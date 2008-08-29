@@ -16,14 +16,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IServiceOriented.ServiceBus.ConsoleUtility", "IServiceOriented.ServiceBus.ConsoleUtility\IServiceOriented.ServiceBus.ConsoleUtility.csproj", "{31896FE3-1DDA-4B36-951C-1079DCAAFB51}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IServiceOriented.ServiceBus.ManagementTool", "IServiceOriented.ServiceBus.ManagementTool\IServiceOriented.ServiceBus.ManagementTool.csproj", "{5D9CC2F6-32BC-45FC-A198-D52E9641940E}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IServiceOriented.ServiceBus.Samples.Chat", "IServiceOriented.ServiceBus.Samples.Chat\IServiceOriented.ServiceBus.Samples.Chat.csproj", "{4587E682-FDB8-4C34-8448-48F1F6921591}"
 EndProject
 Global
-	GlobalSection(TestCaseManagementSettings) = postSolution
-		CategoryFile = IServiceOriented3.vsmdi
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
@@ -41,10 +36,6 @@ Global
 		{31896FE3-1DDA-4B36-951C-1079DCAAFB51}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{31896FE3-1DDA-4B36-951C-1079DCAAFB51}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{31896FE3-1DDA-4B36-951C-1079DCAAFB51}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5D9CC2F6-32BC-45FC-A198-D52E9641940E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5D9CC2F6-32BC-45FC-A198-D52E9641940E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5D9CC2F6-32BC-45FC-A198-D52E9641940E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5D9CC2F6-32BC-45FC-A198-D52E9641940E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4587E682-FDB8-4C34-8448-48F1F6921591}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4587E682-FDB8-4C34-8448-48F1F6921591}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4587E682-FDB8-4C34-8448-48F1F6921591}.Release|Any CPU.ActiveCfg = Release|Any CPU

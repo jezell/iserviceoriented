@@ -61,9 +61,6 @@
     <Compile Include="WcfDispatcher.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="AuthoringTests.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\IServiceOriented.ServiceBus\IServiceOriented.ServiceBus.csproj">
       <Project>{170E9A60-8058-4459-AE51-FEDF88AE7631}</Project>
       <Name>IServiceOriented.ServiceBus</Name>
