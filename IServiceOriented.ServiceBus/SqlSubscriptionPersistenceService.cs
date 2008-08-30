@@ -12,12 +12,67 @@ using System.Data.SqlClient;
 using Microsoft.SqlServer.Management.Common;
 using Microsoft.SqlServer.Management.Smo;
 
+using System.Runtime.Serialization;
+
 
 namespace IServiceOriented.ServiceBus
 {
     public class SqlSubscriptionDB
     {
-        public SqlSubscriptionDB(string connectionString)
+        public SqlSubscriptionDB(Type[] knownDispatcherTypes, Type[] knownListenerTypes, Type[] knownFilterTypes)
+        {
+            _dispatcherSerializer = new DataContractSerializer(typeof(Dispatcher), knownDispatcherTypes);
+            _listenerSerializer = new DataContractSerializer(typeof(Listener), knownListenerTypes);
+            _filterSerializer = new DataContractSerializer(typeof(MessageFilter), knownFilterTypes);
+        }
+
+        DataContractSerializer _dispatcherSerializer;
+        DataContractSerializer _listenerSerializer;
+        DataContractSerializer _filterSerializer;
+
+        Listener getListenerFromPersistenceData(byte[] data)
+        {
+            MemoryStream ms = new MemoryStream(data);
+            ms.Position = 0;
+            return (Listener)_listenerSerializer.ReadObject(ms);
+        }
+
+        byte[] getListenerPersistenceData(Listener obj)        
+        {
+            MemoryStream ms = new MemoryStream();
+            _listenerSerializer.WriteObject(ms,obj);
+            return ms.ToArray();
+        }
+
+        MessageFilter getFilterFromPersistenceData(byte[] data)
+        {
+            MemoryStream ms = new MemoryStream(data);
+            ms.Position = 0;
+            return (MessageFilter)_filterSerializer.ReadObject(ms);
+        }
+
+        byte[] getFilterPersistenceData(MessageFilter obj)
+        {
+            MemoryStream ms = new MemoryStream();
+            _filterSerializer.WriteObject(ms, obj);
+            return ms.ToArray();
+        }
+
+
+        Dispatcher getDispatcherFromPersistenceData(byte[] data)
+        {
+            MemoryStream ms = new MemoryStream(data);
+            ms.Position = 0;
+            return (Dispatcher)_dispatcherSerializer.ReadObject(ms);
+        }
+
+        byte[] getDispatcherPersistenceData(Dispatcher obj)
+        {
+            MemoryStream ms = new MemoryStream();
+            _dispatcherSerializer.WriteObject(ms, obj);
+            return ms.ToArray();
+        }
+        public SqlSubscriptionDB(string connectionString, Type[] knownDispatcherTypes, Type[] knownListenerTypes, Type[] knownFilterTypes) : this(knownDispatcherTypes, knownListenerTypes, knownFilterTypes)
         {
             _connectionString = connectionString;
         }
@@ -58,33 +113,16 @@ namespace IServiceOriented.ServiceBus
         }
 
 
-        static SubscriptionEndpoint getSubscription(IDataReader dr)
-        {
-            MessageFilter filter = null;
-
-            string filterData = dr["filter_data"] as string;
-            string filterTypeString = dr["filter_type"] as string;
-
-            if (filterTypeString != null)
-            {
-                Type filterType = Type.GetType(filterTypeString);
-                if (filterType == null)
-                {
-                    throw new InvalidOperationException("Filter type could not be loaded");
-                }
-
-                filter = (MessageFilter)Activator.CreateInstance(filterType);
-                filter.InitFromString(filterData);
-            }
-
+        SubscriptionEndpoint getSubscription(IDataReader dr)
+        {            
             SubscriptionEndpoint endpoint = new SubscriptionEndpoint(
                 (Guid)dr["id"],
                 dr["name"] as string,
                 dr["configuration_name"] as string,
                 dr["address"] as string,
                 Type.GetType(dr["contract_type"] as string),
-                Type.GetType(dr["dispatcher_type"] as string),
-                filter)
+                getDispatcherFromPersistenceData((byte[])dr["dispatcher_data"]),
+                getFilterFromPersistenceData((byte[])dr["filter_data"]) )
             ;
 
             if (endpoint.ContractType == null)
@@ -95,7 +133,7 @@ namespace IServiceOriented.ServiceBus
             return endpoint;
         }
 
-        static ListenerEndpoint getListener(IDataReader dr)
+        ListenerEndpoint getListener(IDataReader dr)
         {
             ListenerEndpoint endpoint = new ListenerEndpoint(            
                 (Guid)dr["id"],
@@ -103,8 +141,7 @@ namespace IServiceOriented.ServiceBus
                 dr["configuration_name"] as string,
                 dr["address"] as string,
                 Type.GetType(dr["contract_type"] as string),
-                Type.GetType(dr["listener_type"] as string)
-            );
+                getListenerFromPersistenceData((byte[])dr["listener_data"]));
 
             if (endpoint.ContractType == null)
             {
@@ -169,7 +206,7 @@ namespace IServiceOriented.ServiceBus
                     command.Parameters.AddWithValue("@configuration_name", endpoint.ConfigurationName);
                     command.Parameters.AddWithValue("@contract_type", endpoint.ContractTypeName);
                     command.Parameters.AddWithValue("@name", endpoint.Name);
-                    command.Parameters.AddWithValue("@listener_type", endpoint.ListenerTypeName);
+                    command.Parameters.AddWithValue("@listener_data", getListenerPersistenceData(endpoint.Listener));
                     command.ExecuteNonQuery();
                 }
             }
@@ -183,13 +220,12 @@ namespace IServiceOriented.ServiceBus
                 {
                     command.CommandType = CommandType.StoredProcedure;
                     command.Parameters.AddWithValue("@id", subscription.Id);
-                    command.Parameters.AddWithValue("@filter_type", subscription.Filter == null ? DBNull.Value : (object)subscription.Filter.GetType().AssemblyQualifiedName);
-                    command.Parameters.AddWithValue("@filter_data", subscription.Filter == null ? DBNull.Value :  (object)subscription.Filter.CreateInitString());
+                    command.Parameters.AddWithValue("@filter_data", getFilterPersistenceData(subscription.Filter));
                     command.Parameters.AddWithValue("@address", subscription.Address);
                     command.Parameters.AddWithValue("@configuration_name", subscription.ConfigurationName);
                     command.Parameters.AddWithValue("@contract_type", subscription.ContractTypeName);
                     command.Parameters.AddWithValue("@name", subscription.Name);
-                    command.Parameters.AddWithValue("@dispatcher_type", subscription.DispatcherTypeName);
+                    command.Parameters.AddWithValue("@dispatcher_data", getDispatcherPersistenceData(subscription.Dispatcher));
                     command.ExecuteNonQuery();
                 }
             }
@@ -230,13 +266,12 @@ namespace IServiceOriented.ServiceBus
 
     public class SqlSubscriptionPersistenceService : SubscriptionPersistenceService
     {
-        public SqlSubscriptionPersistenceService(string connectionString)
+        public SqlSubscriptionPersistenceService(string connectionString, Type[] knownDispatcherTypes,  Type[] knownListenerTypes, Type[] knownFilterTypes)
         {
-            _db = new SqlSubscriptionDB(connectionString);
+            _db = new SqlSubscriptionDB(connectionString, knownDispatcherTypes, knownListenerTypes, knownFilterTypes);
         }
 
         SqlSubscriptionDB _db;        
-
         
         protected override IEnumerable<Endpoint> LoadEndpoints()
         {
@@ -249,22 +284,34 @@ namespace IServiceOriented.ServiceBus
 
         protected override void CreateListener(ListenerEndpoint endpoint)
         {
-            _db.CreateListener(endpoint);
+            if (!endpoint.Transient)
+            {
+                _db.CreateListener(endpoint);
+            }
         }
 
         protected override void CreateSubscription(SubscriptionEndpoint subscription)
         {
-            _db.CreateSubscription(subscription);
+            if (!subscription.Transient)
+            {
+                _db.CreateSubscription(subscription);
+            }
         }
 
         protected override void DeleteListener(ListenerEndpoint endpoint)
         {
-            _db.DeleteListener(endpoint.Id);
+            if (!endpoint.Transient)
+            {
+                _db.DeleteListener(endpoint.Id);
+            }
         }
 
         protected override void DeleteSubscription(SubscriptionEndpoint subscription)
         {
-            _db.DeleteSubscription(subscription.Id);
+            if (!subscription.Transient)
+            {
+                _db.DeleteSubscription(subscription.Id);
+            }
         }
     }
 }

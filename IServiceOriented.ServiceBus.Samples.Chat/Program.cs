@@ -10,7 +10,9 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
         static void Main(string[] args)
         {
             MessageDelivery.RegisterKnownType(typeof(ChatFilter));
+            MessageDelivery.RegisterKnownType(typeof(ChatFilter2));
             MessageDelivery.RegisterKnownType(typeof(SendMessageRequest));
+            MessageDelivery.RegisterKnownType(typeof(SendMessageRequest2));
             
             if(args.Length == 0)
             {
@@ -28,13 +30,13 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
 
                 server.Stop();
             }
-            else if(args[0] == "client")
+            else if (args[0] == "client" || args[0] == "client2")
             {
                 Console.WriteLine("Starting client...");
 
                 Console.Write("Enter name: ");
 
-                ChatClient client = new ChatClient(Console.ReadLine());
+                ChatClient client = new ChatClient(Console.ReadLine(), args[0] == "client2");
                 client.Start();
 
                 while (true)

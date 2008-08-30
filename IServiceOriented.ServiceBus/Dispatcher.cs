@@ -3,56 +3,54 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+using System.Runtime.Serialization;
+
+
 namespace IServiceOriented.ServiceBus
-{
+{    
+    [Serializable]
+    [DataContract]
     public abstract class Dispatcher : IDisposable
     {
+        [NonSerialized]
+        ServiceBusRuntime _runtime;
         public ServiceBusRuntime Runtime
         {
-            get;
-            private set;
+            get
+            {
+                return _runtime;
+            }
+            internal set
+            {
+                _runtime = value;
+            }
         }
 
+        [NonSerialized]
+        SubscriptionEndpoint _endpoint;        
         public SubscriptionEndpoint Endpoint
         {
-            get;
-            private set;
+            get
+            {
+                return _endpoint;
+            }
+            internal set
+            {
+                _endpoint = value;
+            }
         }
 
-        internal void StartInternal(ServiceBusRuntime runtime, SubscriptionEndpoint endpoint)
+        internal void StartInternal()
         {
-            try
-            {
-                Runtime = runtime;
-                Endpoint = endpoint;
+            OnStart();
 
-                OnStart();
-
-                Started = true;
-            }
-            finally
-            {
-                if (!Started)
-                {
-                    Runtime = null;
-                    Endpoint = null;
-                }
-            }
+            Started = true;
         }
 
         internal void StopInternal()
         {
-            try
-            {
-                OnStop();
-            }
-            finally
-            {
-                Runtime = null;
-                Endpoint = null;
-
-                Started = false;
-            }
+            OnStop();
+            Started = false;        
         }
 
         protected virtual void OnStart()
@@ -69,7 +67,7 @@ namespace IServiceOriented.ServiceBus
             private set;
         }
 
-        [ThreadStatic]
+        [ThreadStatic, NonSerialized]
         static DispatchContext _dispatchContext;
         /// <summary>
         /// Contains information about the message that is currently being dispatched.

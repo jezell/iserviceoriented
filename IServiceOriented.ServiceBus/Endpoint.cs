@@ -114,6 +114,20 @@ namespace IServiceOriented.ServiceBus
                 _name = value;
             }
         }
+
+        bool _transient;
+        [DataMember]
+        public bool Transient
+        {
+            get
+            {
+                return _transient;
+            }
+            set
+            {
+                _transient = value;
+            }
+        }
     }
 
 

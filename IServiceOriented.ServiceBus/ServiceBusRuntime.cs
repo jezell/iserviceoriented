@@ -112,45 +112,7 @@ namespace IServiceOriented.ServiceBus
 		
         ReaderWriterLockedObject<ReadOnlyCollection<RuntimeService>, IList<RuntimeService>> _runtimeServices = new ReaderWriterLockedObject<ReadOnlyCollection<RuntimeService>, IList<RuntimeService>>(new List<RuntimeService>(), l => new ReadOnlyCollection<RuntimeService>(l));
 
-        Dictionary<ListenerEndpoint, Listener> _listeners = new Dictionary<ListenerEndpoint,Listener>();
-
-        void startDispatching(SubscriptionEndpoint se)
-        {
-            Dispatcher dispatcher = (Dispatcher)Activator.CreateInstance(se.DispatcherType);
-            dispatcher.StartInternal(this, se);
-            lock (_dispatchers)
-            {
-                _dispatchers.Add(se, dispatcher);
-            }
-        }
-
-        void stopDispatching(SubscriptionEndpoint se)
-        {
-            lock (_dispatchers)
-            {
-                _dispatchers[se].StopInternal();
-                _dispatchers.Remove(se);
-            }
-        }
-
-        void startListening(ListenerEndpoint le)
-        {
-            Listener listener = (Listener)Activator.CreateInstance(le.ListenerType);
-            listener.StartInternal(this, le);
-            lock (_listeners)
-            {
-                _listeners.Add(le, listener);
-            }
-        }
-
-        void stopListening(ListenerEndpoint le)
-        {
-            lock (_listeners)
-            {
-                _listeners[le].StopInternal();
-                _listeners.Remove(le);
-            }
-        }
+        
         
 		public void Start()
 		{
@@ -178,7 +140,7 @@ namespace IServiceOriented.ServiceBus
                 {
                     foreach (SubscriptionEndpoint se in subscriptions)
                     {
-                        startDispatching(se);
+                        se.Dispatcher.StartInternal();
                     }
                 });                   
 
@@ -186,7 +148,7 @@ namespace IServiceOriented.ServiceBus
                 {
                     foreach(ListenerEndpoint le in _listenerEndpoints)
                     {
-                        startListening(le);
+                        le.Listener.StopInternal();
                     }
                 }
                 
@@ -342,7 +304,7 @@ namespace IServiceOriented.ServiceBus
                 {
                     foreach (ListenerEndpoint le in _listenerEndpoints)
                     {
-                        stopListening(le);
+                        le.Listener.StopInternal();
                     }                
                 }
 
@@ -350,7 +312,7 @@ namespace IServiceOriented.ServiceBus
                 {
                     foreach (SubscriptionEndpoint se in subscriptions)
                     {
-                        stopDispatching(se);
+                        se.Dispatcher.StopInternal();
                     }
                 });
 
@@ -362,7 +324,6 @@ namespace IServiceOriented.ServiceBus
                     }
                 });
 
-                _dispatchers.Clear();
 			
                 _started = false;
 			}
@@ -439,6 +400,11 @@ namespace IServiceOriented.ServiceBus
 
             if (endpoint == null) throw new ArgumentNullException("endpoint");
 
+            if (endpoint.Listener.Runtime != null)
+            {
+                throw new InvalidOperationException("Listener is attached to a bus already");
+            }
+
             VerifyContract(endpoint.ContractType);
 
             bool added = false;
@@ -448,7 +414,8 @@ namespace IServiceOriented.ServiceBus
                 {
                     lock (_listenerEndpointsLock)
                     {
-                        _listenerEndpoints.Add(endpoint);
+                        endpoint.Listener.Runtime = this;
+                        _listenerEndpoints.Add(endpoint);                        
                         added = true;
                     }
                     
@@ -465,7 +432,7 @@ namespace IServiceOriented.ServiceBus
 
                     if (_started)
                     {
-                        startListening(endpoint);
+                        endpoint.Listener.StartInternal();
                     }
 
                     ts.Complete();
@@ -496,7 +463,7 @@ namespace IServiceOriented.ServiceBus
                 {
                     if (_started)
                     {
-                        stopListening(endpoint);
+                        endpoint.Listener.StopInternal();
                     }
                     RemoveListener(endpoint);
 
@@ -527,6 +494,7 @@ namespace IServiceOriented.ServiceBus
 
             if (endpoint == null) throw new ArgumentNullException("endpoint");
 
+
             bool removed = false;
             try
             {
@@ -535,6 +503,7 @@ namespace IServiceOriented.ServiceBus
 				    lock(_listenerEndpointsLock)
 				    {
 					    _listenerEndpoints.Remove(endpoint);
+                        endpoint.Listener.Runtime = null;
 				    }
 
                     _runtimeServices.Read(runtimeServices =>
@@ -681,11 +650,12 @@ namespace IServiceOriented.ServiceBus
 
                         try
                         {
-                            Dispatcher dispatcher;
                             SubscriptionEndpoint endpoint = GetSubscription(delivery.SubscriptionEndpointId);
+                            Dispatcher dispatcher = endpoint.Dispatcher;
+                            
                             if (endpoint != null) // subscriber might have been removed since enqueue
                             {
-                                _dispatchers.TryGetValue(endpoint, out dispatcher);
+                                
 
                                 if (dispatcher != null)
                                 {
@@ -737,9 +707,7 @@ namespace IServiceOriented.ServiceBus
                 }
             }
 		}
-		
-		Dictionary<SubscriptionEndpoint, Dispatcher> _dispatchers = new Dictionary<SubscriptionEndpoint, Dispatcher>();
-
+				
         /// <summary>
         /// Execute a block of code, passing any unhandled exceptions to the unhandled exception handler
         /// </summary>
@@ -805,20 +773,11 @@ namespace IServiceOriented.ServiceBus
             return ForEachSafely(list, d => d.DynamicInvoke(parameters));
         }
         
-		public void Publish(Type contract, string action, object message)
+		public void Publish(PublishRequest dispatchInformation)
 		{
             if (_disposed) throw new ObjectDisposedException("ServiceBusRuntime");
 
-            if (contract == null)
-            {
-                throw new ArgumentNullException("contract");
-            }
-            
-            if (message == null)
-            {
-                throw new ArgumentNullException("message");
-            }
-            VerifyContract(contract);
+            VerifyContract(dispatchInformation.Contract);
 
             _subscriptions.Read(subscriptions =>
             {
@@ -835,7 +794,7 @@ namespace IServiceOriented.ServiceBus
                             if (subscription.Filter is UnhandledMessageFilter)
                             {
                                 include = false;
-                                if (subscription.Filter.Include(action, message))
+                                if (subscription.Filter.Include(dispatchInformation.Action, dispatchInformation.Message))
                                 {
                                     unhandledFilters.Add(subscription);
                                 }
@@ -843,7 +802,7 @@ namespace IServiceOriented.ServiceBus
                             }
                             else
                             {
-                                include = subscription.Filter.Include(action, message);
+                                include = subscription.Filter.Include(dispatchInformation.Action, dispatchInformation.Message);
                             }
                         }
                         else
@@ -853,7 +812,7 @@ namespace IServiceOriented.ServiceBus
 
                         if (include)
                         {
-                            QueueDelivery(subscription.Id, action, message);
+                            QueueDelivery(subscription.Id, dispatchInformation.Action, dispatchInformation.Message);
                             handled = true;
                         }
                     }
@@ -863,7 +822,7 @@ namespace IServiceOriented.ServiceBus
                     {
                         foreach (SubscriptionEndpoint subscription in unhandledFilters)
                         {
-                            QueueDelivery(subscription.Id, action, message);
+                            QueueDelivery(subscription.Id, dispatchInformation.Action, dispatchInformation.Message);
                         }
                     }
 
@@ -912,6 +871,11 @@ namespace IServiceOriented.ServiceBus
 
             if (subscription == null) throw new ArgumentNullException("subscription");
 
+            if (subscription.Dispatcher != null)
+            {
+                throw new InvalidOperationException("Subscription is attached to another bus");
+            }
+
             VerifyContract(subscription.ContractType);
 
             bool added = false;
@@ -922,12 +886,13 @@ namespace IServiceOriented.ServiceBus
                     _subscriptions.Write(subscriptions =>
                     {
                         subscriptions.Add(subscription);
+                        subscription.Dispatcher.Runtime = this;
                         added = true;
                     });
 
                     if (_started)
                     {
-                        startDispatching(subscription);
+                        subscription.Dispatcher.StopInternal() ;
                     }
 
                     _runtimeServices.Read(runtimeServices =>
@@ -987,12 +952,13 @@ namespace IServiceOriented.ServiceBus
             try
             {
                 using (TransactionScope ts = new TransactionScope())
-                {                   
-                    stopDispatching(subscription);
+                {
+                    subscription.Dispatcher.StopInternal();
 
                     _subscriptions.Write(subscriptions =>
                     {
                         subscriptions.Remove(subscription);
+                        subscription.Dispatcher.Runtime = null;
                         removed = true;
                     });                    
                     

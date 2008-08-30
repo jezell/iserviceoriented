@@ -11,18 +11,18 @@ namespace IServiceOriented.ServiceBus
     [DataContract]
     public sealed class SubscriptionEndpoint : Endpoint
     {
-        public SubscriptionEndpoint(Guid id, string name, string configurationName, string address, Type contractType, Type dispatcherType, MessageFilter filter) 
-            : base(id,  name, configurationName, address, contractType)
+        public SubscriptionEndpoint(Guid id, string name, string configurationName, string address, Type contractType, Dispatcher dispatcher, MessageFilter filter)
+            : base(id, name, configurationName, address, contractType)
         {
             Filter = filter;
-            DispatcherType = dispatcherType;
+            Dispatcher = dispatcher;
         }
-
-        public SubscriptionEndpoint(Guid id, string name, string configurationName, string address, string contractTypeName, string dispatcherTypeName, MessageFilter filter)
+        
+        public SubscriptionEndpoint(Guid id, string name, string configurationName, string address, string contractTypeName, Dispatcher dispatcher, MessageFilter filter)
             : base(id, name, configurationName, address, contractTypeName)
         {
             Filter = filter;
-            DispatcherTypeName = dispatcherTypeName;
+            Dispatcher = dispatcher;
         }
         
         MessageFilter _filter;
@@ -38,34 +38,27 @@ namespace IServiceOriented.ServiceBus
                 _filter = value;
             }
         }
-        
-        Type _dispatcherType;        
-        public Type DispatcherType
-        {
-            get
-            {
-                return _dispatcherType;
-            }
-            private set
-            {
-                _dispatcherType = value;
-            }
-        }
 
+        Dispatcher _dispatcher;
         [DataMember]
-        public string DispatcherTypeName
+        public Dispatcher Dispatcher
         {
             get
             {
-                return _dispatcherType.AssemblyQualifiedName;
+                return _dispatcher;
             }
             private set
             {
-                _dispatcherType = Type.GetType(value);
-                if (_dispatcherType == null)
+                if (value != null && value.Endpoint != null)
                 {
-                    throw new InvalidOperationException(value + " is an invalid type");
+                    throw new InvalidOperationException("Endpoint is attached to another dispatcher");
                 }
+                if (_dispatcher != null)
+                {
+                    _dispatcher.Endpoint = null;
+                }
+                _dispatcher = value;
+                if (value != null) value.Endpoint = this;
             }
         }
     }	    

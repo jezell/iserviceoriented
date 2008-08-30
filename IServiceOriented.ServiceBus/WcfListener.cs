@@ -5,8 +5,12 @@ using System.Linq;
 using System.Text;
 using System.ServiceModel;
 
+using System.Runtime.Serialization;
+
 namespace IServiceOriented.ServiceBus
 {
+    [Serializable]
+    [DataContract]
     public class WcfListener<T> : Listener
     {
         protected override void OnStart()
@@ -21,6 +25,7 @@ namespace IServiceOriented.ServiceBus
             _host = null;            
         }
 
+        [NonSerialized]
         ServiceHost _host;
 
         protected override void Dispose(bool disposing)

@@ -14,18 +14,6 @@ namespace IServiceOriented.ServiceBus.UnitTests
             return true;
         }
 
-        protected override void InitFromString(string data)
-        {
-            if (data != "passthrough")
-            {
-                throw new Exception("Data was invalid");
-            }
-        }
-
-        protected override string CreateInitString()
-        {
-            return "passthrough";
-        }
     }
 
 }

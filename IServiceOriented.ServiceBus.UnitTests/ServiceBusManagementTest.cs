@@ -64,7 +64,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
         void putMessageAndGet(object message)
         {
-            SubscriptionEndpoint subscription = new SubscriptionEndpoint(Guid.NewGuid(), "test", "configurationName", "address", typeof(IServiceBusManagementService), typeof(WcfDispatcher<IServiceBusManagementService>), null);
+            SubscriptionEndpoint subscription = new SubscriptionEndpoint(Guid.NewGuid(), "test", "configurationName", "address", typeof(IServiceBusManagementService), new WcfDispatcher<IServiceBusManagementService>(), null);
             MessageDelivery failure = new MessageDelivery(subscription.Id, "action", message, 3);
             
             NonTransactionalMemoryQueue failureQueue = new NonTransactionalMemoryQueue();

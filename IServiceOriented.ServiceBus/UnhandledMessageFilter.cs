@@ -17,16 +17,7 @@ namespace IServiceOriented.ServiceBus
             : base(messageType)
         {
         }
-        protected internal override string CreateInitString()
-        {
-            return null;            
-        }
-
-        protected internal override void InitFromString(string data)
-        {
-            
-        }
-
+        
         public override bool Include(string action, object message)
         {
             return base.Include(action, message);

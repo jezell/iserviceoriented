@@ -8,11 +8,7 @@ namespace IServiceOriented.ServiceBus
     [Serializable]
     public abstract class MessageFilter
     {
-        public abstract bool Include(string action, object message);
-
-        protected internal abstract void InitFromString(string data);
-        protected internal abstract string CreateInitString();
-
+        public abstract bool Include(string action, object message);        
     }
 	
 		

@@ -19,15 +19,6 @@ namespace IServiceOriented.ServiceBus.UnitTests
         {
             return _messageFilter;
         }
-
-        protected override void InitFromString(string data)
-        {
-            _messageFilter = Convert.ToBoolean(data);
-        }
-
-        protected override string CreateInitString()
-        {
-            return _messageFilter.ToString();
-        }
+        
     }
 }

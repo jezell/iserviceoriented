@@ -6,47 +6,35 @@ using System.Runtime.Serialization;
 
 namespace IServiceOriented.ServiceBus
 {
-    [Serializable]
     [DataContract]
     public sealed class ListenerEndpoint : Endpoint
     {
-        public ListenerEndpoint(Guid id, string name, string configurationName, string address, Type contractType, Type listenerType) : base(id, name, configurationName, address, contractType)
+        public ListenerEndpoint(Guid id, string name, string configurationName, string address, Type contractType, Listener listener) : base(id, name, configurationName, address, contractType)
         {
-            ListenerType = listenerType;
+            Listener = listener;
         }
 
-        public Type ListenerType
-        {
-            get;
-            set;
-        }
-
+        Listener _listener;
         [DataMember]
-        public string ListenerTypeName
+        public Listener Listener
         {
             get
             {
-                if (ListenerType == null) return null;
-                return ListenerType.AssemblyQualifiedName;
+                return _listener;
             }
-            set
+            private set
             {
-                if (value == null)
+                if (value != null && value.Endpoint != null)
                 {
-                    ListenerType = null;
+                    throw new InvalidOperationException("Endpoint is attached to another listener");
                 }
-                else
+                if (_listener != null)
                 {
-                    Type type = Type.GetType(value);
-                    if (type == null)
-                    {
-                        throw new InvalidOperationException("Unknown type");
-                    }
-                    ListenerType = type;
-
+                    _listener.Endpoint = null;
                 }
+                _listener = value;
+                if(value != null) value.Endpoint = this;
             }
         }
-        
     }
 }

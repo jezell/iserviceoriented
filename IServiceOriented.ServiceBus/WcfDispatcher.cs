@@ -5,11 +5,20 @@ using System.Text;
 using System.ServiceModel;
 using System.Reflection;
 
+using System.Runtime.Serialization;
+
 namespace IServiceOriented.ServiceBus
 {    
+    [Serializable]
+    [DataContract]
     public class WcfDispatcher<T> : Dispatcher
     {
         public WcfDispatcher()
+        {
+            initActionLookup();
+        }
+
+        void initActionLookup()
         {
             foreach (MethodInfo method in typeof(T).GetMethods())
             {
@@ -56,6 +65,7 @@ namespace IServiceOriented.ServiceBus
             }
         }
 
+        [NonSerialized]
         Dictionary<string, MethodInfo> _actionLookup = new Dictionary<string, MethodInfo>();
 
     }

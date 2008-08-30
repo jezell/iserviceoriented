@@ -2,63 +2,66 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Runtime.Serialization;
 
 namespace IServiceOriented.ServiceBus
-{
+{    
+    [Serializable]
+    [DataContract]
     public abstract class Listener : IDisposable
     {
+        [NonSerialized]
+        ServiceBusRuntime _runtime;
         public ServiceBusRuntime Runtime
         {
-            get;
-            private set;
+            get
+            {
+                return _runtime;
+            }
+            internal set
+            {                
+                _runtime = value;
+            }
         }
 
+        [NonSerialized]
+        ListenerEndpoint _endpoint;
         public ListenerEndpoint Endpoint
         {
-            get;
-            private set;
+            get
+            {
+                return _endpoint;
+            }
+            internal set
+            {
+                _endpoint = value;
+            }
         }
 
+        [NonSerialized]
+        bool _started;
         public bool Started
         {
-            get;
-            private set;
+            get
+            {
+                return _started;
+            }
+            private set
+            {
+                _started = value;
+            }
         }
 
-        internal void StartInternal(ServiceBusRuntime host, ListenerEndpoint endpoint)
-        {
-            try
-            {
-                Runtime = host;
-                Endpoint = endpoint;
-
-                OnStart();
-
-                Started = true;
-            }
-            finally
-            {
-                if (!Started)
-                {
-                    Runtime = null;
-                    Endpoint = null;
-                }                
-            }
+        internal void StartInternal()
+        {            
+            OnStart();
+            Started = true;        
         }
 
         internal void StopInternal()
         {
-            try
-            {
-                OnStop();
-            }
-            finally
-            {
-                Started = false;
-
-                Runtime = null;
-                Endpoint = null;
-            }
+            OnStop();
+            Started = false;
         }
 
         protected virtual void OnStart()

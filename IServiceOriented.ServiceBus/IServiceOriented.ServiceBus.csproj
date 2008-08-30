@@ -68,6 +68,11 @@
     <Compile Include="InvalidContractException.cs" />
     <Compile Include="ListenerEndpoint.cs" />
     <Compile Include="IMessageDeliveryQueue.cs" />
+    <Compile Include="PublishRequest.cs" />
+    <Compile Include="SqlSubscriptionPersistenceService.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="TransformationDispatcher.cs" />
     <Compile Include="ReaderWriterLockedObject.cs" />
     <Compile Include="UnhandledMessageFilter.cs" />
     <Compile Include="PerformanceMonitorRuntimeService.cs" />
@@ -81,7 +86,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Service.cs" />
     <Compile Include="ServiceBusRuntime.cs" />
-    <Compile Include="SqlSubscriptionPersistenceService.cs" />
     <Compile Include="SubscriptionEndpoint.cs" />
     <Compile Include="SubscriptionNotFoundException.cs" />
     <Compile Include="SubscriptionPersistenceService.cs" />
@@ -92,7 +96,6 @@
     <Compile Include="WcfManagementService.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="ClassDiagram.cd" />
     <None Include="iServiceOriented.snk" />
     <EmbeddedResource Include="CreateSqlSubscriptionPersistenceServiceDb.sql" />
   </ItemGroup>

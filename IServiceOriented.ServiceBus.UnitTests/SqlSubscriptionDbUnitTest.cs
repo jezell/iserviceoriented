@@ -59,12 +59,12 @@ namespace IServiceOriented.ServiceBus.UnitTests
         [TestMethod]
         public void TestCrud()
         {
-            SqlSubscriptionDB db = new SqlSubscriptionDB(_connectionString);
+            SqlSubscriptionDB db = new SqlSubscriptionDB(_connectionString, new Type[] { typeof(WcfDispatcher<IContract>) }, new Type[] { typeof(WcfListener<IContract>)  }, new Type[] { typeof(PassThroughMessageFilter) });
 
             Assert.AreEqual(0, db.LoadListenerEndpoints().Count(), "Listener endpoints count should be zero");
             Assert.AreEqual(0, db.LoadSubscriptionEndpoints().Count(), "Subscription endpoints count should be zero");
 
-            ListenerEndpoint listener = new ListenerEndpoint(Guid.NewGuid(), "listener", "ListenerConfig",  "http://localhost/test", typeof(IContract), typeof(WcfListener<IContract>));
+            ListenerEndpoint listener = new ListenerEndpoint(Guid.NewGuid(), "listener", "ListenerConfig",  "http://localhost/test", typeof(IContract), new WcfListener<IContract>());
             db.CreateListener(listener);
 
             IEnumerable<ListenerEndpoint> listeners = db.LoadListenerEndpoints();
@@ -78,7 +78,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
             Assert.AreEqual(listener.ConfigurationName, savedListener.ConfigurationName, "Configuration name does not match");
             Assert.AreEqual(listener.Address, savedListener.Address, "Address does not match");
 
-            SubscriptionEndpoint subscription = new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "SubscriptionConfig", "http://localhost/test/subscription", typeof(IContract), typeof(WcfDispatcher<IContract>), new PassThroughMessageFilter());            
+            SubscriptionEndpoint subscription = new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "SubscriptionConfig", "http://localhost/test/subscription", typeof(IContract), new WcfDispatcher<IContract>(), new PassThroughMessageFilter());            
             db.CreateSubscription(subscription);
             
             IEnumerable<SubscriptionEndpoint> subscriptions = db.LoadSubscriptionEndpoints();
@@ -90,7 +90,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
             Assert.AreEqual(subscription.Address, savedSubscription.Address, "Address does not match");
             Assert.AreEqual(subscription.ConfigurationName, savedSubscription.ConfigurationName, "ConfigurationName does not match");
             Assert.AreEqual(subscription.ContractType, savedSubscription.ContractType, "ContractType does not match");
-            Assert.AreEqual(subscription.DispatcherType, savedSubscription.DispatcherType, "DispatcherType does not match");
+            // TODO: Compare dispatchers
             Assert.AreEqual(subscription.Id, savedSubscription.Id, "Id does not match");
             Assert.AreEqual(subscription.Filter.GetType(), savedSubscription.Filter.GetType(), "Id does not match");
             
