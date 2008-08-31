@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+using System.Runtime.Serialization;
+
 namespace IServiceOriented.ServiceBus.Samples.Chat
-{
+{    
     class Program
     {
         static void Main(string[] args)
@@ -13,7 +15,9 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
             MessageDelivery.RegisterKnownType(typeof(ChatFilter2));
             MessageDelivery.RegisterKnownType(typeof(SendMessageRequest));
             MessageDelivery.RegisterKnownType(typeof(SendMessageRequest2));
-            
+            MessageDelivery.RegisterKnownType(typeof(WcfListener));
+            MessageDelivery.RegisterKnownType(typeof(WcfDispatcher));            
+
             if(args.Length == 0)
             {
                 Console.WriteLine("usage: Chat.exe [server | client]");

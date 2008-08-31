@@ -6,7 +6,7 @@ using System.Text;
 
 namespace IServiceOriented.ServiceBus
 {    
-    public sealed class MethodDispatcher<T> : Dispatcher 
+    public sealed class MethodDispatcher : Dispatcher 
     {
         private MethodDispatcher()
         {
@@ -20,7 +20,7 @@ namespace IServiceOriented.ServiceBus
             }
 
             Target = target;
-            foreach (MethodInfo method in typeof(T).GetMethods())
+            foreach (MethodInfo method in target.GetType().GetMethods())
             {
                 if (_actionLookup.ContainsKey(method.Name))
                 {

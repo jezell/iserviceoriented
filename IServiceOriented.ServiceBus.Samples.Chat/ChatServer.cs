@@ -10,10 +10,10 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
         public ChatServer()
         {            
             _serviceBus = new ServiceBusRuntime(new MsmqMessageDeliveryQueue(".\\private$\\chat_deliver", true), new MsmqMessageDeliveryQueue(".\\private$\\chat_retry", true), new MsmqMessageDeliveryQueue(".\\private$\\chat_fail", true));
-            _serviceBus.AddListener(new ListenerEndpoint(Guid.NewGuid(), "Chat Service", "ChatServer", "net.pipe://localhost/chatServer", typeof(IChatService),  new WcfListener<IChatService>()));
-            _serviceBus.AddListener(new ListenerEndpoint(Guid.NewGuid(), "Chat Service2", "ChatServer2", "net.pipe://localhost/chatServer2", typeof(IChatService2), new WcfListener<IChatService2>()));
-            _serviceBus.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "Chat Service Transformer", null, null, typeof(IChatService), new ChatServiceTransformer(), new TypedMessageFilter(typeof(SendMessageRequest))));
-            _serviceBus.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "No subscribers", "ChatClient", "", typeof(IChatService), new MethodDispatcher<IChatService>(new UnhandledReplyHandler(_serviceBus)), new UnhandledMessageFilter(typeof(SendMessageRequest))));
+            _serviceBus.AddListener(new ListenerEndpoint(Guid.NewGuid(), "Chat Service", "ChatServer", "net.pipe://localhost/chatServer", typeof(IChatService), new WcfListener()));
+            _serviceBus.AddListener(new ListenerEndpoint(Guid.NewGuid(), "Chat Service2", "ChatServer2", "net.pipe://localhost/chatServer2", typeof(IChatService2), new WcfListener()));
+            _serviceBus.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "Chat Service Transformer", null, null, typeof(IChatService2), new ChatServiceTransformer(), new TypedMessageFilter(typeof(SendMessageRequest))));
+            _serviceBus.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "No subscribers", "ChatClient", "", typeof(IChatService), new MethodDispatcher(new UnhandledReplyHandler(_serviceBus)), new UnhandledMessageFilter(typeof(SendMessageRequest2))));
             _serviceBus.RegisterService(new WcfManagementService());
             _serviceBus.UnhandledException+= (o, ex) =>
                 {
@@ -22,7 +22,7 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
                         
         }
 
-        class UnhandledReplyHandler : IChatService
+        class UnhandledReplyHandler : IChatService2
         {
             public UnhandledReplyHandler(ServiceBusRuntime serviceBus)
             {
@@ -30,9 +30,9 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
             }
 
             ServiceBusRuntime _serviceBus;
-            public void SendMessage(SendMessageRequest request)
+            public void SendMessage(SendMessageRequest2 request)
             {
-                _serviceBus.Publish(new PublishRequest(typeof(IChatService), "SendMessage", new SendMessageRequest("System", request.From, request.To + " is an invalid user")));
+                _serviceBus.Publish(new PublishRequest(typeof(IChatService2), "SendMessage", new SendMessageRequest2("Message could not be delivered", "System", request.From, request.To + " is an invalid user")));
             }
         }
         

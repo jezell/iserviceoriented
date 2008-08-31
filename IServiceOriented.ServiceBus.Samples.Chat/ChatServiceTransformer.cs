@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+using System.Runtime.Serialization;
+
 namespace IServiceOriented.ServiceBus.Samples.Chat
 {
+    [DataContract]
     public class ChatServiceTransformer : TransformationDispatcher
     {
         protected override PublishRequest Transform(PublishRequest information)

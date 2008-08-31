@@ -11,16 +11,18 @@ namespace IServiceOriented.ServiceBus
 {    
     [Serializable]
     [DataContract]
-    public class WcfDispatcher<T> : Dispatcher
+    public class WcfDispatcher : Dispatcher
     {
         public WcfDispatcher()
         {
-            initActionLookup();
+            
         }
 
+        // TODO: if the same dispatcher instance is reused with another type this will be invalid
         void initActionLookup()
         {
-            foreach (MethodInfo method in typeof(T).GetMethods())
+            Dictionary<string, MethodInfo> actionLookup = new Dictionary<string, MethodInfo>();
+            foreach (MethodInfo method in Endpoint.ContractType.GetMethods())
             {
                 object[] attributes = method.GetCustomAttributes(typeof(OperationContractAttribute), false);
                 if (attributes.Length > 0)
@@ -31,13 +33,20 @@ namespace IServiceOriented.ServiceBus
                     {
                         action = method.Name;
                     }
-                    _actionLookup.Add(action, method);
+                    actionLookup.Add(action, method);
                 }
             }
+            _actionLookup = actionLookup;
+            
         }
-
+        
         protected override void Dispatch(SubscriptionEndpoint endpoint, string action, object message)
         {
+            if (_actionLookup == null)
+            {
+                initActionLookup();
+            }
+            
             MethodInfo methodInfo;
 
             if (!_actionLookup.TryGetValue(action, out methodInfo))
@@ -54,7 +63,7 @@ namespace IServiceOriented.ServiceBus
 
             if (methodInfo != null)
             {
-                Service.Use<T>(endpoint.ConfigurationName, endpoint.Address, contract =>
+                Service.Use(endpoint.ContractType, endpoint.ConfigurationName, endpoint.Address, contract =>
                 {
                     methodInfo.Invoke(contract, new object[] { message });
                 });
@@ -66,7 +75,7 @@ namespace IServiceOriented.ServiceBus
         }
 
         [NonSerialized]
-        Dictionary<string, MethodInfo> _actionLookup = new Dictionary<string, MethodInfo>();
+        Dictionary<string, MethodInfo> _actionLookup;
 
     }
 		

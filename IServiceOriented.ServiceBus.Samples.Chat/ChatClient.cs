@@ -32,15 +32,14 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
             _host.Open();
 
             Service.Use<IServiceBusManagementService>(serviceBus =>
-                {
-
+             {
                     if (_version2)
                     {
-                        serviceBus.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), _from, "ChatClient2", "net.pipe://localhost/chat/" + _from + "/send", typeof(IChatService2), new WcfDispatcher<IChatService2>(), new ChatFilter2(_from)));                        
+                        serviceBus.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), _from, "ChatClient2", "net.pipe://localhost/chat/" + _from + "/send", typeof(IChatService2), new WcfDispatcher(), new ChatFilter2(_from)));                        
                     }
                     else
                     {
-                        serviceBus.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), _from, "ChatClient", "net.pipe://localhost/chat/" + _from + "/send", typeof(IChatService), new WcfDispatcher<IChatService>(), new ChatFilter(_from)));
+                        serviceBus.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), _from, "ChatClient", "net.pipe://localhost/chat/" + _from + "/send", typeof(IChatService), new WcfDispatcher(), new ChatFilter(_from)));
                     }
                 });
         }

@@ -111,12 +111,12 @@ namespace IServiceOriented.ServiceBus.UnitTests
             serviceBusRuntime.MaxRetries = 1;
 
 
-            serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/test", typeof(IContract), new WcfListener<IContract>()));
+            serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/test", typeof(IContract), new WcfListener()));
             string message = "Publish this message";
             ContractImplementation ci = new ContractImplementation();
             ci.SetFailCount(1);
 
-            serviceBusRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "", "", typeof(IContract), new MethodDispatcher<IContract>(ci), new BooleanMessageFilter(false)));
+            serviceBusRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "", "", typeof(IContract), new MethodDispatcher(ci), new BooleanMessageFilter(false)));
 
 
             AutoResetEvent wait = new AutoResetEvent(false);
@@ -160,12 +160,12 @@ namespace IServiceOriented.ServiceBus.UnitTests
             serviceBusRuntime.RetryDelay = 1000;
             serviceBusRuntime.MaxRetries = 1;
 
-            serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/test", typeof(IContract), new WcfListener<IContract>()));
+            serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/test", typeof(IContract), new WcfListener()));
             string message = "Publish this message";
             ContractImplementation ci = new ContractImplementation();
             ci.SetFailCount(0);
 
-            serviceBusRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "", "", typeof(IContract), new MethodDispatcher<IContract>(ci), new BooleanMessageFilter(true)));
+            serviceBusRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "", "", typeof(IContract), new MethodDispatcher(ci), new BooleanMessageFilter(true)));
 
             AutoResetEvent wait = new AutoResetEvent(false);
             serviceBusRuntime.MessageDelivered += (o, mdea) => { wait.Set(); };
@@ -199,12 +199,12 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
             ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(testQueue, retryQueue, failQueue);
 
-            serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/test", typeof(IContract), new WcfListener<IContract>()));
+            serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/test", typeof(IContract), new WcfListener()));
             string message = "Publish this message";
 
             ContractImplementation ci = new ContractImplementation();
             ci.SetFailCount(0);
-            serviceBusRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "", "", typeof(IContract), new MethodDispatcher<IContract>(ci), new PassThroughMessageFilter()));
+            serviceBusRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "", "", typeof(IContract), new MethodDispatcher(ci), new PassThroughMessageFilter()));
 
             AutoResetEvent wait = new AutoResetEvent(false);
             serviceBusRuntime.MessageDelivered += (o, mdea) => { wait.Set(); };
@@ -242,8 +242,8 @@ namespace IServiceOriented.ServiceBus.UnitTests
             ContractImplementation ci = new ContractImplementation();
             ci.SetFailCount(0);
 
-            serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/test", typeof(IContract), new WcfListener<IContract>()));
-            serviceBusRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "", "", typeof(IContract), new MethodDispatcher<IContract>(ci), new PassThroughMessageFilter()));
+            serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/test", typeof(IContract), new WcfListener()));
+            serviceBusRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "", "", typeof(IContract), new MethodDispatcher(ci), new PassThroughMessageFilter()));
 
 
             int messageCount = 10000;
@@ -312,8 +312,8 @@ namespace IServiceOriented.ServiceBus.UnitTests
             ci.SetFailCount(0);
             ci.SetFailInterval(10);
 
-            serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/test", typeof(IContract), new WcfListener<IContract>()));
-            serviceBusRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "", "", typeof(IContract), new MethodDispatcher<IContract>(ci), new PassThroughMessageFilter()));
+            serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/test", typeof(IContract), new WcfListener()));
+            serviceBusRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "", "", typeof(IContract), new MethodDispatcher(ci), new PassThroughMessageFilter()));
 
 
             int messageCount = 1000;
@@ -377,11 +377,11 @@ namespace IServiceOriented.ServiceBus.UnitTests
             serviceBusRuntime.RetryDelay = 1000;
             serviceBusRuntime.MaxRetries = 1;
 
-            serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/test", typeof(IContract), new WcfListener<IContract>()));
+            serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/test", typeof(IContract), new WcfListener()));
             string message = "Publish this message";
             ContractImplementation ci = new ContractImplementation();
             ci.SetFailCount(1);
-            serviceBusRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "", "", typeof(IContract), new MethodDispatcher<IContract>(ci), new PassThroughMessageFilter()));
+            serviceBusRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "", "", typeof(IContract), new MethodDispatcher(ci), new PassThroughMessageFilter()));
 
 
             CountdownLatch latch = new CountdownLatch(2);
@@ -432,11 +432,11 @@ namespace IServiceOriented.ServiceBus.UnitTests
             serviceBusRuntime.RetryDelay = 1000;
             serviceBusRuntime.MaxRetries = 1;
 
-            serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/test", typeof(IContract), new WcfListener<IContract>()));
+            serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/test", typeof(IContract), new WcfListener()));
             string message = "Publish this message";
             ContractImplementation ci = new ContractImplementation();
             ci.SetFailCount(3);
-            serviceBusRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "", "", typeof(IContract), new MethodDispatcher<IContract>(ci), new PassThroughMessageFilter()));
+            serviceBusRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "", "", typeof(IContract), new MethodDispatcher(ci), new PassThroughMessageFilter()));
 
             CountdownLatch latch = new CountdownLatch(3);
             

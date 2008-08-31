@@ -69,5 +69,27 @@ namespace IServiceOriented.ServiceBus
                 }
             }
         }
+
+        public static void Use(Type endpointType, string config, string address, Action<object> codeBlock)
+        {            
+            Type channelType = typeof(ChannelFactory<>).MakeGenericType(endpointType);
+            object factory = Activator.CreateInstance(channelType, config);
+            ((ChannelFactory)factory).Endpoint.Address = new EndpointAddress(address);
+            IClientChannel proxy = (IClientChannel)channelType.GetMethod("CreateChannel",new Type[] {}).Invoke(factory, new object[] { });
+            bool success = false;
+            try
+            {
+                codeBlock(proxy);
+                proxy.Close();
+                success = true;
+            }
+            finally
+            {
+                if (!success)
+                {
+                    proxy.Abort();
+                }
+            }
+        }
     }
 }

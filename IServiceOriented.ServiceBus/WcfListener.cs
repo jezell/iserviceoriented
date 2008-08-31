@@ -11,8 +11,11 @@ namespace IServiceOriented.ServiceBus
 {
     [Serializable]
     [DataContract]
-    public class WcfListener<T> : Listener
+    public class WcfListener : Listener
     {
+        public WcfListener()
+        {            
+        }
         protected override void OnStart()
         {
             _host = WcfServiceHostFactory.CreateHost(Runtime, Endpoint.ContractType, Endpoint.ConfigurationName, Endpoint.Address);
@@ -21,7 +24,7 @@ namespace IServiceOriented.ServiceBus
 
         protected override void OnStop()
         {
-            _host.Close();
+            if(_host != null) _host.Close();
             _host = null;            
         }
 

@@ -11,9 +11,9 @@ namespace IServiceOriented.ServiceBus.UnitTests
     /// Summary description for WcfDispatcher
     /// </summary>
     [TestClass]
-    public class WcfDispatcher
+    public class WcfDispatcherTest
     {
-        public WcfDispatcher()
+        public WcfDispatcherTest()
         {
             //
             // TODO: Add constructor logic here

@@ -148,7 +148,7 @@ namespace IServiceOriented.ServiceBus
                 {
                     foreach(ListenerEndpoint le in _listenerEndpoints)
                     {
-                        le.Listener.StopInternal();
+                        le.Listener.StartInternal();
                     }
                 }
                 
@@ -651,21 +651,24 @@ namespace IServiceOriented.ServiceBus
                         try
                         {
                             SubscriptionEndpoint endpoint = GetSubscription(delivery.SubscriptionEndpointId);
-                            Dispatcher dispatcher = endpoint.Dispatcher;
-                            
-                            if (endpoint != null) // subscriber might have been removed since enqueue
+                            if (endpoint != null)
                             {
-                                
+                                Dispatcher dispatcher = endpoint.Dispatcher;
 
-                                if (dispatcher != null)
+                                if (endpoint != null) // subscriber might have been removed since enqueue
                                 {
-                                    dispatcher.DispatchInternal(delivery);
 
-                                    _runtimeServices.FastRead(runtimeServices =>
+
+                                    if (dispatcher != null)
                                     {
-                                        ForEachSafely(runtimeServices, service => service.OnMessageDelivered(delivery));
-                                    });
-                                    InvokeSafely(_messageDelivered, this, new MessageDeliveryEventArgs() { MessageDelivery = delivery });
+                                        dispatcher.DispatchInternal(delivery);
+
+                                        _runtimeServices.FastRead(runtimeServices =>
+                                        {
+                                            ForEachSafely(runtimeServices, service => service.OnMessageDelivered(delivery));
+                                        });
+                                        InvokeSafely(_messageDelivered, this, new MessageDeliveryEventArgs() { MessageDelivery = delivery });
+                                    }
                                 }
                             }
                         }
@@ -772,7 +775,11 @@ namespace IServiceOriented.ServiceBus
             Delegate[] list = handler.GetInvocationList();
             return ForEachSafely(list, d => d.DynamicInvoke(parameters));
         }
-        
+
+        public void Publish(Type contractType, string action, object message)
+        {
+            Publish(new PublishRequest(contractType, action, message));
+        }
 		public void Publish(PublishRequest dispatchInformation)
 		{
             if (_disposed) throw new ObjectDisposedException("ServiceBusRuntime");
@@ -871,9 +878,9 @@ namespace IServiceOriented.ServiceBus
 
             if (subscription == null) throw new ArgumentNullException("subscription");
 
-            if (subscription.Dispatcher != null)
+            if (subscription.Dispatcher.Runtime != null)
             {
-                throw new InvalidOperationException("Subscription is attached to another bus");
+                throw new InvalidOperationException("Subscription is attached to a bus already");
             }
 
             VerifyContract(subscription.ContractType);

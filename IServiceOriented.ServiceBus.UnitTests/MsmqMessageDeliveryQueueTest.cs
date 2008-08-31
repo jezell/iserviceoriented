@@ -130,7 +130,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
         {
             MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(_testQueuePath);
 
-            SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "SubscriptionName", "http://localhost/test", "SubscriptionConfigName", typeof(IContract), new WcfDispatcher<IContract>(), new PassThroughMessageFilter());
+            SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "SubscriptionName", "http://localhost/test", "SubscriptionConfigName", typeof(IContract), new WcfDispatcher(), new PassThroughMessageFilter());
 
             MessageDelivery enqueued = new MessageDelivery(endpoint.Id, "randomAction","randomMessageData", 3);
             Assert.IsNull(queue.Peek(TimeSpan.FromSeconds(1)), "Queue must be empty to start transaction test");
@@ -194,7 +194,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
         {
             MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(_testQueuePath);
 
-            SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "SubscriptionName", "http://localhost/test", "SubscriptionConfigName", typeof(IContract), new WcfDispatcher<IContract>(), new PassThroughMessageFilter());
+            SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "SubscriptionName", "http://localhost/test", "SubscriptionConfigName", typeof(IContract), new WcfDispatcher(), new PassThroughMessageFilter());
 
             MessageDelivery enqueued = new MessageDelivery(endpoint.Id, messageAction, messageData, 3);
                 

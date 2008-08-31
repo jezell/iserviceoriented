@@ -86,7 +86,7 @@ namespace IServiceOriented.ServiceBus
 
                     ILGenerator generator = methodBuilder.GetILGenerator();
 
-                    MethodInfo publishMethodInfo = typeof(ServiceBusRuntime).GetMethod("Publish");
+                    MethodInfo publishMethodInfo = typeof(ServiceBusRuntime).GetMethod("Publish", new Type[] { typeof(Type), typeof(string), typeof(object) });
                     MethodInfo runtimeMethodInfo = typeof(WcfListenerServiceImplementationBase).GetProperty("Runtime").GetGetMethod();
 
                     generator.Emit(OpCodes.Ldarg_0);
@@ -120,7 +120,7 @@ namespace IServiceOriented.ServiceBus
             }
             object host = Activator.CreateInstance(hostType);
             ((WcfListenerServiceImplementationBase)host).Runtime = runtime;
-            ServiceHost serviceHost = new WcfListenerServiceHost(host, configurationName, address);
+            ServiceHost serviceHost = new WcfListenerServiceHost(host, contractType.FullName, configurationName, address);
             return serviceHost;
         }
         
@@ -137,7 +137,7 @@ namespace IServiceOriented.ServiceBus
 
     public class WcfListenerServiceHost : ServiceHost
     {
-        public WcfListenerServiceHost(object host, string configurationName, string address)
+        public WcfListenerServiceHost(object host, string contract, string configurationName, string address)
             : base(host)
         {
             ConfigurationName = configurationName;
@@ -163,7 +163,7 @@ namespace IServiceOriented.ServiceBus
             {
                 throw new InvalidOperationException("Configuration must contain exactly one endpoint");
             }
-
+            serviceElement.Endpoints[0].Contract = contract;
             serviceElement.Endpoints[0].Address = new Uri(address);
             LoadConfigurationSection(serviceElement);
         }
