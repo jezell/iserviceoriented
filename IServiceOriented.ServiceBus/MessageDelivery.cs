@@ -13,16 +13,17 @@ namespace IServiceOriented.ServiceBus
     [KnownType("GetKnownTypes")]
     public class MessageDelivery 
     {
-        public MessageDelivery(Guid subscriptionEndpointId, string action, object message, int maxRetries)
+        public MessageDelivery(Guid subscriptionEndpointId, string action, object message, int maxRetries, ReadOnlyDictionary<string,object> context)
         {
             _messageId = Guid.NewGuid().ToString();
             _subscriptionEndpointId = subscriptionEndpointId;
             _action = action;
             _message = message;
             _maxRetries = maxRetries;
+            _context = context;
         }
 
-        public MessageDelivery(string messageId, Guid subscriptionEndpointId, string action, object message, int maxRetries, int retryCount, DateTime? timeToProcess, int queueCount)
+        public MessageDelivery(string messageId, Guid subscriptionEndpointId, string action, object message, int maxRetries, int retryCount, DateTime? timeToProcess, int queueCount, ReadOnlyDictionary<string, object> context)
         {
             _messageId = messageId;
             _subscriptionEndpointId = subscriptionEndpointId;
@@ -32,6 +33,7 @@ namespace IServiceOriented.ServiceBus
             _timeToProcess = timeToProcess;
             _queueCount = queueCount;
             _maxRetries = maxRetries;
+            _context = context;
         }
 
         public static Type[] GetKnownTypes()
@@ -42,7 +44,7 @@ namespace IServiceOriented.ServiceBus
             }
         }
         
-        static List<Type> _knownTypes = new List<Type>(new Type[] { typeof(UnhandledMessageFilter) } );
+        static List<Type> _knownTypes = new List<Type>(new Type[] { typeof(UnhandledMessageFilter), typeof(Guid[]) } );
         public static void ClearKnownTypes()
         {
             lock (_knownTypes)
@@ -149,7 +151,7 @@ namespace IServiceOriented.ServiceBus
         {
             get { return _maxRetries; }
             private set { _maxRetries = value; }
-        } 
+        }
 
 
         public bool RetriesMaxed
@@ -160,12 +162,27 @@ namespace IServiceOriented.ServiceBus
             }
         }
 
+        ReadOnlyDictionary<string, object> _context = new ReadOnlyDictionary<string, object>();
+        
+        [DataMember]
+        public ReadOnlyDictionary<string, object> Context
+        {
+            get
+            {
+                return _context;
+            }
+            private set
+            {
+                _context = value;
+            }
+        }
+
         private int _maxRetries;
         
         public MessageDelivery CreateRetry(bool resetRetryCount, DateTime timeToDeliver)
         {            
             int retryCount = resetRetryCount ? 0 : (_retryCount + 1);            
-            return new MessageDelivery(_messageId, _subscriptionEndpointId, _action, _message, _maxRetries, retryCount, timeToDeliver, QueueCount+1);             
+            return new MessageDelivery(_messageId, _subscriptionEndpointId, _action, _message, _maxRetries, retryCount, timeToDeliver, QueueCount+1, _context);             
         }        
     }
 }

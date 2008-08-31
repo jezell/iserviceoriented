@@ -18,9 +18,9 @@ namespace IServiceOriented.ServiceBus
         {
         }
         
-        public override bool Include(string action, object message)
+        public override bool Include(PublishRequest request)
         {
-            return base.Include(action, message);
+            return base.Include(request);
         }
     }
 }

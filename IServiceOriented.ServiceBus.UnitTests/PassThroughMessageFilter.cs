@@ -9,7 +9,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
     [Serializable]
     public class PassThroughMessageFilter : MessageFilter
     {
-        public override bool Include(string action, object message)
+        public override bool Include(PublishRequest request)
         {
             return true;
         }

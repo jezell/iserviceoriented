@@ -576,11 +576,11 @@ namespace IServiceOriented.ServiceBus
             return endpoint;
         }
 				
-		protected void QueueDelivery(Guid subscriptionEndpointId, string action, object message)
+		protected void QueueDelivery(Guid subscriptionEndpointId, string action, object message, ReadOnlyDictionary<string, object> context)
 		{
             if (message == null) throw new ArgumentNullException("message");
 
-			MessageDelivery delivery = new MessageDelivery(subscriptionEndpointId, action, message, _maxRetries);
+			MessageDelivery delivery = new MessageDelivery(subscriptionEndpointId, action, message, _maxRetries, context);
 			_messageDeliveryQueue.Enqueue(delivery);
 		}
 
@@ -778,13 +778,13 @@ namespace IServiceOriented.ServiceBus
 
         public void Publish(Type contractType, string action, object message)
         {
-            Publish(new PublishRequest(contractType, action, message));
+            Publish(new PublishRequest(contractType, action, message, new ReadOnlyDictionary<string,object>()));
         }
-		public void Publish(PublishRequest dispatchInformation)
+		public void Publish(PublishRequest publishRequest)
 		{
             if (_disposed) throw new ObjectDisposedException("ServiceBusRuntime");
 
-            VerifyContract(dispatchInformation.Contract);
+            VerifyContract(publishRequest.Contract);
 
             _subscriptions.Read(subscriptions =>
             {
@@ -801,7 +801,7 @@ namespace IServiceOriented.ServiceBus
                             if (subscription.Filter is UnhandledMessageFilter)
                             {
                                 include = false;
-                                if (subscription.Filter.Include(dispatchInformation.Action, dispatchInformation.Message))
+                                if (subscription.Filter.Include(publishRequest))
                                 {
                                     unhandledFilters.Add(subscription);
                                 }
@@ -809,7 +809,7 @@ namespace IServiceOriented.ServiceBus
                             }
                             else
                             {
-                                include = subscription.Filter.Include(dispatchInformation.Action, dispatchInformation.Message);
+                                include = subscription.Filter.Include(publishRequest);
                             }
                         }
                         else
@@ -819,7 +819,7 @@ namespace IServiceOriented.ServiceBus
 
                         if (include)
                         {
-                            QueueDelivery(subscription.Id, dispatchInformation.Action, dispatchInformation.Message);
+                            QueueDelivery(subscription.Id, publishRequest.Action, publishRequest.Message, publishRequest.Context);
                             handled = true;
                         }
                     }
@@ -829,7 +829,7 @@ namespace IServiceOriented.ServiceBus
                     {
                         foreach (SubscriptionEndpoint subscription in unhandledFilters)
                         {
-                            QueueDelivery(subscription.Id, dispatchInformation.Action, dispatchInformation.Message);
+                            QueueDelivery(subscription.Id, publishRequest.Action, publishRequest.Message, publishRequest.Context);
                         }
                     }
 

@@ -14,12 +14,16 @@ namespace IServiceOriented.ServiceBus
             _messageTypes = new Type[] {  messageType };
         }
 
-        
-        public override bool Include(string action, object message)
+        public TypedMessageFilter(params Type[] messageTypes)
         {
-            if (message == null) return false;
+            _messageTypes = (Type[])messageTypes.Clone();
+        }
+        
+        public override bool Include(PublishRequest request)
+        {
+            if (request.Message == null) return false;
             
-            return _messageTypes.Contains(message.GetType());
+            return _messageTypes.Contains(request.Message.GetType());
         }
 
         const char TYPE_SEPERATOR = ':';

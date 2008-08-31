@@ -63,12 +63,14 @@
     <Compile Include="CountdownLatch.cs" />
     <Compile Include="Dispatcher.cs" />
     <Compile Include="Endpoint.cs" />
+    <Compile Include="IReadOnlyDictionary.cs" />
     <Compile Include="Listener.cs" />
     <Compile Include="ILockedObject.cs" />
     <Compile Include="InvalidContractException.cs" />
     <Compile Include="ListenerEndpoint.cs" />
     <Compile Include="IMessageDeliveryQueue.cs" />
     <Compile Include="PublishRequest.cs" />
+    <Compile Include="ReadOnlyDictionary.cs" />
     <Compile Include="SqlSubscriptionPersistenceService.cs">
       <SubType>Code</SubType>
     </Compile>

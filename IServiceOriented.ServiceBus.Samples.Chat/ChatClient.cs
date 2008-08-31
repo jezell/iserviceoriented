@@ -113,12 +113,12 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
         [DataMember]
         public string To;
         
-        public override bool Include(string action, object message)
-        {
-            SendMessageRequest request = message as SendMessageRequest;
-            if (request != null)
+        public override bool Include(PublishRequest request)
+        {            
+            SendMessageRequest r = request.Message as SendMessageRequest;
+            if (r != null)
             {
-                return String.Compare(request.To, To, true) == 0;
+                return String.Compare(r.To, To, true) == 0;
             }
             return false;
         }
@@ -140,9 +140,9 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
         [DataMember]
         public string To;
 
-        public override bool Include(string action, object message)
+        public override bool Include(PublishRequest request)
         {            
-            SendMessageRequest2 request2 = message as SendMessageRequest2;
+            SendMessageRequest2 request2 = request.Message as SendMessageRequest2;
             if (request2 != null)
             {
                 return String.Compare(request2.To, To, true) == 0;

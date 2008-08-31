@@ -11,7 +11,7 @@ namespace IServiceOriented.ServiceBus
     [DataContract]
     public abstract class MessageFilter
     {
-        public abstract bool Include(string action, object message);        
+        public abstract bool Include(PublishRequest request);        
     }
 	
 		

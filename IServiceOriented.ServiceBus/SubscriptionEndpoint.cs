@@ -17,14 +17,14 @@ namespace IServiceOriented.ServiceBus
             Filter = filter;
             Dispatcher = dispatcher;
         }
-        
+
         public SubscriptionEndpoint(Guid id, string name, string configurationName, string address, string contractTypeName, Dispatcher dispatcher, MessageFilter filter)
             : base(id, name, configurationName, address, contractTypeName)
         {
             Filter = filter;
             Dispatcher = dispatcher;
         }
-        
+
         MessageFilter _filter;
         [DataMember]
         public MessageFilter Filter
@@ -61,6 +61,5 @@ namespace IServiceOriented.ServiceBus
                 if (value != null) value.Endpoint = this;
             }
         }
-    }	    
-	
+    }	
 }
