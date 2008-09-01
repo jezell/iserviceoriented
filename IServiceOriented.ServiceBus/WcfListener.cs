@@ -9,6 +9,12 @@ using System.Runtime.Serialization;
 
 namespace IServiceOriented.ServiceBus
 {
+    /// <summary>
+    /// Provides support for hosting WCF service contracts with the service bus.
+    /// </summary>
+    /// <remarks>
+    /// Currently, contracts are restricted to one way, single parameter, methods.
+    /// </remarks>
     [Serializable]
     [DataContract]
     public class WcfListener : Listener

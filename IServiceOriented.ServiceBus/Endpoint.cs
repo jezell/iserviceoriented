@@ -8,6 +8,9 @@ using System.Runtime.Serialization;
 
 namespace IServiceOriented.ServiceBus
 {
+    /// <summary>
+    /// Base class for service bus endpoints.
+    /// </summary>
     [Serializable]
     [DataContract]
     public abstract class Endpoint
@@ -31,6 +34,10 @@ namespace IServiceOriented.ServiceBus
         }
 
         Guid _endpointId = Guid.NewGuid();
+        
+        /// <summary>
+        /// Gets the unique identifier of the endpoint.
+        /// </summary>
         [DataMember]
         public Guid Id
         {
@@ -43,7 +50,11 @@ namespace IServiceOriented.ServiceBus
                 _endpointId = value;
             }
         }
+
         Type _contractType;                
+        /// <summary>
+        /// Gets the Type of the contract supported by the endpoint.
+        /// </summary>
         public Type ContractType
         {
             get
@@ -56,6 +67,9 @@ namespace IServiceOriented.ServiceBus
             }
         }
 
+        /// <summary>
+        /// Gets the name of the contract type supported by the endpoint.
+        /// </summary>
         [DataMember]
         public string ContractTypeName
         {
@@ -74,6 +88,9 @@ namespace IServiceOriented.ServiceBus
         }
 
         string _address;
+        /// <summary>
+        /// Gets the address of the endpoint.
+        /// </summary>
         [DataMember]
         public string Address
         {
@@ -88,6 +105,9 @@ namespace IServiceOriented.ServiceBus
         }
 
         string _configurationName;
+        /// <summary>
+        /// Gets the name of the configuration used by the endpoint.
+        /// </summary>
         [DataMember]
         public string ConfigurationName
         {
@@ -102,6 +122,9 @@ namespace IServiceOriented.ServiceBus
         }
 
         string _name;
+        /// <summary>
+        /// Gets the name of this endpoint.
+        /// </summary>
         [DataMember]
         public string Name
         {
@@ -116,6 +139,9 @@ namespace IServiceOriented.ServiceBus
         }
 
         bool _transient;
+        /// <summary>
+        /// Gets a boolean value indicating whether this endpoint is transient (true) or should be persisted (false).
+        /// </summary>
         [DataMember]
         public bool Transient
         {
@@ -128,8 +154,5 @@ namespace IServiceOriented.ServiceBus
                 _transient = value;
             }
         }
-    }
-
-
-    
+    }    
 }

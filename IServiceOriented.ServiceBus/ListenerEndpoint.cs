@@ -6,15 +6,24 @@ using System.Runtime.Serialization;
 
 namespace IServiceOriented.ServiceBus
 {
+    /// <summary>
+    /// Represents a listener endpoint.
+    /// </summary>
     [DataContract]
     public sealed class ListenerEndpoint : Endpoint
     {
         public ListenerEndpoint(Guid id, string name, string configurationName, string address, Type contractType, Listener listener) : base(id, name, configurationName, address, contractType)
-        {
+        {            
             Listener = listener;
         }
 
         Listener _listener;
+        /// <summary>
+        /// The listener used by this endpoint
+        /// </summary>
+        /// <remarks>
+        /// Listeners cannot be shared by multiple endpoints.
+        /// </remarks>
         [DataMember]
         public Listener Listener
         {

@@ -62,6 +62,7 @@
   <ItemGroup>
     <Compile Include="CountdownLatch.cs" />
     <Compile Include="Dispatcher.cs" />
+    <Compile Include="DuplicateIdentifierException.cs" />
     <Compile Include="Endpoint.cs" />
     <Compile Include="IReadOnlyDictionary.cs" />
     <Compile Include="Listener.cs" />
@@ -69,11 +70,13 @@
     <Compile Include="InvalidContractException.cs" />
     <Compile Include="ListenerEndpoint.cs" />
     <Compile Include="IMessageDeliveryQueue.cs" />
+    <Compile Include="ListenerEndpointCollection.cs" />
     <Compile Include="PublishRequest.cs" />
     <Compile Include="ReadOnlyDictionary.cs" />
     <Compile Include="SqlSubscriptionPersistenceService.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="SubscriptionEndpointCollection.cs" />
     <Compile Include="TransformationDispatcher.cs" />
     <Compile Include="ReaderWriterLockedObject.cs" />
     <Compile Include="UnhandledMessageFilter.cs" />

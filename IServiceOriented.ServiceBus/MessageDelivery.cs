@@ -8,12 +8,15 @@ using System.Runtime.Serialization;
 
 namespace IServiceOriented.ServiceBus
 {
+    /// <summary>
+    /// Represents a message to be delivered.
+    /// </summary>
     [Serializable]
     [DataContract]
     [KnownType("GetKnownTypes")]
     public class MessageDelivery 
     {
-        public MessageDelivery(Guid subscriptionEndpointId, string action, object message, int maxRetries, ReadOnlyDictionary<string,object> context)
+        public MessageDelivery(Guid subscriptionEndpointId, Type contractType, string action, object message, int maxRetries, ReadOnlyDictionary<string,object> context)
         {
             _messageId = Guid.NewGuid().ToString();
             _subscriptionEndpointId = subscriptionEndpointId;
@@ -21,9 +24,10 @@ namespace IServiceOriented.ServiceBus
             _message = message;
             _maxRetries = maxRetries;
             _context = context;
+            ContractType = contractType;
         }
 
-        public MessageDelivery(string messageId, Guid subscriptionEndpointId, string action, object message, int maxRetries, int retryCount, DateTime? timeToProcess, int queueCount, ReadOnlyDictionary<string, object> context)
+        public MessageDelivery(string messageId, Guid subscriptionEndpointId, Type contractType, string action, object message, int maxRetries, int retryCount, DateTime? timeToProcess, int queueCount, ReadOnlyDictionary<string, object> context)
         {
             _messageId = messageId;
             _subscriptionEndpointId = subscriptionEndpointId;
@@ -34,8 +38,12 @@ namespace IServiceOriented.ServiceBus
             _queueCount = queueCount;
             _maxRetries = maxRetries;
             _context = context;
+            ContractType = contractType;
         }
 
+        /// <summary>
+        /// Gets a list of types that have been registered for message delivery.
+        /// </summary>        
         public static Type[] GetKnownTypes()
         {
             lock (_knownTypes)
@@ -44,7 +52,10 @@ namespace IServiceOriented.ServiceBus
             }
         }
         
-        static List<Type> _knownTypes = new List<Type>(new Type[] { typeof(UnhandledMessageFilter), typeof(Guid[]) } );
+        static List<Type> _knownTypes = new List<Type>(new Type[] { typeof(UnhandledMessageFilter), typeof(Guid[]), typeof(WcfListener), typeof(WcfDispatcher), typeof(TypedMessageFilter) } );
+        /// <summary>
+        /// Clears the list of types registered for message delivery.
+        /// </summary>
         public static void ClearKnownTypes()
         {
             lock (_knownTypes)
@@ -53,6 +64,9 @@ namespace IServiceOriented.ServiceBus
             }
         }
 
+        /// <summary>
+        /// Register a type for message delivery.
+        /// </summary>
         public static void RegisterKnownType(Type type)
         {
             lock (_knownTypes)
@@ -64,6 +78,9 @@ namespace IServiceOriented.ServiceBus
             }
         }
 
+        /// <summary>
+        /// Unregister a type for message delivery.
+        /// </summary>
         public static void UnregisterKnownType(Type type)
         {
             lock (_knownTypes)
@@ -77,6 +94,9 @@ namespace IServiceOriented.ServiceBus
 
 
         int _queueCount;
+        /// <summary>
+        /// The number of times that this message has been queued
+        /// </summary>
         [DataMember]
         public int QueueCount
         {
@@ -90,6 +110,11 @@ namespace IServiceOriented.ServiceBus
             }
         }
         
+        /// <summary>
+        /// Increment the queue count.
+        /// </summary>
+        /// <returns>The new queue count.</returns>
+        /// <remarks>This method is not thread safe.</remarks>
         public int IncrementQueueCount()
         {
             return _queueCount++; 
@@ -97,6 +122,9 @@ namespace IServiceOriented.ServiceBus
 
 
         private string _messageId;
+        /// <summary>
+        /// Gets the unique identifier of this message
+        /// </summary>
         [DataMember]
         public string MessageId
         {
@@ -105,14 +133,65 @@ namespace IServiceOriented.ServiceBus
         }
 
         private Guid _subscriptionEndpointId;
+        /// <summary>
+        /// Gets the identifier of the subscription that this message is associated with.
+        /// </summary>
         [DataMember]
         public Guid SubscriptionEndpointId
         {
             get { return _subscriptionEndpointId; }
             private set { _subscriptionEndpointId = value; }
-        } 
+        }
+
+        private Type _contractType;
+        /// <summary>
+        /// Gets the type of contract associated with this message delivery.
+        /// </summary>
+        public Type ContractType
+        {
+            get
+            {
+                return _contractType;
+            }
+            set
+            {
+                _contractType = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the name of the contract type associated with this message delivery.
+        /// </summary>
+        [DataMember]
+        public string ContractTypeName
+        {
+            get
+            {
+                if (_contractType == null) return null;
+                return _contractType.AssemblyQualifiedName;
+            }
+            set
+            {
+                if (value == null)
+                {
+                    ContractType = null;
+                }
+                else
+                {
+                    Type type = Type.GetType(value);
+                    if (type == null)
+                    {
+                        throw new InvalidOperationException("The type specified does not exist");
+                    }
+                    ContractType = type;
+                }
+            }
+        }
 
         private string _action;
+        /// <summary>
+        /// Gets the action associated with this message.
+        /// </summary>
         [DataMember]
         public string Action
         {
@@ -121,7 +200,9 @@ namespace IServiceOriented.ServiceBus
         }
 
         private  object _message;
-
+        /// <summary>
+        /// Gets the message contents.
+        /// </summary>
         [DataMember]
         public object Message
         {
@@ -130,6 +211,9 @@ namespace IServiceOriented.ServiceBus
         } 
 
         private int _retryCount;
+        /// <summary>
+        /// Gets the number of times this message has been retried.
+        /// </summary>
         [DataMember]
         public int RetryCount
         {
@@ -138,6 +222,9 @@ namespace IServiceOriented.ServiceBus
         } 
 
         private DateTime? _timeToProcess;
+        /// <summary>
+        /// Gets the time that this message should be processed (or null if immediately).
+        /// </summary>
         [DataMember]
         public DateTime? TimeToProcess
         {
@@ -146,6 +233,9 @@ namespace IServiceOriented.ServiceBus
         }
 
 
+        /// <summary>
+        /// Gets the maximum number of times this message will be retried.
+        /// </summary>
         [DataMember]
         public int MaxRetries
         {
@@ -154,6 +244,9 @@ namespace IServiceOriented.ServiceBus
         }
 
 
+        /// <summary>
+        /// Gets a boolean value indicating whether the maximum number of retries has been met.
+        /// </summary>
         public bool RetriesMaxed
         {
             get
@@ -164,6 +257,9 @@ namespace IServiceOriented.ServiceBus
 
         ReadOnlyDictionary<string, object> _context = new ReadOnlyDictionary<string, object>();
         
+        /// <summary>
+        /// Gets the context associated with this message.
+        /// </summary>
         [DataMember]
         public ReadOnlyDictionary<string, object> Context
         {
@@ -179,10 +275,16 @@ namespace IServiceOriented.ServiceBus
 
         private int _maxRetries;
         
+        /// <summary>
+        /// Create a retry message based off of this message.
+        /// </summary>
+        /// <param name="resetRetryCount">Whether or not to reset the retry count.</param>
+        /// <param name="timeToDeliver">Time to deliver the retry message.</param>
+        /// <returns>A new MessageDelivery.</returns>
         public MessageDelivery CreateRetry(bool resetRetryCount, DateTime timeToDeliver)
         {            
             int retryCount = resetRetryCount ? 0 : (_retryCount + 1);            
-            return new MessageDelivery(_messageId, _subscriptionEndpointId, _action, _message, _maxRetries, retryCount, timeToDeliver, QueueCount+1, _context);             
+            return new MessageDelivery(_messageId, _subscriptionEndpointId, _contractType, _action, _message, _maxRetries, retryCount, timeToDeliver, QueueCount+1, _context);             
         }        
     }
 }

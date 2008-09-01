@@ -6,6 +6,9 @@ using System.Text;
 using System.Runtime.Serialization;
 namespace IServiceOriented.ServiceBus
 {
+    /// <summary>
+    /// Provides support for message transformation. The TransformationDispatcher transforms a PublishRequest and publishes the transformed request to the bus.
+    /// </summary>
     [Serializable]
     [DataContract]
     public abstract class TransformationDispatcher : Dispatcher
@@ -15,7 +18,12 @@ namespace IServiceOriented.ServiceBus
             
         }
 
-        protected abstract PublishRequest Transform(PublishRequest information);
+        /// <summary>
+        /// Performs a transformation of a PublishRequest
+        /// </summary>
+        /// <param name="request">An incoming publish request.</param>
+        /// <returns>The transformed request or null if the message cannot be transformed.</returns>
+        protected abstract PublishRequest Transform(PublishRequest request);
 
         public const string TransformedByKeyName = "TransformedBy";
         
@@ -33,7 +41,7 @@ namespace IServiceOriented.ServiceBus
             }
 
             // Don't transform this message more than once
-            if (!oldTransformedByList.Contains(endpoint.Id))
+            if (!oldTransformedByList.Contains(endpoint.Id) || AllowMultipleTransforms)
             {
                 Guid[] newTransformedByList = new Guid[oldTransformedByList.Length + 1];
                 newTransformedByList[newTransformedByList.Length - 1] = endpoint.Id;
@@ -42,12 +50,28 @@ namespace IServiceOriented.ServiceBus
                 context = newContext.MakeReadOnly();
 
                 PublishRequest result = Transform(new PublishRequest(endpoint.ContractType, action, message, context));
-                Runtime.Publish(new PublishRequest(result.Contract, result.Action, result.Message, context));
+                if (result != null)
+                {
+                    Runtime.Publish(new PublishRequest(result.Contract, result.Action, result.Message, context));
+                }
             }
             else
             {
                 System.Diagnostics.Trace.TraceInformation("Skipping already transformed message (" + DispatchContext.MessageDelivery.MessageId +")"); 
             }
+        }
+
+        /// <summary>
+        /// Gets or sets whether this endpoint can transform a message multiple times.
+        /// </summary>
+        /// <remarks>
+        /// Setting this property to true can cause cycles if it transforms both to and from a certain message type.
+        /// </remarks>
+        [DataMember]
+        public bool AllowMultipleTransforms
+        {
+            get;
+            set;
         }
     }
 }

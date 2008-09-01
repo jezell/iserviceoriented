@@ -15,9 +15,7 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
             MessageDelivery.RegisterKnownType(typeof(ChatFilter2));
             MessageDelivery.RegisterKnownType(typeof(SendMessageRequest));
             MessageDelivery.RegisterKnownType(typeof(SendMessageRequest2));
-            MessageDelivery.RegisterKnownType(typeof(WcfListener));
-            MessageDelivery.RegisterKnownType(typeof(WcfDispatcher));            
-
+            
             if(args.Length == 0)
             {
                 Console.WriteLine("usage: Chat.exe [server | client]");

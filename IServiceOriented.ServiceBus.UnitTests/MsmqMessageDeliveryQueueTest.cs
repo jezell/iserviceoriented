@@ -132,7 +132,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
             SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "SubscriptionName", "http://localhost/test", "SubscriptionConfigName", typeof(IContract), new WcfDispatcher(), new PassThroughMessageFilter());
 
-            MessageDelivery enqueued = new MessageDelivery(endpoint.Id, "randomAction","randomMessageData", 3, new ReadOnlyDictionary<string,object>());
+            MessageDelivery enqueued = new MessageDelivery(endpoint.Id, typeof(MessageDelivery), "randomAction","randomMessageData", 3, new ReadOnlyDictionary<string,object>());
             Assert.IsNull(queue.Peek(TimeSpan.FromSeconds(1)), "Queue must be empty to start transaction test");
 
             // Enqueue, but abort transaction
@@ -196,7 +196,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
             SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "SubscriptionName", "http://localhost/test", "SubscriptionConfigName", typeof(IContract), new WcfDispatcher(), new PassThroughMessageFilter());
 
-            MessageDelivery enqueued = new MessageDelivery(endpoint.Id, messageAction, messageData, 3, new ReadOnlyDictionary<string,object>());
+            MessageDelivery enqueued = new MessageDelivery(endpoint.Id, typeof(MessageDelivery), messageAction, messageData, 3, new ReadOnlyDictionary<string,object>());
                 
             using (TransactionScope ts = new TransactionScope())
             {

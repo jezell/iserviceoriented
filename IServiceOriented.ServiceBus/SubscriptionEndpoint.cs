@@ -7,6 +7,9 @@ using System.Runtime.Serialization;
 
 namespace IServiceOriented.ServiceBus
 {
+    /// <summary>
+    /// Represents a subscription endpoint.
+    /// </summary>
     [Serializable]
     [DataContract]
     public sealed class SubscriptionEndpoint : Endpoint
@@ -26,6 +29,9 @@ namespace IServiceOriented.ServiceBus
         }
 
         MessageFilter _filter;
+        /// <summary>
+        /// The filter to be applied to this subscription or null if all messages should be included.
+        /// </summary>
         [DataMember]
         public MessageFilter Filter
         {
@@ -40,6 +46,9 @@ namespace IServiceOriented.ServiceBus
         }
 
         Dispatcher _dispatcher;
+        /// <summary>
+        /// The Dispatcher used to send messages to this endpoint.
+        /// </summary>
         [DataMember]
         public Dispatcher Dispatcher
         {

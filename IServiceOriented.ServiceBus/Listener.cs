@@ -6,12 +6,21 @@ using System.Runtime.Serialization;
 
 namespace IServiceOriented.ServiceBus
 {    
+    /// <summary>
+    /// Base class for all service host listeners.
+    /// </summary>
+    /// <remarks>
+    /// Listeners are responsible for receiving messages and publishing them to the bus.
+    /// </remarks>
     [Serializable]
     [DataContract]
     public abstract class Listener : IDisposable
     {
         [NonSerialized]
         ServiceBusRuntime _runtime;
+        /// <summary>
+        /// Gets the service bus instance that this listener is associated with.
+        /// </summary>
         public ServiceBusRuntime Runtime
         {
             get
@@ -26,6 +35,9 @@ namespace IServiceOriented.ServiceBus
 
         [NonSerialized]
         ListenerEndpoint _endpoint;
+        /// <summary>
+        /// Gets the listener endpoint that this listener is associated with.
+        /// </summary>
         public ListenerEndpoint Endpoint
         {
             get
@@ -40,6 +52,9 @@ namespace IServiceOriented.ServiceBus
 
         [NonSerialized]
         bool _started;
+        /// <summary>
+        /// Gets a boolean value indicating whether this listener has been started.
+        /// </summary>
         public bool Started
         {
             get
@@ -64,14 +79,24 @@ namespace IServiceOriented.ServiceBus
             Started = false;
         }
 
+        /// <summary>
+        /// Perform any actions that should be performed when this listener starts.
+        /// </summary>
         protected virtual void OnStart()
         {
         }
 
+        /// <summary>
+        /// Perform any actions that should be performed when this listener stops.
+        /// </summary>
         protected virtual void OnStop()
         {
         }
 
+        /// <summary>
+        /// Dispose any resources held by this listener.
+        /// </summary>
+        /// <param name="disposing">Indicates whether this method is being called as a result of a direct call to Dispose (true) or by the object's finalizer (false).</param>
         protected virtual void Dispose(bool disposing)
         {
 
@@ -86,6 +111,11 @@ namespace IServiceOriented.ServiceBus
         }
 
         #endregion
+
+        ~Listener()
+        {
+            Dispose(false);
+        }
     }
 
 }    

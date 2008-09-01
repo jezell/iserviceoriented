@@ -7,6 +7,9 @@ using System.Threading;
 
 namespace IServiceOriented.ServiceBus
 {
+    /// <summary>
+    /// Used for countdown events. When the count reaches zero, the event will be set.
+    /// </summary>
     public class CountdownLatch : IDisposable
     {
         public CountdownLatch(int count)
@@ -17,8 +20,13 @@ namespace IServiceOriented.ServiceBus
         int _count;
         ManualResetEvent _handle = new ManualResetEvent(false);
 
+        /// <summary>
+        /// Decrement the count. Set the event to signalled if the count is zero;
+        /// </summary>
+        /// <returns>The new count</returns>
         public int Tick()
         {
+            if (_disposed) throw new ObjectDisposedException("CoundownLatch");
             int count = Interlocked.Decrement(ref _count);
             if (count == 0)
             {
@@ -31,11 +39,23 @@ namespace IServiceOriented.ServiceBus
         {
             get
             {
+                if (_disposed) throw new ObjectDisposedException("CoundownLatch");
                 return _handle;
             }
         }
 
         volatile bool _disposed;
+
+        /// <summary>
+        /// Reset the count and set the event to non signalled.
+        /// </summary>
+        public void Reset(int count)
+        {
+            if (_disposed) throw new ObjectDisposedException("CoundownLatch");
+            
+            _count = count;
+            _handle.Reset();
+        }
 
         protected virtual void Dispose(bool disposing)
         {
@@ -55,6 +75,11 @@ namespace IServiceOriented.ServiceBus
             Dispose(true);
 
             GC.SuppressFinalize(this);
+        }
+
+        ~CountdownLatch()
+        {
+            Dispose(false);
         }
     }
 }

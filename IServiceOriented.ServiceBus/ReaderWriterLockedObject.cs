@@ -130,7 +130,13 @@ namespace IServiceOriented.ServiceBus
             GC.SuppressFinalize(this);
         }
 
+        
         #endregion
+
+        ~ReaderWriterLockedObject()
+        {
+            Dispose(false);
+        }
     }
 
 }

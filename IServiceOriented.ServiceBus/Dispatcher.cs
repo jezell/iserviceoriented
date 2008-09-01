@@ -8,12 +8,21 @@ using System.Runtime.Serialization;
 
 namespace IServiceOriented.ServiceBus
 {    
+    /// <summary>
+    /// Base class for all service bus dispatchers.
+    /// </summary>
+    /// <remarks>
+    /// Dispatchers are responsible for delivering messages to subscription endpoints.
+    /// </remarks>
     [Serializable]
     [DataContract]
     public abstract class Dispatcher : IDisposable
     {
         [NonSerialized]
         ServiceBusRuntime _runtime;
+        /// <summary>
+        /// Gets the service bus instance associated with this dispatcher.
+        /// </summary>
         public ServiceBusRuntime Runtime
         {
             get
@@ -28,6 +37,9 @@ namespace IServiceOriented.ServiceBus
 
         [NonSerialized]
         SubscriptionEndpoint _endpoint;        
+        /// <summary>
+        /// Gets the subscription endpoint associated with this dispatcher.
+        /// </summary>
         public SubscriptionEndpoint Endpoint
         {
             get
@@ -103,6 +115,10 @@ namespace IServiceOriented.ServiceBus
         /// </summary>
         protected abstract void Dispatch(SubscriptionEndpoint endpoint, string action, object message);
 
+        /// <summary>
+        /// Dispose any resources held by this dispatcher.
+        /// </summary>
+        /// <param name="disposing">Indicates whether this method is being called as a result of a direct call to Dispose (true) or by the object's finalizer (false).</param>
         protected virtual void Dispose(bool disposing)
         {
             
@@ -117,6 +133,11 @@ namespace IServiceOriented.ServiceBus
         }
 
         #endregion
+
+        ~Dispatcher()
+        {
+            Dispose(false);
+        }
     }
 
 

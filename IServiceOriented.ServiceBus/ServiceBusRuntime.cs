@@ -351,7 +351,7 @@ namespace IServiceOriented.ServiceBus
         public event EventHandler<EndpointEventArgs> ListenerAdded;
         public event EventHandler<EndpointEventArgs> ListenerRemoved;
         
-		List<ListenerEndpoint> _listenerEndpoints = new List<ListenerEndpoint>();
+		ListenerEndpointCollection _listenerEndpoints = new ListenerEndpointCollection();
         object _listenerEndpointsLock = new object();
 
 		public IEnumerable<Endpoint> ListeningEndpoints
@@ -362,7 +362,7 @@ namespace IServiceOriented.ServiceBus
 			}
 		}
 
-        ReaderWriterLockedObject<IEnumerable<SubscriptionEndpoint>, IList<SubscriptionEndpoint>> _subscriptions = new ReaderWriterLockedObject<IEnumerable<SubscriptionEndpoint>, IList<SubscriptionEndpoint>>(new List<SubscriptionEndpoint>(), l => l);
+        ReaderWriterLockedObject<IEnumerable<SubscriptionEndpoint>, SubscriptionEndpointCollection> _subscriptions = new ReaderWriterLockedObject<IEnumerable<SubscriptionEndpoint>, SubscriptionEndpointCollection>(new SubscriptionEndpointCollection(), l => l);
 
         public static void VerifyContract(Type contractType)
         {
@@ -576,11 +576,11 @@ namespace IServiceOriented.ServiceBus
             return endpoint;
         }
 				
-		protected void QueueDelivery(Guid subscriptionEndpointId, string action, object message, ReadOnlyDictionary<string, object> context)
+		protected void QueueDelivery(Guid subscriptionEndpointId, Type contractType, string action, object message, ReadOnlyDictionary<string, object> context)
 		{
             if (message == null) throw new ArgumentNullException("message");
 
-			MessageDelivery delivery = new MessageDelivery(subscriptionEndpointId, action, message, _maxRetries, context);
+			MessageDelivery delivery = new MessageDelivery(subscriptionEndpointId, contractType, action, message, _maxRetries, context);
 			_messageDeliveryQueue.Enqueue(delivery);
 		}
 
@@ -819,7 +819,7 @@ namespace IServiceOriented.ServiceBus
 
                         if (include)
                         {
-                            QueueDelivery(subscription.Id, publishRequest.Action, publishRequest.Message, publishRequest.Context);
+                            QueueDelivery(subscription.Id, publishRequest.Contract, publishRequest.Action, publishRequest.Message, publishRequest.Context);
                             handled = true;
                         }
                     }
@@ -829,7 +829,7 @@ namespace IServiceOriented.ServiceBus
                     {
                         foreach (SubscriptionEndpoint subscription in unhandledFilters)
                         {
-                            QueueDelivery(subscription.Id, publishRequest.Action, publishRequest.Message, publishRequest.Context);
+                            QueueDelivery(subscription.Id, publishRequest.Contract, publishRequest.Action, publishRequest.Message, publishRequest.Context);
                         }
                     }
 
@@ -1063,6 +1063,11 @@ namespace IServiceOriented.ServiceBus
             Dispose(true);
 
             GC.SuppressFinalize(this);
+        }
+
+        ~ServiceBusRuntime()
+        {
+            Dispose(false);
         }
 	}
 			

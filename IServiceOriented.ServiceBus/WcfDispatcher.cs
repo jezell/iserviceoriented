@@ -9,6 +9,9 @@ using System.Runtime.Serialization;
 
 namespace IServiceOriented.ServiceBus
 {    
+    /// <summary>
+    /// Provides support for dispatching messages to WCF endpoints.
+    /// </summary>
     [Serializable]
     [DataContract]
     public class WcfDispatcher : Dispatcher
