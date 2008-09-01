@@ -24,9 +24,29 @@ namespace IServiceOriented.ServiceBus
         }
         protected override void OnStart()
         {
-            _host = WcfServiceHostFactory.CreateHost(Runtime, Endpoint.ContractType, Endpoint.ConfigurationName, Endpoint.Address);
+            _host = CreateServiceHost();
             _host.Open();
         }
+
+        /// <summary>
+        /// Gets the type that should be hosted by the ServiceHost
+        /// </summary>
+        /// <returns></returns>
+        protected virtual Type GetServiceImplementationType()
+        {
+            Type hostType = WcfServiceHostFactory.CreateImplementationType(Endpoint.ContractType);
+            return hostType;
+        }
+
+        /// <summary>
+        /// Creates and initializes a service host for use with this listener
+        /// </summary>
+        /// <returns></returns>
+        protected virtual ServiceHost CreateServiceHost()
+        {
+            return WcfServiceHostFactory.CreateHost(Runtime, Endpoint.ContractType, GetServiceImplementationType(), Endpoint.ConfigurationName, Endpoint.Address);
+        }
+
 
         protected override void OnStop()
         {
@@ -36,10 +56,16 @@ namespace IServiceOriented.ServiceBus
 
         [NonSerialized]
         ServiceHost _host;
+        protected ServiceHost Host
+        {
+            get
+            {
+                return _host;
+            }
+        }
 
         protected override void Dispose(bool disposing)
         {
-
             if (disposing)
             {
                 if (_host != null)

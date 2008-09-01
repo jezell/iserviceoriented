@@ -24,6 +24,15 @@ namespace IServiceOriented.ServiceBus
             
         }
 
+        public ReadOnlyDictionary(IEnumerable<KeyValuePair<K, V>> pairs)
+        {
+            _dictionary = new Dictionary<K, V>();
+            foreach (KeyValuePair<K, V> p in pairs)
+            {
+                _dictionary.Add(p);
+            }
+        }
+
         public ReadOnlyDictionary(IDictionary<K, V> from)
             : this(from, false)
         {

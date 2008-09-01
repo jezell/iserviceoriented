@@ -285,6 +285,10 @@ namespace IServiceOriented.ServiceBus
         {            
             int retryCount = resetRetryCount ? 0 : (_retryCount + 1);            
             return new MessageDelivery(_messageId, _subscriptionEndpointId, _contractType, _action, _message, _maxRetries, retryCount, timeToDeliver, QueueCount+1, _context);             
-        }        
+        }
+
+        public const string PrimaryIdentityNameKey = "PrimaryIdentityName";        
+        public const string WindowsIdentityNameKey = "WindowsIdentityName";
+        public const string WindowsIdentityImpersonationLevelKey = "WindowsImpersonationLevel";
     }
 }

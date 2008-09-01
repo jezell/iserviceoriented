@@ -31,9 +31,9 @@ namespace IServiceOriented.ServiceBus
         public const string TransformedByKeyName = "TransformedBy";
         
 
-        protected override sealed void Dispatch(SubscriptionEndpoint endpoint, string action, object message)
+        protected override sealed void Dispatch(SubscriptionEndpoint endpoint, MessageDelivery messageDelivery)
         {
-            ReadOnlyDictionary<string, object> context = DispatchContext.MessageDelivery.Context;
+            ReadOnlyDictionary<string, object> context = messageDelivery.Context;
 
             Dictionary<string, object> newContext = context.ToDictionary();
 
@@ -53,7 +53,7 @@ namespace IServiceOriented.ServiceBus
 
                 context = newContext.MakeReadOnly();
 
-                PublishRequest result = Transform(new PublishRequest(endpoint.ContractType, action, message, context));
+                PublishRequest result = Transform(new PublishRequest(endpoint.ContractType, messageDelivery.Action, messageDelivery.Message, context));
                 if (result != null)
                 {
                     Runtime.Publish(new PublishRequest(result.ContractType, result.Action, result.Message, context));

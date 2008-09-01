@@ -8,6 +8,7 @@ using System.Text;
 using System.ServiceModel;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Security.Principal;
 
 namespace IServiceOriented.ServiceBus
 {
@@ -85,7 +86,7 @@ namespace IServiceOriented.ServiceBus
                 // Only add methods with OperationContractAttribute
                 string action = methodInfo.Name;
                 object[] attributes = methodInfo.GetCustomAttributes(typeof(OperationContractAttribute), false);
-                if (attributes.Length > 0)
+                if (attributes.Length > 0 )
                 {
                     OperationContractAttribute oca = (OperationContractAttribute)attributes[0];
                     string ocAction = oca.Action;
@@ -99,16 +100,19 @@ namespace IServiceOriented.ServiceBus
                         throw new InvalidOperationException("Only one way operations are supported for WCF contracts");
                     }
 
+                    if (methodInfo.GetParameters().Length != 1)
+                    {
+                        continue; // skip methods that don't accept a single parameter
+                    }
+
                     Type[] parameters = methodInfo.GetParameters().Select(p => p.ParameterType).ToArray();
                     MethodBuilder methodBuilder = typeBuilder.DefineMethod(methodInfo.Name, MethodAttributes.Public | MethodAttributes.Virtual, methodInfo.ReturnType, parameters);
 
                     ILGenerator generator = methodBuilder.GetILGenerator();
 
-                    MethodInfo publishMethodInfo = typeof(ServiceBusRuntime).GetMethod("Publish", new Type[] { typeof(Type), typeof(string), typeof(object) });
-                    MethodInfo runtimeMethodInfo = typeof(WcfListenerServiceImplementationBase).GetProperty("Runtime").GetGetMethod();
-
+                    MethodInfo publishMethodInfo = typeof(WcfListenerServiceImplementationBase).GetMethod("Publish", BindingFlags.NonPublic | BindingFlags.Instance, null, new Type[] { typeof(Type), typeof(string), typeof(object) }, null);
+                    
                     generator.Emit(OpCodes.Ldarg_0);
-                    generator.EmitCall(OpCodes.Call, runtimeMethodInfo, null);
                     generator.Emit(OpCodes.Ldtoken, interfaceType);
                     generator.EmitCall(OpCodes.Call, typeof(Type).GetMethod("GetTypeFromHandle", BindingFlags.Public | BindingFlags.Static), null);
                     generator.Emit(OpCodes.Ldstr, action);
@@ -132,19 +136,13 @@ namespace IServiceOriented.ServiceBus
         /// <summary>
         /// Dynamically generate a service host
         /// </summary>
-        /// <param name="runtime"></param>
-        /// <param name="contractType"></param>
-        /// <param name="configurationName"></param>
-        /// <param name="address"></param>
-        /// <returns></returns>
-        public static ServiceHost CreateHost(ServiceBusRuntime runtime, Type contractType, string configurationName, string address)        
-        {
-            Type hostType = CreateImplementationType(contractType);            
+        public static ServiceHost CreateHost(ServiceBusRuntime runtime, Type contractType, Type implementationType, string configurationName, string address)        
+        {            
             if (configurationName == null)
             {
                 throw new InvalidOperationException("The endpoint's ConfigurationName was not set");
             }
-            object host = Activator.CreateInstance(hostType);
+            object host = Activator.CreateInstance(implementationType);
             ((WcfListenerServiceImplementationBase)host).Runtime = runtime;
             ServiceHost serviceHost = new WcfListenerServiceHost(host, contractType.FullName, configurationName, address);
             return serviceHost;
@@ -161,6 +159,31 @@ namespace IServiceOriented.ServiceBus
         {
             get;
             set;
+        }
+
+        protected void Publish(Type contractType, string action, object message)
+        {
+            Dictionary<string, object> context = new Dictionary<string, object>();
+            
+            // Add security context to the message if it is available
+            if (System.ServiceModel.OperationContext.Current.ServiceSecurityContext != null)
+            {
+                WindowsIdentity identity = System.ServiceModel.OperationContext.Current.ServiceSecurityContext.WindowsIdentity;
+                if (identity != null && identity.IsAuthenticated)
+                {
+                    context.Add(MessageDelivery.WindowsIdentityNameKey, identity.Name);
+                    context.Add(MessageDelivery.WindowsIdentityImpersonationLevelKey, identity.ImpersonationLevel.ToString());
+                }
+
+                IIdentity primaryIdentity = System.ServiceModel.OperationContext.Current.ServiceSecurityContext.PrimaryIdentity;
+                if (primaryIdentity != null)
+                {
+                    context.Add(MessageDelivery.PrimaryIdentityNameKey, primaryIdentity.Name);
+                    //context.Add(MessageDelivery.PrimaryIdentityImpersonationLevelKey, primaryIdentity);
+                }
+            }
+            PublishRequest pr = new PublishRequest(contractType, action, message, context.MakeReadOnly());
+            Runtime.Publish(pr);
         }
     }
 

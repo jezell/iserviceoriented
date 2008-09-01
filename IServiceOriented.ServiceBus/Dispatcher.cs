@@ -98,10 +98,11 @@ namespace IServiceOriented.ServiceBus
         /// </summary>        
         internal void DispatchInternal(MessageDelivery delivery)
         {
-            _dispatchContext = new DispatchContext(Runtime, delivery);
+            SubscriptionEndpoint endpoint = Runtime.GetSubscription(delivery.SubscriptionEndpointId);
+            _dispatchContext = new DispatchContext(Runtime, endpoint, delivery);
             try
             {
-                Dispatch(Runtime.GetSubscription(delivery.SubscriptionEndpointId), delivery.Action, delivery.Message);
+                Dispatch(endpoint, delivery);
             }
             finally
             {
@@ -113,7 +114,7 @@ namespace IServiceOriented.ServiceBus
         /// <summary>
         /// Handles sending a message to a subscriber endpoint.
         /// </summary>
-        protected abstract void Dispatch(SubscriptionEndpoint endpoint, string action, object message);
+        protected abstract void Dispatch(SubscriptionEndpoint endpoint, MessageDelivery messageDelivery);
 
         /// <summary>
         /// Dispose any resources held by this dispatcher.
@@ -147,13 +148,20 @@ namespace IServiceOriented.ServiceBus
         {
         }
 
-        public DispatchContext(ServiceBusRuntime runtime, MessageDelivery messageDelivery)
+        public DispatchContext(ServiceBusRuntime runtime, SubscriptionEndpoint endpoint, MessageDelivery messageDelivery)
         {
             MessageDelivery = messageDelivery;
             Runtime = runtime;
+            Endpoint = endpoint;
         }
 
         public ServiceBusRuntime Runtime
+        {
+            get;
+            private set;
+        }
+
+        public SubscriptionEndpoint Endpoint
         {
             get;
             private set;

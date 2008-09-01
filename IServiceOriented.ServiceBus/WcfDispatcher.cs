@@ -67,65 +67,105 @@ namespace IServiceOriented.ServiceBus
             }
             _typeLookup = typeLookup;            
         }
-        
-        protected override void Dispatch(SubscriptionEndpoint endpoint, string action, object message)
+
+        /// <summary>
+        /// Specifies whether to apply the credentials of the user that published the message.
+        /// </summary>
+        /// <remarks>Credentials will be passed as UserName credentials, not using Windows impersonation or delegation.</remarks>
+        [DataMember]
+        public bool ApplyCredentials
         {
-            
-            MethodInfo methodInfo;
+            get;
+            set;
+        }
 
-            if (DispatchStyle == WcfDispatchStyle.Action)
+        protected virtual void ApplySecurityContext(ChannelFactory factory)
+        {
+            if (ApplyCredentials)
             {
-                if (_actionLookup == null)
+                if (DispatchContext.MessageDelivery.Context.ContainsKey(MessageDelivery.PrimaryIdentityNameKey))
                 {
-                    initActionLookup();
+                    factory.Credentials.UserName.UserName = (string)DispatchContext.MessageDelivery.Context[MessageDelivery.PrimaryIdentityNameKey];
+                    factory.Credentials.UserName.Password = "";
                 }
+            }
+        }
+        
+        protected override void Dispatch(SubscriptionEndpoint endpoint, MessageDelivery messageDelivery)
+        {
+            // TODO: Clean this up. Creating channel factory for each call is expensive
+            Type channelType = typeof(ChannelFactory<>).MakeGenericType(endpoint.ContractType);
+            object factory = Activator.CreateInstance(channelType, endpoint.ConfigurationName);
+            ((ChannelFactory)factory).Endpoint.Address = new EndpointAddress(endpoint.Address);
 
-                if (!_actionLookup.TryGetValue(action, out methodInfo))
+            ApplySecurityContext((ChannelFactory)factory);
+
+            IClientChannel proxy = (IClientChannel)channelType.GetMethod("CreateChannel", new Type[] { }).Invoke(factory, new object[] { });
+            bool success = false;
+            try
+            {
+                MethodInfo methodInfo;
+
+                if (DispatchStyle == WcfDispatchStyle.Action)
                 {
-                    foreach (string a in _actionLookup.Keys)
+                    if (_actionLookup == null)
                     {
-                        if (a == "*")
+                        initActionLookup();
+                    }
+
+                    if (!_actionLookup.TryGetValue(messageDelivery.Action, out methodInfo))
+                    {
+                        foreach (string a in _actionLookup.Keys)
                         {
-                            methodInfo = _actionLookup[a];
-                            break;
+                            if (a == "*")
+                            {
+                                methodInfo = _actionLookup[a];
+                                break;
+                            }
                         }
                     }
                 }
-            }
-            else if (DispatchStyle == WcfDispatchStyle.Type)
-            {
-                if (_typeLookup == null)
+                else if (DispatchStyle == WcfDispatchStyle.Type)
                 {
-                    initTypeLookup();
-                }
-
-                if (_typeLookup.TryGetValue(message.GetType(), out methodInfo))
-                {
-                    foreach (Type t in _typeLookup.Keys)
+                    if (_typeLookup == null)
                     {
-                        if (t == typeof(object))
+                        initTypeLookup();
+                    }
+
+                    if (_typeLookup.TryGetValue(messageDelivery.Message.GetType(), out methodInfo))
+                    {
+                        foreach (Type t in _typeLookup.Keys)
                         {
-                            methodInfo = _typeLookup[t];
-                            break;
+                            if (t == typeof(object))
+                            {
+                                methodInfo = _typeLookup[t];
+                                break;
+                            }
                         }
                     }
                 }
-            }
-            else
-            {
-                throw new NotSupportedException();
-            }
-
-            if (methodInfo != null)
-            {
-                Service.Use(endpoint.ContractType, endpoint.ConfigurationName, endpoint.Address, contract =>
+                else
                 {
-                    methodInfo.Invoke(contract, new object[] { message });
-                });
+                    throw new NotSupportedException();
+                }
+
+                if (methodInfo != null)
+                {                    
+                    methodInfo.Invoke(proxy, new object[] { messageDelivery.Message });                    
+                }
+                else
+                {
+                    throw new InvalidOperationException("Matching method not found");
+                }
+                proxy.Close();
+                success = true;
             }
-            else
+            finally
             {
-                throw new InvalidOperationException("Matching method not found");
+                if (!success)
+                {
+                    proxy.Abort();
+                }
             }
         }
 

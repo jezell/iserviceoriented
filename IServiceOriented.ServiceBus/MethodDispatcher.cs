@@ -39,14 +39,14 @@ namespace IServiceOriented.ServiceBus
             private set;
         }
 
-        protected override void Dispatch(SubscriptionEndpoint endpoint, string action, object message)
+        protected override void Dispatch(SubscriptionEndpoint endpoint, MessageDelivery messageDelivery)
         {            
             MethodInfo methodInfo;
-            if (!_actionLookup.TryGetValue(action, out methodInfo))
+            if (!_actionLookup.TryGetValue(messageDelivery.Action, out methodInfo))
             {
                 foreach (string a in _actionLookup.Keys)
                 {
-                    if (a == action)
+                    if (a == messageDelivery.Action)
                     {
                         methodInfo = _actionLookup[a];
                         break;
@@ -56,7 +56,7 @@ namespace IServiceOriented.ServiceBus
 
             if (methodInfo != null)
             {
-                methodInfo.Invoke(Target, new object[] { message });
+                methodInfo.Invoke(Target, new object[] { messageDelivery.Message });
             }
             else
             {

@@ -15,11 +15,11 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
 
             if (version2)
             {
-                _host = new ServiceHost(new IncomingHandler2(), new Uri("net.pipe://localhost/chat/" + _from));
+                _host = new ServiceHost(new IncomingHandler2(), new Uri("http://localhost/chat/" + _from));
             }
             else
             {
-                _host = new ServiceHost(new IncomingHandler(), new Uri("net.pipe://localhost/chat/" + _from));
+                _host = new ServiceHost(new IncomingHandler(), new Uri("http://localhost/chat/" + _from));
             }
 
             _version2 = version2;
@@ -35,11 +35,11 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
              {
                     if (_version2)
                     {
-                        serviceBus.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), _from, "ChatClient2", "net.pipe://localhost/chat/" + _from + "/send", typeof(IChatService2), new WcfDispatcher(), new ChatFilter2(_from)));                        
+                        serviceBus.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), _from, "ChatClientOut2", "http://localhost/chat/" + _from + "/send", typeof(IChatService2), new WcfDispatcher() { ApplyCredentials = true }, new ChatFilter2(_from)));                        
                     }
                     else
                     {
-                        serviceBus.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), _from, "ChatClient", "net.pipe://localhost/chat/" + _from + "/send", typeof(IChatService), new WcfDispatcher(), new ChatFilter(_from)));
+                        serviceBus.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), _from, "ChatClientOut", "http://localhost/chat/" + _from + "/send", typeof(IChatService), new WcfDispatcher() { ApplyCredentials = true }, new ChatFilter(_from)));
                     }
                 });
         }
@@ -71,26 +71,29 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
         {
             _host.Close();
         }
-        
-        [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConfigurationName="ChatServer")]
+
+        [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConfigurationName = "ChatServerOut")]
         public class IncomingHandler : IChatService
         {
             #region IChatService Members
             [OperationBehavior]
             public void SendMessage(SendMessageRequest request)
             {
+
+                if (ServiceSecurityContext.Current != null && ServiceSecurityContext.Current.PrimaryIdentity != null) Console.WriteLine("Identity: " + ServiceSecurityContext.Current.PrimaryIdentity.Name);
                 Console.WriteLine(request.From + ": " + request.Message);
             }
             #endregion
         }
 
-        [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConfigurationName = "ChatServer2")]
+        [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConfigurationName = "ChatServerOut2")]
         public class IncomingHandler2 : IChatService2
         {
             #region IChatService Members
             [OperationBehavior]
             public void SendMessage(SendMessageRequest2 request)
             {
+                if (ServiceSecurityContext.Current != null && ServiceSecurityContext.Current.PrimaryIdentity != null) Console.WriteLine("Identity: " + ServiceSecurityContext.Current.PrimaryIdentity.Name);
                 Console.WriteLine(request.From + ": " + request.Title + "\r\n"+request.Message);
             }
             #endregion

@@ -42,6 +42,9 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.IdentityModel">
+      <RequiredTargetFramework>3.0</RequiredTargetFramework>
+    </Reference>
     <Reference Include="System.Messaging" />
     <Reference Include="System.Runtime.Serialization">
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
@@ -71,6 +74,7 @@
     <Compile Include="ListenerEndpoint.cs" />
     <Compile Include="IMessageDeliveryQueue.cs" />
     <Compile Include="ListenerEndpointCollection.cs" />
+    <Compile Include="NullUserNamePasswordValidator.cs" />
     <Compile Include="PublishRequest.cs" />
     <Compile Include="ReadOnlyDictionary.cs" />
     <Compile Include="SqlSubscriptionPersistenceService.cs">

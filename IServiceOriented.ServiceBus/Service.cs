@@ -47,10 +47,11 @@ namespace IServiceOriented.ServiceBus
                     proxy.Abort();
                 }
             }
-        }
+        }        
+
 
         public static void Use<T>(string config, string address, Action<T> codeBlock)
-        {
+        {            
             ChannelFactory<T> channelFactory = new ChannelFactory<T>(config);
             channelFactory.Endpoint.Address = new EndpointAddress(address);
             IClientChannel proxy = (IClientChannel)channelFactory.CreateChannel();
