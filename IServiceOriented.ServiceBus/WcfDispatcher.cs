@@ -21,6 +21,11 @@ namespace IServiceOriented.ServiceBus
             
         }
 
+        public WcfDispatcher(WcfDispatchStyle dispatchStyle)
+        {
+            DispatchStyle = dispatchStyle;
+        }
+
         // TODO: if the same dispatcher instance is reused with another type this will be invalid
         void initActionLookup()
         {
@@ -42,26 +47,73 @@ namespace IServiceOriented.ServiceBus
             _actionLookup = actionLookup;
             
         }
+
+        // TODO: if the same dispatcher instance is reused with another type this will be invalid
+        void initTypeLookup()
+        {
+            Dictionary<Type, MethodInfo> typeLookup = new Dictionary<Type, MethodInfo>();
+            foreach (MethodInfo method in Endpoint.ContractType.GetMethods())
+            {
+                object[] attributes = method.GetCustomAttributes(typeof(OperationContractAttribute), false);
+                if (attributes.Length > 0)
+                {
+                    OperationContractAttribute oca = (OperationContractAttribute)attributes[0];
+                    ParameterInfo[] parameters = method.GetParameters();
+                    if (parameters.Length == 1)
+                    {
+                        typeLookup.Add(parameters[0].ParameterType, method);
+                    }
+                }
+            }
+            _typeLookup = typeLookup;            
+        }
         
         protected override void Dispatch(SubscriptionEndpoint endpoint, string action, object message)
         {
-            if (_actionLookup == null)
-            {
-                initActionLookup();
-            }
             
             MethodInfo methodInfo;
 
-            if (!_actionLookup.TryGetValue(action, out methodInfo))
+            if (DispatchStyle == WcfDispatchStyle.Action)
             {
-                foreach (string a in _actionLookup.Keys)
+                if (_actionLookup == null)
                 {
-                    if (a == "*")
+                    initActionLookup();
+                }
+
+                if (!_actionLookup.TryGetValue(action, out methodInfo))
+                {
+                    foreach (string a in _actionLookup.Keys)
                     {
-                        methodInfo = _actionLookup[a];
-                        break;
+                        if (a == "*")
+                        {
+                            methodInfo = _actionLookup[a];
+                            break;
+                        }
                     }
                 }
+            }
+            else if (DispatchStyle == WcfDispatchStyle.Type)
+            {
+                if (_typeLookup == null)
+                {
+                    initTypeLookup();
+                }
+
+                if (_typeLookup.TryGetValue(message.GetType(), out methodInfo))
+                {
+                    foreach (Type t in _typeLookup.Keys)
+                    {
+                        if (t == typeof(object))
+                        {
+                            methodInfo = _typeLookup[t];
+                            break;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                throw new NotSupportedException();
             }
 
             if (methodInfo != null)
@@ -73,13 +125,37 @@ namespace IServiceOriented.ServiceBus
             }
             else
             {
-                throw new InvalidOperationException("Matching action not found");
+                throw new InvalidOperationException("Matching method not found");
             }
         }
 
         [NonSerialized]
         Dictionary<string, MethodInfo> _actionLookup;
 
+        [NonSerialized]
+        Dictionary<Type, MethodInfo> _typeLookup;
+
+
+        /// <summary>
+        /// Gets or sets the way that this dispatcher will determine which operation to invoke.
+        /// </summary>        
+        public WcfDispatchStyle DispatchStyle
+        {
+            get;
+            set;
+        }
+    }
+
+    public enum WcfDispatchStyle
+    {
+        /// <summary>
+        /// Dispatch by finding an operation that matches the requested action (or "*" if no direct match)
+        /// </summary>
+        Action, 
+        /// <summary>
+        /// Dispatch by finding an operation that accepts the requested message type (or object if no direct match)
+        /// </summary>
+        Type
     }
 		
 }

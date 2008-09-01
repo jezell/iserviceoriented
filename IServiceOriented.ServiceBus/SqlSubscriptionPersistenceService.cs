@@ -17,6 +17,9 @@ using System.Runtime.Serialization;
 
 namespace IServiceOriented.ServiceBus
 {
+    /// <summary>
+    /// Provides data access functionality for SqlSubscriptionPersistenceService
+    /// </summary>
     public class SqlSubscriptionDB
     {
         public SqlSubscriptionDB(Type[] knownDispatcherTypes, Type[] knownListenerTypes, Type[] knownFilterTypes)
@@ -264,6 +267,9 @@ namespace IServiceOriented.ServiceBus
         }
     }
 
+    /// <summary>
+    /// Provides support for durable persistence of subscriptions and listeners using SQL Server
+    /// </summary>
     public class SqlSubscriptionPersistenceService : SubscriptionPersistenceService
     {
         public SqlSubscriptionPersistenceService(string connectionString, Type[] knownDispatcherTypes,  Type[] knownListenerTypes, Type[] knownFilterTypes)

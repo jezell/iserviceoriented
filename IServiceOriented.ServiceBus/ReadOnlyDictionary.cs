@@ -7,6 +7,11 @@ using System.Runtime.Serialization;
 
 namespace IServiceOriented.ServiceBus
 {
+    /// <summary>
+    /// Represents a read only collection of keys and values.
+    /// </summary>
+    /// <typeparam name="K">Key type</typeparam>
+    /// <typeparam name="V">Value type</typeparam>
     [Serializable]
     [CollectionDataContract]
     public class ReadOnlyDictionary<K, V> : IReadOnlyDictionary<K, V>
@@ -16,6 +21,7 @@ namespace IServiceOriented.ServiceBus
         public ReadOnlyDictionary()
             : this(new Dictionary<K,V>(), false)
         {
+            
         }
 
         public ReadOnlyDictionary(IDictionary<K, V> from)

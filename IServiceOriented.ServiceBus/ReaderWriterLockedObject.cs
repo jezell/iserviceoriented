@@ -8,7 +8,11 @@ using System.Reflection;
 
 namespace IServiceOriented.ServiceBus
 {
-
+    /// <summary>
+    /// Gaurds a value using ReaderWriteLockSlim 
+    /// </summary>
+    /// <typeparam name="TRead">Read only type of the contained data.</typeparam>
+    /// <typeparam name="TWrite">Writeable type of the contained data.</typeparam>
     public class ReaderWriterLockedObject<TRead, TWrite> : ILockedObject<TRead, TWrite> where TRead : class
     {
         public ReaderWriterLockedObject(TWrite value, Converter<TWrite, TRead> makeReadOnly)

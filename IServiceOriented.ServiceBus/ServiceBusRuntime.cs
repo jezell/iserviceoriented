@@ -784,7 +784,7 @@ namespace IServiceOriented.ServiceBus
 		{
             if (_disposed) throw new ObjectDisposedException("ServiceBusRuntime");
 
-            VerifyContract(publishRequest.Contract);
+            VerifyContract(publishRequest.ContractType);
 
             _subscriptions.Read(subscriptions =>
             {
@@ -819,7 +819,7 @@ namespace IServiceOriented.ServiceBus
 
                         if (include)
                         {
-                            QueueDelivery(subscription.Id, publishRequest.Contract, publishRequest.Action, publishRequest.Message, publishRequest.Context);
+                            QueueDelivery(subscription.Id, publishRequest.ContractType, publishRequest.Action, publishRequest.Message, publishRequest.Context);
                             handled = true;
                         }
                     }
@@ -829,7 +829,7 @@ namespace IServiceOriented.ServiceBus
                     {
                         foreach (SubscriptionEndpoint subscription in unhandledFilters)
                         {
-                            QueueDelivery(subscription.Id, publishRequest.Contract, publishRequest.Action, publishRequest.Message, publishRequest.Context);
+                            QueueDelivery(subscription.Id, publishRequest.ContractType, publishRequest.Action, publishRequest.Message, publishRequest.Context);
                         }
                     }
 

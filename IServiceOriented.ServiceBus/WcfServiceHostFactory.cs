@@ -11,8 +11,16 @@ using System.Reflection.Emit;
 
 namespace IServiceOriented.ServiceBus
 {
+    /// <summary>
+    /// Creates WCF service hosts. Used by WcfListener.
+    /// </summary>
     public static class WcfServiceHostFactory
-    {                
+    {
+        /// <summary>
+        /// Determines whether the specified method is marked as OperationContract and supported.
+        /// </summary>
+        /// <param name="info"></param>
+        /// <returns></returns>
         public static bool IsServiceMethod(MethodInfo info)
         {
             // Only single parameter calls are supported currently
@@ -33,6 +41,11 @@ namespace IServiceOriented.ServiceBus
             return false;                        
         }
 
+        /// <summary>
+        /// Gets a list of the message types that a service contract exposes.
+        /// </summary>
+        /// <param name="contractType"></param>
+        /// <returns></returns>
         public static Type[] GetMessageTypes(Type contractType)
         {
             List<Type> list = new List<Type>();
@@ -48,6 +61,11 @@ namespace IServiceOriented.ServiceBus
             return list.ToArray();
         }
         
+        /// <summary>
+        /// Dynamically generate a service implementation type for use with a ServiceHost
+        /// </summary>
+        /// <param name="interfaceType"></param>
+        /// <returns></returns>
         public static Type CreateImplementationType(Type interfaceType)
         {
             ServiceBusRuntime.VerifyContract(interfaceType);
@@ -111,6 +129,14 @@ namespace IServiceOriented.ServiceBus
             return impType;        
         }
 
+        /// <summary>
+        /// Dynamically generate a service host
+        /// </summary>
+        /// <param name="runtime"></param>
+        /// <param name="contractType"></param>
+        /// <param name="configurationName"></param>
+        /// <param name="address"></param>
+        /// <returns></returns>
         public static ServiceHost CreateHost(ServiceBusRuntime runtime, Type contractType, string configurationName, string address)        
         {
             Type hostType = CreateImplementationType(contractType);            
@@ -126,6 +152,9 @@ namespace IServiceOriented.ServiceBus
         
     }
 
+    /// <summary>
+    /// Base class used by dynamically generated service hosts
+    /// </summary>
     public class WcfListenerServiceImplementationBase
     {
         public ServiceBusRuntime Runtime
@@ -135,6 +164,9 @@ namespace IServiceOriented.ServiceBus
         }
     }
 
+    /// <summary>
+    /// Custom service host used by WcfListener
+    /// </summary>
     public class WcfListenerServiceHost : ServiceHost
     {
         public WcfListenerServiceHost(object host, string contract, string configurationName, string address)

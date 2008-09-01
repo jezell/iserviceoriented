@@ -25,8 +25,12 @@ namespace IServiceOriented.ServiceBus
         /// <returns>The transformed request or null if the message cannot be transformed.</returns>
         protected abstract PublishRequest Transform(PublishRequest request);
 
+        /// <summary>
+        /// The name of the context key that stores a the IDs (Guid[]) of the endpoints which have been involved in message transformation.
+        /// </summary>
         public const string TransformedByKeyName = "TransformedBy";
         
+
         protected override sealed void Dispatch(SubscriptionEndpoint endpoint, string action, object message)
         {
             ReadOnlyDictionary<string, object> context = DispatchContext.MessageDelivery.Context;
@@ -52,7 +56,7 @@ namespace IServiceOriented.ServiceBus
                 PublishRequest result = Transform(new PublishRequest(endpoint.ContractType, action, message, context));
                 if (result != null)
                 {
-                    Runtime.Publish(new PublishRequest(result.Contract, result.Action, result.Message, context));
+                    Runtime.Publish(new PublishRequest(result.ContractType, result.Action, result.Message, context));
                 }
             }
             else

@@ -9,6 +9,12 @@ using System.Messaging;
 
 namespace IServiceOriented.ServiceBus
 {
+    /// <summary>
+    /// Provides support for formatting messages using a DataContractSerializer
+    /// </summary>
+    /// <remarks>
+    /// Using the MessageDeliveryDataContractFormatter with a service bus that will be delivering messages to WCF endpoints ensures that the same serialization is used when placing messages into the queue as sending them to endpoints.
+    /// </remarks>
     public class MessageDeliveryDataContractFormatter : IMessageFormatter
     {
         #region IMessageFormatter Members
@@ -59,6 +65,10 @@ namespace IServiceOriented.ServiceBus
 
         #endregion
     }
+
+    /// <summary>
+    /// Provides support for queuing messages using MSMQ
+    /// </summary>
     public class MsmqMessageDeliveryQueue : IMessageDeliveryQueue, IDisposable
     {
         public MsmqMessageDeliveryQueue(string path)
@@ -95,17 +105,28 @@ namespace IServiceOriented.ServiceBus
             _formatter = new MessageDeliveryDataContractFormatter();
         }
 
+        /// <summary>
+        /// Create a message queue
+        /// </summary>
+        /// <param name="path"></param>
         public static void Create(string path)
         {
             MessageQueue.Create(path, true);
         }
 
+        /// <summary>
+        /// Delete a message queue
+        /// </summary>
+        /// <param name="path"></param>
         public static void Delete(string path)
         {
             MessageQueue.Delete(path);
         }
 
         MessageQueueTransactionType _transactionType = MessageQueueTransactionType.Automatic;
+        /// <summary>
+        /// Gets or sets the TransactionType that will be used when communicating with the message queue
+        /// </summary>
         public MessageQueueTransactionType TransactionType
         {
             get

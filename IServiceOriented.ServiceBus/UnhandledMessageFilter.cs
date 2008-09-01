@@ -8,13 +8,17 @@ using System.Runtime.Serialization;
 namespace IServiceOriented.ServiceBus
 {
     /// <summary>
-    /// Used to specify a handler for unhandled messages of a certain type
+    /// Instructs the service bus to send unhandled messages of a certain type to this endpoint.
     /// </summary>
     [DataContract]
     public class UnhandledMessageFilter : TypedMessageFilter
     {
         public UnhandledMessageFilter(Type messageType)
             : base(messageType)
+        {
+        }
+
+        public UnhandledMessageFilter(params Type[] messageTypes) : base(messageTypes)
         {
         }
         

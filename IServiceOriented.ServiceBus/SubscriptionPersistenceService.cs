@@ -5,9 +5,11 @@ using System.Text;
 
 namespace IServiceOriented.ServiceBus
 {
+    /// <summary>
+    /// Base class for subscription persistence
+    /// </summary>
     public abstract class SubscriptionPersistenceService : RuntimeService
     {
-
         protected override void OnStart()
         {
 
@@ -84,12 +86,34 @@ namespace IServiceOriented.ServiceBus
             DeleteSubscription(endpoint);
         }
 
+        /// <summary>
+        /// Load saved end points from the persistence store.
+        /// </summary>
+        /// <returns></returns>
         protected abstract IEnumerable<Endpoint> LoadEndpoints();
 
+        /// <summary>
+        /// Create a subscription in the persistence store.
+        /// </summary>
+        /// <param name="subscription"></param>
         protected abstract void CreateSubscription(SubscriptionEndpoint subscription);
+        
+        /// <summary>
+        /// Delete a subscription from the persistence store.
+        /// </summary>
+        /// <param name="subscription"></param>
         protected abstract void DeleteSubscription(SubscriptionEndpoint subscription);
 
+        /// <summary>
+        /// Create a listener in the persistence store
+        /// </summary>
+        /// <param name="endpoint"></param>
         protected abstract void CreateListener(ListenerEndpoint endpoint);
+        
+        /// <summary>
+        /// Delete a listener from the persistence store
+        /// </summary>
+        /// <param name="endpoint"></param>
         protected abstract void DeleteListener(ListenerEndpoint endpoint);
 
     }

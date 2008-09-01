@@ -7,6 +7,9 @@ using System.Diagnostics;
 
 namespace IServiceOriented.ServiceBus
 {
+    /// <summary>
+    /// Provides performance counter support for a service bus instance.
+    /// </summary>
     public class PerformanceMonitorRuntimeService : RuntimeService
     {
         public PerformanceMonitorRuntimeService() : this (null, null)
@@ -66,6 +69,11 @@ namespace IServiceOriented.ServiceBus
 
         }
 
+        /// <summary>
+        /// Create required performance counters
+        /// </summary>
+        /// <param name="categoryName"></param>
+        /// <param name="machineName"></param>
         public static void CreateCounters(string categoryName, string machineName)
         {
             if (machineName == null)
@@ -89,6 +97,12 @@ namespace IServiceOriented.ServiceBus
             PerformanceCounterCategory.Create(categoryName, machineName, PerformanceCounterCategoryType.MultiInstance, creationData);
         }
 
+        /// <summary>
+        /// Specifies whether counters should be automatically created.
+        /// </summary>
+        /// <remarks>
+        /// Peformance counters can only be created with the appropriate permissions. If the bus is running with restricted permissions, counters should be created ahead of time using CreateCounters or the command line tool.
+        /// </remarks>
         public bool AutoCreateCounters
         {
             get;

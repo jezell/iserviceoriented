@@ -6,6 +6,9 @@ using System.Runtime.Serialization;
 
 namespace IServiceOriented.ServiceBus
 {
+    /// <summary>
+    /// A filter that filters out any messages not in a list of predefined types.
+    /// </summary>
     [DataContract]   
     public class TypedMessageFilter : MessageFilter
     {

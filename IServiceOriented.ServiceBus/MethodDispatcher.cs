@@ -6,6 +6,9 @@ using System.Text;
 
 namespace IServiceOriented.ServiceBus
 {    
+    /// <summary>
+    /// Provides support for dispatching messages to an object instance.
+    /// </summary>
     public sealed class MethodDispatcher : Dispatcher 
     {
         private MethodDispatcher()

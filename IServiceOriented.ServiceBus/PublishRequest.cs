@@ -5,6 +5,9 @@ using System.Text;
 
 namespace IServiceOriented.ServiceBus
 {
+    /// <summary>
+    /// Represents a request to publish a message
+    /// </summary>
     public class PublishRequest
     {
         protected PublishRequest()
@@ -17,28 +20,42 @@ namespace IServiceOriented.ServiceBus
         }
         public PublishRequest(Type contract, string action, object message, ReadOnlyDictionary<string, object> context)
         {
-            Contract = contract;
+            ContractType = contract;
             Action = action;
             Message = message;
             Context = context;
         }
 
-        public Type Contract
+        /// <summary>
+        /// Gets the type of the contract associated with the message
+        /// </summary>
+        public Type ContractType
         {
             get;
             private set;
         }
+        
+        /// <summary>
+        /// Gets the action associated with the message
+        /// </summary>
         public string Action
         {
             get;
             private set;
         }
+
+        /// <summary>
+        /// Gets the message to publish
+        /// </summary>
         public object Message
         {
             get;
             private set;
         }
 
+        /// <summary>
+        /// Gets the contex associated with the message
+        /// </summary>
         public ReadOnlyDictionary<string, object> Context
         {
             get;

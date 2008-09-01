@@ -7,7 +7,7 @@ using System.Text;
 namespace IServiceOriented.ServiceBus
 {
     /// <summary>
-    /// A read-only dictionary.
+    /// Represents a read only collection of keys and values.
     /// </summary>
     /// <typeparam name="K">Key type</typeparam>
     /// <typeparam name="V">Value type</typeparam>
