@@ -1,0 +1,497 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="IServiceOriented.ServiceBus.CountdownLatch" BaseTypeListCollapsed="true">
+    <Position X="14.5" Y="13.5" Width="3.5" />
+    <Members>
+      <Method Name="~CountdownLatch" Hidden="true" />
+    </Members>
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAGAEBAAAAAAAAAAAAAAAAAIAAACAAAAAQAA=</HashCode>
+      <FileName>CountdownLatch.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.DispatchContext">
+    <Position X="23.5" Y="2" Width="2" />
+    <Compartments>
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>ACAAAAAAAAAAAAAACEAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Dispatcher.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.Dispatcher">
+    <Position X="21" Y="2" Width="2" />
+    <Members>
+      <Field Name="_dispatchContext" Hidden="true" />
+      <Field Name="_endpoint" Hidden="true" />
+      <Field Name="_runtime" Hidden="true" />
+      <Method Name="~Dispatcher" Hidden="true" />
+      <Method Name="DispatchInternal" Hidden="true" />
+      <Method Name="StartInternal" Hidden="true" />
+      <Method Name="StopInternal" Hidden="true" />
+    </Members>
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAgAAAAEACAAAAIAGEAAAAACAAMAAgAAAEAAIAAACAA=</HashCode>
+      <FileName>Dispatcher.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.DuplicateIdentifierException" Collapsed="true">
+    <Position X="14" Y="21" Width="3" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>DuplicateIdentifierException.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.Endpoint">
+    <Position X="13" Y="1" Width="2.25" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAACIAAAEAABAAAAQBAAAAQQAAACEQACAAAAAEAAAAA=</HashCode>
+      <FileName>Endpoint.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.EndpointEventArgs">
+    <Position X="4.25" Y="9" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>ServiceBusRuntime.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.InvalidContractException" Collapsed="true">
+    <Position X="14" Y="22.5" Width="3" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>InvalidContractException.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.Listener">
+    <Position X="7.5" Y="2" Width="2" />
+    <Members>
+      <Field Name="_endpoint" Hidden="true" />
+      <Field Name="_runtime" Hidden="true" />
+      <Field Name="_started" Hidden="true" />
+      <Method Name="~Listener" Hidden="true" />
+      <Method Name="StartInternal" Hidden="true" />
+      <Method Name="StopInternal" Hidden="true" />
+    </Members>
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAACAAAAIAGEAAAAAAAAMAAgAAAEAAAAAACAA=</HashCode>
+      <FileName>Listener.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.ListenerEndpoint">
+    <Position X="10.25" Y="2" Width="1.75" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAACAAAAAAAAAAAAAAAAAACAAAAAAAAAAAA=</HashCode>
+      <FileName>ListenerEndpoint.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.ListenerEndpointCollection" Collapsed="true">
+    <Position X="13" Y="5.5" Width="3" />
+    <TypeIdentifier>
+      <HashCode>AAAAAABAAAAABAAACAAACAAAAAAAAAAEAQAAAAAAAAA=</HashCode>
+      <FileName>ListenerEndpointCollection.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.ListenerNotFoundException" Collapsed="true">
+    <Position X="14" Y="24" Width="3" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>ListenerNotFoundException.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.ListenerNotFoundFault" Collapsed="true">
+    <Position X="18.75" Y="21" Width="3" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>WcfManagementService.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.MessageDelivery">
+    <Position X="4.25" Y="3.5" Width="2.25" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>UgAADAAgggQABBAACRQAAAIQAAAAFQEEWAAAoAAAAEY=</HashCode>
+      <FileName>MessageDelivery.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.MessageDeliveryDataContractFormatter" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="0.5" Y="12.25" Width="3" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAQAAAAAAgAgAAAACAAAAAAAAAEIABA=</HashCode>
+      <FileName>MsmqMessageDeliveryQueue.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.MessageDeliveryEventArgs">
+    <Position X="4.25" Y="11" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>ACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>ServiceBusRuntime.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.MessageDeliveryFailedEventArgs">
+    <Position X="4.25" Y="12.5" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAA=</HashCode>
+      <FileName>ServiceBusRuntime.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.MessageDeliveryNotFoundFault" Collapsed="true">
+    <Position X="18.75" Y="21.75" Width="3" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAA=</HashCode>
+      <FileName>WcfManagementService.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.MessageFilter">
+    <Position X="18.5" Y="1.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>MessageFilter.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.MethodDispatcher">
+    <Position X="23.5" Y="5.5" Width="2" />
+    <Members>
+      <Field Name="_actionLookup" Hidden="true" />
+      <Method Name="MethodDispatcher" Hidden="true" />
+    </Members>
+    <TypeIdentifier>
+      <HashCode>AAgAAAAAAAAAAAIAAAAAACAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>MethodDispatcher.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.MsmqMessageDeliveryQueue" BaseTypeListCollapsed="true">
+    <Position X="0.5" Y="15.25" Width="3" />
+    <Members>
+      <Field Name="_disposed" Hidden="true" />
+      <Field Name="_formatter" Hidden="true" />
+      <Field Name="_queue" Hidden="true" />
+      <Field Name="_transactionType" Hidden="true" />
+      <Method Name="createMessage" Hidden="true" />
+      <Method Name="createObject" Hidden="true" />
+    </Members>
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AABAAAAAACAVAgCAEBAAAAAAAAEABEEAAAAAAAAAAQA=</HashCode>
+      <FileName>MsmqMessageDeliveryQueue.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.NullUserNamePasswordValidator" Collapsed="true">
+    <Position X="23.5" Y="21" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>NullUserNamePasswordValidator.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.PerformanceMonitorRuntimeService">
+    <Position X="0.75" Y="19.75" Width="2.75" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAgAAAAAABBAgsTCEAEQAAAAAAAAAAAAAEAASAAACCA=</HashCode>
+      <FileName>PerformanceMonitorRuntimeService.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.PoisonMessageException" Collapsed="true">
+    <Position X="14" Y="21.75" Width="3" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>PoisonMessageException.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.PublishRequest">
+    <Position X="4.25" Y="1" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAgAAAAAAAAAAAAAAAAAAEAAAAAAAIAAAAAQ=</HashCode>
+      <FileName>PublishRequest.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.ReaderWriterLockedObject&lt;TRead, TWrite&gt;" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="14.5" Y="16.25" Width="3.5" />
+    <TypeIdentifier>
+      <HashCode>ABAAAQAAACAEAgAAAAAAAAAgIAAAAAEAAAAAAAEAAAA=</HashCode>
+      <FileName>ReaderWriterLockedObject.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.ReadOnlyDictionary&lt;K, V&gt;" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="19.25" Y="16.25" Width="3.5" />
+    <TypeIdentifier>
+      <HashCode>AAIAAABAAAAEABAACAAAAAQAAAAAAAAEAAAgAAAQAAA=</HashCode>
+      <FileName>ReadOnlyDictionary.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.ReadOnlyDictionaryExtensions" Collapsed="true">
+    <Position X="19.25" Y="17" Width="3.5" />
+    <TypeIdentifier>
+      <HashCode>ABEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>IReadOnlyDictionary.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.RuntimeService">
+    <Position X="4.25" Y="14.75" Width="3" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>gAAAAAQAACAAAAJAGAAAABAEAAMAAAAAAEAAAAgACAA=</HashCode>
+      <FileName>RuntimeService.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.ServiceBusManagementService" BaseTypeListCollapsed="true">
+    <Position X="8" Y="23.5" Width="3" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAABAAKAEAAAAAAAACMAAAQAQAAAAAAAA=</HashCode>
+      <FileName>WcfManagementService.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.ServiceBusManagementServiceTypeProvider">
+    <Position X="8" Y="30.5" Width="3" />
+    <TypeIdentifier>
+      <HashCode>EAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>WcfManagementService.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.ServiceBusRuntime" BaseTypeListCollapsed="true">
+    <Position X="0.5" Y="1" Width="3" />
+    <Members>
+      <Method Name="~ServiceBusRuntime" Hidden="true" />
+      <Method Name="addWorker" Hidden="true" />
+      <Method Name="deliveryWorker" Hidden="true" />
+      <Method Name="notifyUnhandledException" Hidden="true" />
+      <Method Name="retryWorker" Hidden="true" />
+    </Members>
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+      <Compartment Name="Nested Types" Collapsed="false" />
+    </Compartments>
+    <NestedTypes>
+      <Class Name="IServiceOriented.ServiceBus.ServiceBusRuntime.DeliveryWork" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>ServiceBusRuntime.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AMXIAgSIAWIcABACoEGQFAoqCCKDIIFIaAIgECSQOAA=</HashCode>
+      <FileName>ServiceBusRuntime.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.SqlSubscriptionDB">
+    <Position X="4.5" Y="24.75" Width="3" />
+    <Members>
+      <Method Name="getConnection" Hidden="true" />
+      <Method Name="getDispatcherFromPersistenceData" Hidden="true" />
+      <Method Name="getDispatcherPersistenceData" Hidden="true" />
+      <Method Name="getFilterFromPersistenceData" Hidden="true" />
+      <Method Name="getFilterPersistenceData" Hidden="true" />
+      <Method Name="getListener" Hidden="true" />
+      <Method Name="getListenerFromPersistenceData" Hidden="true" />
+      <Method Name="getListenerPersistenceData" Hidden="true" />
+      <Method Name="getSubscription" Hidden="true" />
+      <Method Name="LoadListenerEndpoints" Hidden="true" />
+    </Members>
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>EIAIAAABIAAAAAAAIAAgAAAIAAAAQAEIAAoAAQAEIAI=</HashCode>
+      <FileName>SqlSubscriptionPersistenceService.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.SqlSubscriptionPersistenceService" Collapsed="true">
+    <Position X="4.5" Y="23.75" Width="3" />
+    <TypeIdentifier>
+      <HashCode>AAAAgAAAAAAAAAAAAAAAAQAIAAAAAAAAAAgAAAAAIAI=</HashCode>
+      <FileName>SqlSubscriptionPersistenceService.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.SubscriptionEndpoint">
+    <Position X="16" Y="2" Width="1.75" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAQAAAAAAAAAAABCAAIAAAAAAAAAAAAA=</HashCode>
+      <FileName>SubscriptionEndpoint.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.SubscriptionEndpointCollection" Collapsed="true">
+    <Position X="13" Y="4.5" Width="3" />
+    <TypeIdentifier>
+      <HashCode>AAAAAABAAAAABAAACAAACAAAAAAAAAAEAQAAAAAAAAA=</HashCode>
+      <FileName>SubscriptionEndpointCollection.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.SubscriptionNotFoundException" Collapsed="true">
+    <Position X="14" Y="23.25" Width="3" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>SubscriptionNotFoundException.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.SubscriptionNotFoundFault" Collapsed="true">
+    <Position X="18.75" Y="22.5" Width="3" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>WcfManagementService.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.SubscriptionPersistenceService">
+    <Position X="4.25" Y="19.75" Width="3" />
+    <TypeIdentifier>
+      <HashCode>gAAAAAAAAAAIAAAAEAAAARAMAAAAAAAAAEgAAAgAIAI=</HashCode>
+      <FileName>SubscriptionPersistenceService.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.TransformationDispatcher">
+    <Position X="18.5" Y="5.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAgAAAAAAAAAQAAAAAAAAAQAEAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>TransformationDispatcher.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.TypedMessageFilter" Collapsed="true">
+    <Position X="18.5" Y="3" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAgAAAAAAQAABAACAAAAAAABAAAAAAAAAAAAAA=</HashCode>
+      <FileName>TypedMessageFilter.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.UnhandledMessageFilter" Collapsed="true">
+    <Position X="18.5" Y="4" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>UnhandledMessageFilter.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.WcfDispatcher">
+    <Position X="21" Y="5.5" Width="2" />
+    <Members>
+      <Field Name="_actionLookup" Hidden="true" />
+      <Field Name="_typeLookup" Hidden="true" />
+      <Method Name="initActionLookup" Hidden="true" />
+      <Method Name="initTypeLookup" Hidden="true" />
+    </Members>
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAgAAAAIAAAAAAIAAIAAAAAAAAIAAAAAAAAAAAgAggA=</HashCode>
+      <FileName>WcfDispatcher.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.WcfListener">
+    <Position X="7.5" Y="5.5" Width="2" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAAAAAAUAAAAAAgAAAACAAAAEAABAAAAAA=</HashCode>
+      <FileName>WcfListener.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.WcfListenerServiceHost" Collapsed="true">
+    <Position X="7.5" Y="11.25" Width="3.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAACEAAAAAAAAAAAAAA=</HashCode>
+      <FileName>WcfServiceHostFactory.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.WcfListenerServiceImplementationBase">
+    <Position X="7.5" Y="9.5" Width="3.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACEAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>WcfServiceHostFactory.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.WcfManagementService" Collapsed="true">
+    <Position X="8" Y="19.75" Width="3" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAEAABAAAAAA=</HashCode>
+      <FileName>WcfManagementService.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.WcfManagementServiceActions">
+    <Position X="8" Y="27" Width="3" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAABAAIAEAAAAAAAACMAAAQIQAAABAQAA=</HashCode>
+      <FileName>WcfManagementService.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.WcfServiceHostFactory" Collapsed="true">
+    <Position X="7.5" Y="8.75" Width="3.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAQAAAAAAAAAAAgAAIAAAAAAAAAAAAQ=</HashCode>
+      <FileName>WcfServiceHostFactory.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Interface Name="IServiceOriented.ServiceBus.ILockedObject&lt;TRead, TWrite&gt;" Collapsed="true">
+    <Position X="14.5" Y="17.25" Width="3.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAgAAAAAAAAAgAAAAAAAAAAAAAAEAAAA=</HashCode>
+      <FileName>ILockedObject.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="IServiceOriented.ServiceBus.IMessageDeliveryQueue">
+    <Position X="0.5" Y="13.25" Width="3" />
+    <TypeIdentifier>
+      <HashCode>AABAAAAAAAAUAAAAAAAAAAAAAAAABAAAAAAAAAAAAAA=</HashCode>
+      <FileName>IMessageDeliveryQueue.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="IServiceOriented.ServiceBus.IReadOnlyDictionary&lt;K, V&gt;">
+    <Position X="19.25" Y="13.5" Width="3.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAEAAAACAAAAAQAAAAAAAAAAAAgAAAQAAA=</HashCode>
+      <FileName>IReadOnlyDictionary.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="IServiceOriented.ServiceBus.IServiceBusManagementService">
+    <Position X="8" Y="20.75" Width="3" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAABAAIAEAAAAAAAACMAAAQAQAAAAAAAA=</HashCode>
+      <FileName>WcfManagementService.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Enum Name="IServiceOriented.ServiceBus.WcfDispatchStyle">
+    <Position X="21" Y="8.25" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAQ=</HashCode>
+      <FileName>WcfDispatcher.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

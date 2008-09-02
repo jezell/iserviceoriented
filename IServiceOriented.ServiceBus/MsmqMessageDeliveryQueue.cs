@@ -52,6 +52,7 @@ namespace IServiceOriented.ServiceBus
             serializer.WriteObject(ms, obj);
             ms.Position = 0;
             message.BodyStream = ms;
+            
         }
 
         #endregion
@@ -283,6 +284,11 @@ namespace IServiceOriented.ServiceBus
             Dispose(true);
 
             GC.SuppressFinalize(this);
+        }
+
+        ~MsmqMessageDeliveryQueue()
+        {
+            Dispose(false);
         }
     }
 	

@@ -105,6 +105,7 @@
     <Compile Include="WcfManagementService.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="ClassDiagram.cd" />
     <None Include="iServiceOriented.snk" />
     <EmbeddedResource Include="CreateSqlSubscriptionPersistenceServiceDb.sql" />
   </ItemGroup>

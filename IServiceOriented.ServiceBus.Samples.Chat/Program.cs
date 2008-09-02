@@ -12,9 +12,7 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
         static void Main(string[] args)
         {
             MessageDelivery.RegisterKnownType(typeof(ChatFilter));
-            MessageDelivery.RegisterKnownType(typeof(ChatFilter2));
             MessageDelivery.RegisterKnownType(typeof(SendMessageRequest));
-            MessageDelivery.RegisterKnownType(typeof(SendMessageRequest2));
             
             if(args.Length == 0)
             {
@@ -32,23 +30,26 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
 
                 server.Stop();
             }
-            else if (args[0] == "client" || args[0] == "client2")
+            else if (args[0] == "client")
             {
                 Console.WriteLine("Starting client...");
 
                 Console.Write("Enter name: ");
 
-                ChatClient client = new ChatClient(Console.ReadLine(), args[0] == "client2");
+                ChatClient client = new ChatClient(Console.ReadLine());
                 client.Start();
 
                 while (true)
                 {
                     string line = Console.ReadLine();
 
-                    if (line.StartsWith("@"))
+                    if (line.StartsWith("@") && line.Length > 1)
                     {
                         string to = line.Substring(1, line.IndexOf(' ')-1);
-                        client.Send(to, line.Substring(to.Length +2));
+                        if (to.Length > 0)
+                        {
+                            client.Send(to, line.Substring(to.Length + 2));
+                        }
                     }
                     else if (line == "quit")
                     {

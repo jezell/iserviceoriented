@@ -54,9 +54,7 @@
   <ItemGroup>
     <Compile Include="ChatClient.cs" />
     <Compile Include="ChatServer.cs" />
-    <Compile Include="ChatServiceTransformer.cs" />
     <Compile Include="IChatService.cs" />
-    <Compile Include="IChatService2.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
