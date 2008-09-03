@@ -5,7 +5,7 @@ using System.Text;
 
 namespace IServiceOriented.ServiceBus.UnitTests
 {
-    class NonTransactionalMemoryQueue : IMessageDeliveryQueue
+    public class NonTransactionalMemoryQueue : IMessageDeliveryQueue
     {
         Queue<MessageDelivery> _queue = new Queue<MessageDelivery>();
 

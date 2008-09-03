@@ -41,15 +41,24 @@
     </Reference>
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+      <Aliases>MSCore</Aliases>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScriptMessageFilterTest.cs" />
+    <Compile Include="ScriptTransformationDispatcherTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\IServiceOriented.ServiceBus.Scripting\IServiceOriented.ServiceBus.Scripting.csproj">
       <Project>{D57132AD-3E5C-4504-B7C5-3AD9D30FCA3C}</Project>
       <Name>IServiceOriented.ServiceBus.Scripting</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\IServiceOriented.ServiceBus.UnitTests\IServiceOriented.ServiceBus.UnitTests.csproj">
+      <Project>{D48FDAC6-6557-4628-B73A-E85D7273D003}</Project>
+      <Name>IServiceOriented.ServiceBus.UnitTests</Name>
     </ProjectReference>
     <ProjectReference Include="..\IServiceOriented.ServiceBus\IServiceOriented.ServiceBus.csproj">
       <Project>{170E9A60-8058-4459-AE51-FEDF88AE7631}</Project>

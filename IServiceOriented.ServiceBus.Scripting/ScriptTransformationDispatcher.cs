@@ -11,14 +11,14 @@ namespace IServiceOriented.ServiceBus.Scripting
 {
     [Serializable]
     [DataContract]
-    public class ScriptMessageFilter : MessageFilter
+    public class ScriptTransformationDispatcher : TransformationDispatcher
     {
-        public ScriptMessageFilter(string languageId, string code)
+        public ScriptTransformationDispatcher(string languageId, string code)
         {
             Script = new Script(languageId, code);
         }
 
-        public ScriptMessageFilter(string languageId, string code, SourceCodeKind sourceCodeKind)
+        public ScriptTransformationDispatcher(string languageId, string code, SourceCodeKind sourceCodeKind)
         {
             Script = new Script(languageId, code, sourceCodeKind);         
         }
@@ -27,12 +27,12 @@ namespace IServiceOriented.ServiceBus.Scripting
         public Script Script
         {
             get;
-            private set;
+            set;
         }
-        
-        public override bool Include(PublishRequest request)
+
+        protected override PublishRequest Transform(PublishRequest request)        
         {
-            return (bool)Script.ExecuteWithVariables(new Dictionary<string, object>() { { "request", request } });
+            return (PublishRequest)Script.ExecuteWithVariables(new Dictionary<string, object>() { { "request", request } });            
         }
     }
 }

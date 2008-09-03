@@ -40,6 +40,9 @@
       <HintPath>..\..\..\..\..\..\Code\IronPython\2.0B4\Microsoft.Scripting.Core.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Runtime.Serialization">
+      <RequiredTargetFramework>3.0</RequiredTargetFramework>
+    </Reference>
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
@@ -50,9 +53,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Script.cs" />
     <Compile Include="ScriptContext.cs" />
     <Compile Include="ScriptMessageFilter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ScriptTransformationDispatcher.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\IServiceOriented.ServiceBus\IServiceOriented.ServiceBus.csproj">
