@@ -21,12 +21,39 @@ namespace IServiceOriented.ServiceBus
         {
             _messageTypes = (Type[])messageTypes.Clone();
         }
+
+        public TypedMessageFilter(bool inherit, Type messageType)
+        {
+            Inherit = inherit;
+            _messageTypes = new Type[] { messageType };
+        }
+
+        public TypedMessageFilter(bool inherit, params Type[] messageTypes)
+        {
+            Inherit = inherit;
+            _messageTypes = (Type[])messageTypes.Clone();
+        }
         
         public override bool Include(PublishRequest request)
         {
             if (request.Message == null) return false;
-            
-            return _messageTypes.Contains(request.Message.GetType());
+
+            if (!Inherit)
+            {
+                return _messageTypes.Contains(request.Message.GetType());
+            }
+            else
+            {
+                Type requestType = request.Message.GetType();
+                foreach (Type t in _messageTypes)
+                {
+                    if (t.IsAssignableFrom(requestType))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }            
         }
 
         const char TYPE_SEPERATOR = ':';
@@ -42,6 +69,13 @@ namespace IServiceOriented.ServiceBus
             {
                 _messageTypes = value.Select(s => Type.GetType(s)).ToArray();
             }
+        }
+
+        [DataMember]
+        public bool Inherit
+        {
+            get;
+            private set;
         }
 
         public Type[] GetMessageTypes()

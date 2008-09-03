@@ -63,11 +63,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ActionDispatcher.cs" />
     <Compile Include="CountdownLatch.cs" />
     <Compile Include="Dispatcher.cs" />
     <Compile Include="DuplicateIdentifierException.cs" />
     <Compile Include="Endpoint.cs" />
     <Compile Include="IReadOnlyDictionary.cs" />
+    <Compile Include="ISubscriptionDB.cs" />
     <Compile Include="Listener.cs" />
     <Compile Include="ILockedObject.cs" />
     <Compile Include="InvalidContractException.cs" />
@@ -77,6 +79,7 @@
     <Compile Include="NullUserNamePasswordValidator.cs" />
     <Compile Include="PublishRequest.cs" />
     <Compile Include="ReadOnlyDictionary.cs" />
+    <Compile Include="SqlSubscriptionDB.cs" />
     <Compile Include="SqlSubscriptionPersistenceService.cs">
       <SubType>Code</SubType>
     </Compile>

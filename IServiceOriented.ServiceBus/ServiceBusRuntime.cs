@@ -363,37 +363,7 @@ namespace IServiceOriented.ServiceBus
 		}
 
         ReaderWriterLockedObject<IEnumerable<SubscriptionEndpoint>, SubscriptionEndpointCollection> _subscriptions = new ReaderWriterLockedObject<IEnumerable<SubscriptionEndpoint>, SubscriptionEndpointCollection>(new SubscriptionEndpointCollection(), l => l);
-
-        public static void VerifyContract(Type contractType)
-        {
-            if (contractType == null) throw new ArgumentNullException("contractType");
-
-            MethodInfo[] methods = contractType.GetMethods();
-            HashSet<string> set = new HashSet<string>();
-
-            foreach (MethodInfo method in methods)
-            {
-                if (set.Contains(method.Name))
-                {
-                    throw new InvalidContractException("Method overloads are not allowed. The method "+method.Name+" is overloaded.");
-                }
-                else
-                {
-                    set.Add(method.Name);
-                }
-
-                if(method.ReturnType != typeof(void))
-                {
-                    throw new InvalidContractException(method.Name + " must have no return value instead of "+method.ReturnType);
-                }
-
-                if (method.GetParameters().Length != 1)
-                {
-                    throw new InvalidContractException("Methods must have one parameter");
-                }
-            }
-        }
-
+        
 		public void AddListener(ListenerEndpoint endpoint)
 		{
             if (_disposed) throw new ObjectDisposedException("ServiceBusRuntime");
@@ -404,9 +374,7 @@ namespace IServiceOriented.ServiceBus
             {
                 throw new InvalidOperationException("Listener is attached to a bus already");
             }
-
-            VerifyContract(endpoint.ContractType);
-
+            
             bool added = false;
             try
             {
@@ -783,9 +751,7 @@ namespace IServiceOriented.ServiceBus
 		public void Publish(PublishRequest publishRequest)
 		{
             if (_disposed) throw new ObjectDisposedException("ServiceBusRuntime");
-
-            VerifyContract(publishRequest.ContractType);
-
+            
             _subscriptions.Read(subscriptions =>
             {
                 using (TransactionScope ts = new TransactionScope())
@@ -796,27 +762,21 @@ namespace IServiceOriented.ServiceBus
                     foreach (SubscriptionEndpoint subscription in subscriptions)
                     {
                         bool include;
-                        if (subscription.Filter != null)
+                        
+                        if (subscription.Filter is UnhandledMessageFilter)
                         {
-                            if (subscription.Filter is UnhandledMessageFilter)
+                            include = false;
+                            if (subscription.Filter.Include(publishRequest))
                             {
-                                include = false;
-                                if (subscription.Filter.Include(publishRequest))
-                                {
-                                    unhandledFilters.Add(subscription);
-                                }
-                                
+                                unhandledFilters.Add(subscription);
                             }
-                            else
-                            {
-                                include = subscription.Filter.Include(publishRequest);
-                            }
+                            
                         }
                         else
                         {
-                            include = true;
+                            include = subscription.Filter == null || subscription.Filter.Include(publishRequest);
                         }
-
+                                                
                         if (include)
                         {
                             QueueDelivery(subscription.Id, publishRequest.ContractType, publishRequest.Action, publishRequest.Message, publishRequest.Context);
@@ -881,9 +841,7 @@ namespace IServiceOriented.ServiceBus
             if (subscription.Dispatcher.Runtime != null)
             {
                 throw new InvalidOperationException("Subscription is attached to a bus already");
-            }
-
-            VerifyContract(subscription.ContractType);
+            }            
 
             bool added = false;
             try

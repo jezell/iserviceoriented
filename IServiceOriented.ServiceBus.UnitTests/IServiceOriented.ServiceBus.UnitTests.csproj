@@ -50,6 +50,7 @@
   <ItemGroup>
     <Compile Include="BooleanMessageFilter.cs" />
     <Compile Include="IContract.cs" />
+    <Compile Include="MessageFiltersTest.cs" />
     <Compile Include="MsmqMessageDeliveryQueueTest.cs" />
     <Compile Include="NonTransactionalMemoryQueue.cs" />
     <Compile Include="NullMessageDeliveryQueue.cs" />

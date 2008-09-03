@@ -44,15 +44,14 @@ namespace IServiceOriented.ServiceBus
             DataContractSerializer serializer = getSerializer(false);
             return (MessageDelivery)serializer.ReadObject(message.BodyStream);
         }
-
+        
         public void Write(Message message, object obj)
-        {            
-            DataContractSerializer serializer = getSerializer(false);
+        {
             MemoryStream ms = new MemoryStream();
+            DataContractSerializer serializer = getSerializer(false);
             serializer.WriteObject(ms, obj);
             ms.Position = 0;
-            message.BodyStream = ms;
-            
+            message.BodyStream = ms;            
         }
 
         #endregion

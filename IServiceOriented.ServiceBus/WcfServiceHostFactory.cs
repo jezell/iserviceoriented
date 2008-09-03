@@ -61,7 +61,36 @@ namespace IServiceOriented.ServiceBus
 
             return list.ToArray();
         }
-        
+
+        public static void VerifyContract(Type contractType)
+        {
+            if (contractType == null) throw new ArgumentNullException("contractType");
+
+            MethodInfo[] methods = contractType.GetMethods();
+            HashSet<string> set = new HashSet<string>();
+
+            foreach (MethodInfo method in methods)
+            {
+                if (set.Contains(method.Name))
+                {
+                    throw new InvalidContractException("Method overloads are not allowed. The method " + method.Name + " is overloaded.");
+                }
+                else
+                {
+                    set.Add(method.Name);
+                }
+
+                if (method.ReturnType != typeof(void))
+                {
+                    throw new InvalidContractException(method.Name + " must have no return value instead of " + method.ReturnType);
+                }
+
+                if (method.GetParameters().Length != 1)
+                {
+                    throw new InvalidContractException("Methods must have one parameter");
+                }
+            }
+        }
         /// <summary>
         /// Dynamically generate a service implementation type for use with a ServiceHost
         /// </summary>
@@ -69,7 +98,7 @@ namespace IServiceOriented.ServiceBus
         /// <returns></returns>
         public static Type CreateImplementationType(Type interfaceType)
         {
-            ServiceBusRuntime.VerifyContract(interfaceType);
+            VerifyContract(interfaceType);
 
             AssemblyName assemblyName = new AssemblyName("ServiceBusTmpOf"+interfaceType.FullName);
             AssemblyBuilder assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);

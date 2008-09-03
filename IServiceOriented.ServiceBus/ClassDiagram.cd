@@ -308,28 +308,6 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" Collapsed="true" />
   </Class>
-  <Class Name="IServiceOriented.ServiceBus.SqlSubscriptionDB">
-    <Position X="4.5" Y="24.75" Width="3" />
-    <Members>
-      <Method Name="getConnection" Hidden="true" />
-      <Method Name="getDispatcherFromPersistenceData" Hidden="true" />
-      <Method Name="getDispatcherPersistenceData" Hidden="true" />
-      <Method Name="getFilterFromPersistenceData" Hidden="true" />
-      <Method Name="getFilterPersistenceData" Hidden="true" />
-      <Method Name="getListener" Hidden="true" />
-      <Method Name="getListenerFromPersistenceData" Hidden="true" />
-      <Method Name="getListenerPersistenceData" Hidden="true" />
-      <Method Name="getSubscription" Hidden="true" />
-      <Method Name="LoadListenerEndpoints" Hidden="true" />
-    </Members>
-    <Compartments>
-      <Compartment Name="Fields" Collapsed="true" />
-    </Compartments>
-    <TypeIdentifier>
-      <HashCode>EIAIAAABIAAAAAAAIAAgAAAIAAAAQAEIAAoAAQAEIAI=</HashCode>
-      <FileName>SqlSubscriptionPersistenceService.cs</FileName>
-    </TypeIdentifier>
-  </Class>
   <Class Name="IServiceOriented.ServiceBus.SqlSubscriptionPersistenceService" Collapsed="true">
     <Position X="4.5" Y="23.75" Width="3" />
     <TypeIdentifier>
@@ -457,6 +435,29 @@
       <HashCode>AAAAAAAAAAAAAAQAAAAAAAAAAAgAAIAAAAAAAAAAAAQ=</HashCode>
       <FileName>WcfServiceHostFactory.cs</FileName>
     </TypeIdentifier>
+  </Class>
+  <Class Name="IServiceOriented.ServiceBus.SqlSubscriptionDB">
+    <Position X="4.5" Y="24.75" Width="3" />
+    <Members>
+      <Method Name="getConnection" Hidden="true" />
+      <Method Name="getDispatcherFromPersistenceData" Hidden="true" />
+      <Method Name="getDispatcherPersistenceData" Hidden="true" />
+      <Method Name="getFilterFromPersistenceData" Hidden="true" />
+      <Method Name="getFilterPersistenceData" Hidden="true" />
+      <Method Name="getListener" Hidden="true" />
+      <Method Name="getListenerFromPersistenceData" Hidden="true" />
+      <Method Name="getListenerPersistenceData" Hidden="true" />
+      <Method Name="getSubscription" Hidden="true" />
+      <Method Name="LoadListenerEndpoints" Hidden="true" />
+    </Members>
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>EIAIAAABIAAAAAAAIAAgAAAIAAAAQAEIAAoAAQAEIAI=</HashCode>
+      <FileName>SqlSubscriptionDB.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
   </Class>
   <Interface Name="IServiceOriented.ServiceBus.ILockedObject&lt;TRead, TWrite&gt;" Collapsed="true">
     <Position X="14.5" Y="17.25" Width="3.5" />

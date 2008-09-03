@@ -21,6 +21,16 @@ namespace IServiceOriented.ServiceBus
         public UnhandledMessageFilter(params Type[] messageTypes) : base(messageTypes)
         {
         }
+
+        public UnhandledMessageFilter(bool inherit, Type messageType)
+            : base(inherit, messageType)
+        {
+        }
+
+        public UnhandledMessageFilter(bool inherit, params Type[] messageTypes)
+            : base(inherit, messageTypes)
+        {
+        }
         
         public override bool Include(PublishRequest request)
         {
