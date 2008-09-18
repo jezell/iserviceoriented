@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Configuration;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Configuration;
@@ -188,12 +189,13 @@ namespace IServiceOriented.ServiceBus
         {
             get;
             set;
-        }
-
+        }        
+        
         protected void Publish(Type contractType, string action, object message)
         {
+
             Dictionary<string, object> context = new Dictionary<string, object>();
-            
+
             // Add security context to the message if it is available
             if (System.ServiceModel.OperationContext.Current.ServiceSecurityContext != null)
             {
@@ -214,7 +216,9 @@ namespace IServiceOriented.ServiceBus
             PublishRequest pr = new PublishRequest(contractType, action, message, context.MakeReadOnly());
             Runtime.Publish(pr);
         }
+
     }
+    
 
     /// <summary>
     /// Custom service host used by WcfListener

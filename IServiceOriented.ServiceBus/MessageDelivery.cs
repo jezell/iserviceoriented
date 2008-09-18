@@ -290,5 +290,6 @@ namespace IServiceOriented.ServiceBus
         public const string PrimaryIdentityNameKey = "PrimaryIdentityName";        
         public const string WindowsIdentityNameKey = "WindowsIdentityName";
         public const string WindowsIdentityImpersonationLevelKey = "WindowsImpersonationLevel";
+        public const string ReplyToMessageId = "ReplyToMessageId";
     }
 }

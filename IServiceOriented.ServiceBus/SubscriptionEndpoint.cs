@@ -21,6 +21,14 @@ namespace IServiceOriented.ServiceBus
             Dispatcher = dispatcher;
         }
 
+
+        public SubscriptionEndpoint(Guid id, string name, string configurationName, string address, Type contractType, Dispatcher dispatcher, MessageFilter filter, bool transient)
+            : base(id, name, configurationName, address, contractType,  transient)
+        {
+            Filter = filter;
+            Dispatcher = dispatcher;
+        }
+
         public SubscriptionEndpoint(Guid id, string name, string configurationName, string address, string contractTypeName, Dispatcher dispatcher, MessageFilter filter)
             : base(id, name, configurationName, address, contractTypeName)
         {

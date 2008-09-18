@@ -15,12 +15,18 @@ namespace IServiceOriented.ServiceBus
         {
 
         }
-        public MethodDispatcher(object target) 
+
+        public MethodDispatcher(object target) : this(target, true)
+        {
+        }
+        public MethodDispatcher(object target, bool isOneWay) 
         {
             if (target == null)
             {
                 throw new ArgumentNullException("target");
             }
+
+            IsOneWay = isOneWay;
 
             Target = target;
             foreach (MethodInfo method in target.GetType().GetMethods())
@@ -30,7 +36,18 @@ namespace IServiceOriented.ServiceBus
                     throw new InvalidOperationException("Method overloads are not allowed");
                 }
                 _actionLookup.Add(method.Name, method);
+
+                if (!IsOneWay)
+                {
+                    _replyLookup.Add(method.Name, method.Name + "Reply");
+                }
             }            
+        }
+
+        public bool IsOneWay
+        {
+            get;
+            private set;
         }
 
         public object Target
@@ -42,6 +59,8 @@ namespace IServiceOriented.ServiceBus
         protected override void Dispatch(SubscriptionEndpoint endpoint, MessageDelivery messageDelivery)
         {            
             MethodInfo methodInfo;
+            string replyAction = null;
+
             if (!_actionLookup.TryGetValue(messageDelivery.Action, out methodInfo))
             {
                 foreach (string a in _actionLookup.Keys)
@@ -54,9 +73,18 @@ namespace IServiceOriented.ServiceBus
                 }
             }
 
+            if(!IsOneWay) replyAction = _replyLookup[messageDelivery.Action];
+
             if (methodInfo != null)
             {
-                methodInfo.Invoke(Target, new object[] { messageDelivery.Message });
+                object result = methodInfo.Invoke(Target, new object[] { messageDelivery.Message });
+
+                if (!IsOneWay)
+                {
+                    KeyValuePair<string, object>[] replyData = new KeyValuePair<string, object>[1];
+                    replyData[0] = new KeyValuePair<string, object>(MessageDelivery.ReplyToMessageId, messageDelivery.MessageId);                         
+                    Runtime.Publish(new PublishRequest(endpoint.ContractType, replyAction, result, new ReadOnlyDictionary<string, object>(replyData)));
+                }
             }
             else
             {
@@ -65,6 +93,7 @@ namespace IServiceOriented.ServiceBus
         }
 
         Dictionary<string, MethodInfo> _actionLookup = new Dictionary<string, MethodInfo>();
+        Dictionary<string, string> _replyLookup = new Dictionary<string, string>();
 
     }
 	

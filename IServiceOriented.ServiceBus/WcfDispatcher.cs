@@ -21,15 +21,12 @@ namespace IServiceOriented.ServiceBus
             
         }
 
-        public WcfDispatcher(WcfDispatchStyle dispatchStyle)
-        {
-            DispatchStyle = dispatchStyle;
-        }
-
+        
         // TODO: if the same dispatcher instance is reused with another type this will be invalid
         void initActionLookup()
         {
             Dictionary<string, MethodInfo> actionLookup = new Dictionary<string, MethodInfo>();
+            Dictionary<string, string> replyActionLookup = new Dictionary<string, string>();
             foreach (MethodInfo method in Endpoint.ContractType.GetMethods())
             {
                 object[] attributes = method.GetCustomAttributes(typeof(OperationContractAttribute), false);
@@ -42,30 +39,22 @@ namespace IServiceOriented.ServiceBus
                         action = method.Name;
                     }
                     actionLookup.Add(action, method);
-                }
-            }
-            _actionLookup = actionLookup;
-            
-        }
 
-        // TODO: if the same dispatcher instance is reused with another type this will be invalid
-        void initTypeLookup()
-        {
-            Dictionary<Type, MethodInfo> typeLookup = new Dictionary<Type, MethodInfo>();
-            foreach (MethodInfo method in Endpoint.ContractType.GetMethods())
-            {
-                object[] attributes = method.GetCustomAttributes(typeof(OperationContractAttribute), false);
-                if (attributes.Length > 0)
-                {
-                    OperationContractAttribute oca = (OperationContractAttribute)attributes[0];
-                    ParameterInfo[] parameters = method.GetParameters();
-                    if (parameters.Length == 1)
+                    if(!oca.IsOneWay)
                     {
-                        typeLookup.Add(parameters[0].ParameterType, method);
+                        string replyAction = oca.ReplyAction;
+                        if(replyAction == null)
+                        {
+                            replyAction = action+"Reply";
+                        }
+
+                        replyActionLookup.Add(action, replyAction);
                     }
                 }
             }
-            _typeLookup = typeLookup;            
+            _actionLookup = actionLookup;
+            _replyActionLookup = replyActionLookup;
+            
         }
 
         /// <summary>
@@ -106,52 +95,57 @@ namespace IServiceOriented.ServiceBus
             {
                 MethodInfo methodInfo;
 
-                if (DispatchStyle == WcfDispatchStyle.Action)
+                if (_actionLookup == null)
                 {
-                    if (_actionLookup == null)
-                    {
-                        initActionLookup();
-                    }
+                    initActionLookup();
+                }
 
-                    if (!_actionLookup.TryGetValue(messageDelivery.Action, out methodInfo))
+                if (!_actionLookup.TryGetValue(messageDelivery.Action, out methodInfo))
+                {
+                    foreach (string a in _actionLookup.Keys)
                     {
-                        foreach (string a in _actionLookup.Keys)
+                        if (a == "*")
                         {
-                            if (a == "*")
-                            {
-                                methodInfo = _actionLookup[a];
-                                break;
-                            }
+                            methodInfo = _actionLookup[a];
+                            break;
                         }
                     }
-                }
-                else if (DispatchStyle == WcfDispatchStyle.Type)
-                {
-                    if (_typeLookup == null)
-                    {
-                        initTypeLookup();
-                    }
-
-                    if (_typeLookup.TryGetValue(messageDelivery.Message.GetType(), out methodInfo))
-                    {
-                        foreach (Type t in _typeLookup.Keys)
-                        {
-                            if (t == typeof(object))
-                            {
-                                methodInfo = _typeLookup[t];
-                                break;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    throw new NotSupportedException();
                 }
 
                 if (methodInfo != null)
-                {                    
-                    methodInfo.Invoke(proxy, new object[] { messageDelivery.Message });                    
+                {
+                    try
+                    {
+                        object result = methodInfo.Invoke(proxy, new object[] { messageDelivery.Message });
+
+                        if (_replyActionLookup.ContainsKey(messageDelivery.Action)) // if two way message, publish reply
+                        {
+                            KeyValuePair<string, object>[] replyData = new KeyValuePair<string, object>[1];
+                            replyData[0] = new KeyValuePair<string, object>(MessageDelivery.ReplyToMessageId, messageDelivery.MessageId);
+                            Runtime.Publish(new PublishRequest(endpoint.ContractType, _replyActionLookup[messageDelivery.Action], result, new ReadOnlyDictionary<string,object>( replyData ))); 
+                        }
+                    }
+                    catch(System.Reflection.TargetInvocationException ex)
+                    {
+                        if (_replyActionLookup.ContainsKey(messageDelivery.Action)) // if two way message, publish reply
+                        {
+                            KeyValuePair<string, object>[] replyData = new KeyValuePair<string, object>[1];
+                            replyData[0] = new KeyValuePair<string, object>(MessageDelivery.ReplyToMessageId, messageDelivery.MessageId);
+                        
+                            if (ex.InnerException is FaultException)
+                            {
+                                Runtime.Publish(new PublishRequest(endpoint.ContractType, _replyActionLookup[messageDelivery.Action], ex.InnerException, new ReadOnlyDictionary<string, object>(replyData)));
+                            }
+                            else
+                            {
+                                throw;
+                            }
+                        }
+                        else
+                        {
+                            throw;   
+                        }
+                    }                    
                 }
                 else
                 {
@@ -170,32 +164,13 @@ namespace IServiceOriented.ServiceBus
         }
 
         [NonSerialized]
-        Dictionary<string, MethodInfo> _actionLookup;
+        Dictionary<string, string> _replyActionLookup;
+
 
         [NonSerialized]
-        Dictionary<Type, MethodInfo> _typeLookup;
+        Dictionary<string, MethodInfo> _actionLookup;
 
-
-        /// <summary>
-        /// Gets or sets the way that this dispatcher will determine which operation to invoke.
-        /// </summary>        
-        public WcfDispatchStyle DispatchStyle
-        {
-            get;
-            set;
-        }
     }
 
-    public enum WcfDispatchStyle
-    {
-        /// <summary>
-        /// Dispatch by finding an operation that matches the requested action (or "*" if no direct match)
-        /// </summary>
-        Action, 
-        /// <summary>
-        /// Dispatch by finding an operation that accepts the requested message type (or object if no direct match)
-        /// </summary>
-        Type
-    }
 		
 }

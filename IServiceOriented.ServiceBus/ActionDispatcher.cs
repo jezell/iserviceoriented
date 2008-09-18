@@ -17,6 +17,7 @@ namespace IServiceOriented.ServiceBus
         {
             DispatchAction = dispatchAction;
         }
+
         public Action<SubscriptionEndpoint, MessageDelivery> DispatchAction
         {
             get;

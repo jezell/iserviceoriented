@@ -7,8 +7,12 @@ using System.Text;
 using System.Data;
 using System.Data.SqlClient;
 
+#if MICROSOFT_SQLSERVER_MANAGEMENT
+
 using Microsoft.SqlServer.Management.Common;
 using Microsoft.SqlServer.Management.Smo;
+
+#endif 
 
 using System.Runtime.Serialization;
 
@@ -84,6 +88,7 @@ namespace IServiceOriented.ServiceBus
             return connection;
         }
 
+#if MICROSOFT_SQLSERVER_MANAGEMENT 
         public static void CreateDB(string server, string dbName)
         {
             using (SqlConnection connection = new SqlConnection("Data Source=" + server + "; Integrated Security=SSPI;"))
@@ -110,7 +115,17 @@ namespace IServiceOriented.ServiceBus
                 serverObj.ConnectionContext.Cancel();
             }
         }
+#else 
+        public static void CreateDB(string server, string dbName)
+        {
+            throw new NotImplementedException();
+        }
 
+        public static void DropDB(string server, string dbName)
+        {
+            throw new NotImplementedException();
+        }
+#endif
 
         SubscriptionEndpoint getSubscription(IDataReader dr)
         {

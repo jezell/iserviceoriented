@@ -542,15 +542,7 @@ namespace IServiceOriented.ServiceBus
                     endpoint = subscriptions.FirstOrDefault(s => s.Id == subscriptionEndpointId);
                 });
             return endpoint;
-        }
-				
-		protected void QueueDelivery(Guid subscriptionEndpointId, Type contractType, string action, object message, ReadOnlyDictionary<string, object> context)
-		{
-            if (message == null) throw new ArgumentNullException("message");
-
-			MessageDelivery delivery = new MessageDelivery(subscriptionEndpointId, contractType, action, message, _maxRetries, context);
-			_messageDeliveryQueue.Enqueue(delivery);
-		}
+        }		
 
         int _maxRetries = 10;
         public int MaxRetries
@@ -746,13 +738,41 @@ namespace IServiceOriented.ServiceBus
 
         public void Publish(Type contractType, string action, object message)
         {
-            Publish(new PublishRequest(contractType, action, message, new ReadOnlyDictionary<string,object>()));
+            MessageDelivery[] results;
+            Publish(new PublishRequest(contractType, action, message, new ReadOnlyDictionary<string,object>()), PublishWait.None, TimeSpan.MinValue, out results);
         }
-		public void Publish(PublishRequest publishRequest)
+
+        public void Publish(PublishRequest publishRequest)
+        {
+            MessageDelivery[] results;
+            Publish(publishRequest, PublishWait.None, TimeSpan.MinValue, out results);
+        }
+
+		public void Publish(PublishRequest publishRequest, PublishWait wait, TimeSpan timeout, out MessageDelivery[] res)
 		{
+            bool waitForReply = wait != PublishWait.None;
+ 
             if (_disposed) throw new ObjectDisposedException("ServiceBusRuntime");
-            
-            _subscriptions.Read(subscriptions =>
+
+            res = null;
+
+            MessageDelivery[] results = null;
+
+            SubscriptionEndpoint[] subscriptions = null;
+            _subscriptions.Read(endpoints =>
+            {
+                subscriptions = endpoints.ToArray();
+            });
+
+            int subscriptionCount = subscriptions.Length;
+
+            List<MessageDelivery> messageDeliveries = new List<MessageDelivery>();
+            ReplyMessageFilter filter;
+            ActionDispatcher dispatcher;
+            SubscriptionEndpoint temporarySubscription = null;
+
+            CountdownLatch latch = null;
+            try
             {
                 using (TransactionScope ts = new TransactionScope())
                 {
@@ -762,7 +782,7 @@ namespace IServiceOriented.ServiceBus
                     foreach (SubscriptionEndpoint subscription in subscriptions)
                     {
                         bool include;
-                        
+
                         if (subscription.Filter is UnhandledMessageFilter)
                         {
                             include = false;
@@ -770,16 +790,17 @@ namespace IServiceOriented.ServiceBus
                             {
                                 unhandledFilters.Add(subscription);
                             }
-                            
+
                         }
                         else
                         {
                             include = subscription.Filter == null || subscription.Filter.Include(publishRequest);
                         }
-                                                
+
                         if (include)
-                        {
-                            QueueDelivery(subscription.Id, publishRequest.ContractType, publishRequest.Action, publishRequest.Message, publishRequest.Context);
+                        {                                                             
+                            MessageDelivery delivery = new MessageDelivery(subscription.Id, publishRequest.ContractType, publishRequest.Action, publishRequest.Message, _maxRetries, publishRequest.Context);
+                            messageDeliveries.Add(delivery);
                             handled = true;
                         }
                     }
@@ -789,14 +810,61 @@ namespace IServiceOriented.ServiceBus
                     {
                         foreach (SubscriptionEndpoint subscription in unhandledFilters)
                         {
-                            QueueDelivery(subscription.Id, publishRequest.ContractType, publishRequest.Action, publishRequest.Message, publishRequest.Context);
+                            MessageDelivery delivery = new MessageDelivery(subscription.Id, publishRequest.ContractType, publishRequest.Action, publishRequest.Message, _maxRetries, publishRequest.Context);
+                            messageDeliveries.Add(delivery);
                         }
                     }
 
+                    if(waitForReply)
+                    {
+                        latch = new CountdownLatch(messageDeliveries.Count);
+                        filter = new ReplyMessageFilter(messageDeliveries.Select(md => md.MessageId).ToArray());
+                        results = new MessageDelivery[messageDeliveries.Count];
+                        dispatcher = new ActionDispatcher((se, md) =>
+                                {
+                                    for (int j = 0; j < messageDeliveries.Count; j++)
+                                    {
+                                        if (messageDeliveries[j].MessageId == (string)md.Context[MessageDelivery.ReplyToMessageId]) // is reply
+                                        {
+                                            results[j] = md;
+                                            latch.Tick();
+                                        }
+                                    }
+                                });
 
+                        temporarySubscription = new SubscriptionEndpoint(Guid.NewGuid(), "Temporary subscription", null, null, typeof(void), dispatcher, filter, true);                            
+                        Subscribe(temporarySubscription);
+                    }                        
+                                   
+                    Thread.MemoryBarrier(); // make sure variable assignment doesn't move after enqueue
+
+                    foreach (MessageDelivery md in messageDeliveries)
+                    {
+                        _messageDeliveryQueue.Enqueue(md);
+                    }
+                    
                     ts.Complete();
                 }
-            });
+
+                if (waitForReply)
+                {
+                    latch.Handle.WaitOne(timeout, true); // wait for responses
+                }
+            }
+            finally
+            {
+                if(temporarySubscription != null)
+                {
+                    Unsubscribe(temporarySubscription);
+                }
+                if (latch != null)
+                {
+                    latch.Dispose();
+                }
+            }
+        
+
+            res = results;
 		}
 
         public Collection<ListenerEndpoint> ListListeners()
@@ -1060,6 +1128,13 @@ namespace IServiceOriented.ServiceBus
             get;
             set;
         }        
+    }
+
+    public enum PublishWait
+    {
+        None,
+        Timeout,
+        FirstWins
     }
 
 }
