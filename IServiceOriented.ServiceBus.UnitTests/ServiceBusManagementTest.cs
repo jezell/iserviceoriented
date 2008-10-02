@@ -69,9 +69,8 @@ namespace IServiceOriented.ServiceBus.UnitTests
             
             NonTransactionalMemoryQueue failureQueue = new NonTransactionalMemoryQueue();
             failureQueue.Enqueue(failure);
-            ServiceBusRuntime runtime = new ServiceBusRuntime(new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue(), failureQueue);
-            runtime.RegisterService(new WcfManagementService());
-
+            ServiceBusRuntime runtime = new ServiceBusRuntime(new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue(), failureQueue, SimpleServiceLocator.With(new WcfManagementService()));
+            
             runtime.Start();
 
             Service.Use<IServiceBusManagementService>(managementService =>

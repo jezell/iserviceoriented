@@ -236,8 +236,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
             MsmqMessageDeliveryQueue retryQueue = new MsmqMessageDeliveryQueue(_retryQueuePath);
             MsmqMessageDeliveryQueue failQueue = new MsmqMessageDeliveryQueue(_failQueuePath);
 
-            ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(testQueue, retryQueue, failQueue);
-            serviceBusRuntime.RegisterService(new PerformanceMonitorRuntimeService());
+            ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(testQueue, retryQueue, failQueue, SimpleServiceLocator.With(new PerformanceMonitorRuntimeService()));
 
             ContractImplementation ci = new ContractImplementation();
             ci.SetFailCount(0);
@@ -300,14 +299,12 @@ namespace IServiceOriented.ServiceBus.UnitTests
             MsmqMessageDeliveryQueue retryQueue = new MsmqMessageDeliveryQueue(_retryQueuePath);
             MsmqMessageDeliveryQueue failQueue = new MsmqMessageDeliveryQueue(_failQueuePath);
 
-            ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(testQueue, retryQueue, failQueue);
+            ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(testQueue, retryQueue, failQueue, SimpleServiceLocator.With(new PerformanceMonitorRuntimeService()));
 
             serviceBusRuntime.ExponentialBackOff = false;
             serviceBusRuntime.RetryDelay = 1000;
             serviceBusRuntime.MaxRetries = 1000;
-
-            serviceBusRuntime.RegisterService(new PerformanceMonitorRuntimeService());
-
+            
             ContractImplementation ci = new ContractImplementation();
             ci.SetFailCount(0);
             ci.SetFailInterval(10);

@@ -91,7 +91,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
         {
             public override bool Include(PublishRequest request)
             {
-                if (request.Context.ContainsKey(MessageDelivery.ReplyToMessageId))
+                if (request.Context.ContainsKey(MessageDelivery.CorrelationId))
                 {
                     return false;
                 }

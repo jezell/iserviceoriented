@@ -12,28 +12,18 @@ namespace IServiceOriented.ServiceBus.UnitTests
     {
         public SqlSubscriptionDbUnitTest()
         {
-            //
-            // TODO: Add constructor logic here
-            //
         }
 
         [ClassInitialize]
         public static void Initialize(TestContext context)
-        {
-            try
-            {
-                SqlSubscriptionDB.DropDB(@"(local)\SQLEXPRESS", "ServiceBus");
-            }
-            catch
-            {
-            }
-            SqlSubscriptionDB.CreateDB(@"(local)\SQLEXPRESS", "ServiceBus");
+        {            
+            SqlSubscriptionDB.CreateDB(@"(local)", "ServiceBus");
         }
 
         [ClassCleanup]        
         public static void Cleanup()
         {
-            
+            SqlSubscriptionDB.DropDB(@"(local)", "ServiceBus");               
         }
 
         private TestContext testContextInstance;
@@ -54,7 +44,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
             }
         }
 
-        string _connectionString = @"Data Source=(local)\SQLEXPRESS; Initial Catalog=ServiceBus; Integrated Security=SSPI;";
+        string _connectionString = @"Data Source=(local); Initial Catalog=ServiceBus; Integrated Security=SSPI;";
 
         [TestMethod]
         public void TestCrud()

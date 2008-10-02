@@ -7,13 +7,6 @@ using System.Text;
 using System.Data;
 using System.Data.SqlClient;
 
-#if MICROSOFT_SQLSERVER_MANAGEMENT
-
-using Microsoft.SqlServer.Management.Common;
-using Microsoft.SqlServer.Management.Smo;
-
-#endif 
-
 using System.Runtime.Serialization;
 
 
@@ -88,44 +81,70 @@ namespace IServiceOriented.ServiceBus
             return connection;
         }
 
-#if MICROSOFT_SQLSERVER_MANAGEMENT 
+        static void executeScript(SqlConnection connection, StreamReader scriptReader)
+        {
+            using (SqlCommand create = new SqlCommand())
+            {
+                create.Connection = connection;
+                StringBuilder commandBuilder = new StringBuilder();
+
+                string line = null;
+                while ((line = scriptReader.ReadLine()) != null)
+                {
+                    if (String.Compare(line.Trim(), "go", StringComparison.InvariantCultureIgnoreCase) == 0)
+                    {
+                        create.CommandText = commandBuilder.ToString();
+                        create.ExecuteNonQuery();
+                        commandBuilder.Length = 0;
+                    }
+                    else
+                    {
+                        commandBuilder.AppendLine(line);
+                    }
+                }
+
+                // run last
+                create.CommandText = commandBuilder.ToString();
+                create.ExecuteNonQuery();
+            
+            }
+        }
+
         public static void CreateDB(string server, string dbName)
         {
             using (SqlConnection connection = new SqlConnection("Data Source=" + server + "; Integrated Security=SSPI;"))
             {
-                Server serverObj = new Server(new ServerConnection(connection));
+                connection.Open();
+                using (SqlCommand createDb = new SqlCommand("CREATE DATABASE [" + dbName + "]", connection))
+                {
+                    createDb.ExecuteNonQuery();
+                }
+
+                using (SqlCommand useDb = new SqlCommand("USE [" + dbName + "]", connection))
+                {
+                    useDb.ExecuteNonQuery();
+                }
 
                 using (StreamReader sr = new StreamReader(typeof(SqlSubscriptionDB).Assembly.GetManifestResourceStream("IServiceOriented.ServiceBus.CreateSqlSubscriptionPersistenceServiceDb.sql")))
                 {
-                    string createScript = sr.ReadToEnd();
-                    serverObj.ConnectionContext.ExecuteNonQuery("CREATE DATABASE [" + dbName + "]\r\nGO\r\nUSE [" + dbName + "]");
-                    serverObj.ConnectionContext.ExecuteNonQuery(createScript);
-                    serverObj.ConnectionContext.ExecuteNonQuery("USE [master]");
-                    serverObj.ConnectionContext.Cancel();
+                    executeScript(connection, sr);
+                }
+                
+            }            
+        }
+
+        public static void DropDB(string server, string dbName)
+        {
+            using (SqlConnection connection = new SqlConnection("Data Source=" + server + "; Integrated Security=SSPI;"))
+            {
+                connection.Open();
+                using (SqlCommand command = new SqlCommand("DROP DATABASE [" + dbName + "]", connection))
+                {
+                    command.ExecuteNonQuery();
                 }
             }
         }
 
-        public static void DropDB(string server, string dbName)
-        {
-            using (SqlConnection connection = new SqlConnection("Data Source=" + server + "; Integrated Security=SSPI;"))
-            {
-                Server serverObj = new Server(new ServerConnection(connection));
-                serverObj.ConnectionContext.ExecuteNonQuery("USE [master]\r\nGO\r\nDROP DATABASE [" + dbName + "]");
-                serverObj.ConnectionContext.Cancel();
-            }
-        }
-#else 
-        public static void CreateDB(string server, string dbName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static void DropDB(string server, string dbName)
-        {
-            throw new NotImplementedException();
-        }
-#endif
 
         SubscriptionEndpoint getSubscription(IDataReader dr)
         {

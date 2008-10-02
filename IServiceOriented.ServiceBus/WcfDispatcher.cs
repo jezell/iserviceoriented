@@ -121,7 +121,7 @@ namespace IServiceOriented.ServiceBus
                         if (_replyActionLookup.ContainsKey(messageDelivery.Action)) // if two way message, publish reply
                         {
                             KeyValuePair<string, object>[] replyData = new KeyValuePair<string, object>[1];
-                            replyData[0] = new KeyValuePair<string, object>(MessageDelivery.ReplyToMessageId, messageDelivery.MessageId);
+                            replyData[0] = new KeyValuePair<string, object>(MessageDelivery.CorrelationId, messageDelivery.MessageId);
                             Runtime.Publish(new PublishRequest(endpoint.ContractType, _replyActionLookup[messageDelivery.Action], result, new ReadOnlyDictionary<string,object>( replyData ))); 
                         }
                     }
@@ -130,7 +130,7 @@ namespace IServiceOriented.ServiceBus
                         if (_replyActionLookup.ContainsKey(messageDelivery.Action)) // if two way message, publish reply
                         {
                             KeyValuePair<string, object>[] replyData = new KeyValuePair<string, object>[1];
-                            replyData[0] = new KeyValuePair<string, object>(MessageDelivery.ReplyToMessageId, messageDelivery.MessageId);
+                            replyData[0] = new KeyValuePair<string, object>(MessageDelivery.CorrelationId, messageDelivery.MessageId);
                         
                             if (ex.InnerException is FaultException)
                             {

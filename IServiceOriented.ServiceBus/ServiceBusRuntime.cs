@@ -9,110 +9,56 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Globalization;
 
+using Microsoft.Practices.ServiceLocation;
+
 namespace IServiceOriented.ServiceBus
 {
 	public class ServiceBusRuntime : IDisposable
 	{
-		public ServiceBusRuntime(IMessageDeliveryQueue deliveryQueue, IMessageDeliveryQueue retryQueue, IMessageDeliveryQueue failureQueue)
-		{
+        public ServiceBusRuntime(IMessageDeliveryQueue deliveryQueue, IMessageDeliveryQueue retryQueue, IMessageDeliveryQueue failureQueue, IServiceLocator serviceLocator)
+        {
             if (deliveryQueue == null) throw new ArgumentNullException("deliveryQueue");
             if (retryQueue == null) throw new ArgumentNullException("retryQueue");
             if (failureQueue == null) throw new ArgumentNullException("failureQueue");
-            
-			_messageDeliveryQueue = deliveryQueue;
-			_retryQueue = retryQueue;			
+
+            try
+            {
+                serviceLocator = Microsoft.Practices.ServiceLocation.ServiceLocator.Current;
+            }
+            catch(NullReferenceException) // 1.0 throws null ref exception if no provider delegate is set.
+            {
+            }
+
+            if (serviceLocator == null)
+            {                
+                serviceLocator = new SimpleServiceLocator(); // default to simple service locator
+            }
+
+            _messageDeliveryQueue = deliveryQueue;
+            _retryQueue = retryQueue;
             _failureQueue = failureQueue;
+
+            _serviceLocator = serviceLocator;
+        }
+		public ServiceBusRuntime(IMessageDeliveryQueue deliveryQueue, IMessageDeliveryQueue retryQueue, IMessageDeliveryQueue failureQueue) : this(deliveryQueue, retryQueue, failureQueue, null)
+		{
+            
 		}
 		
 		object _startLock = new object();
 		
 		List<Thread> _workerThreads = new List<Thread>();
         object _workerThreadsLock = new object();
-		
-		public void RegisterService(RuntimeService service)
-		{
-            if (_disposed) throw new ObjectDisposedException("ServiceBusRuntime");
 
-            if (service == null) throw new ArgumentNullException("service");
-
-			lock(_startLock)
-			{
-                if (_started)
-                {
-                    throw new InvalidOperationException("Services cannot be registered or unregistered while the bus is running.");
-                }
-                _runtimeServices.Write(runtimeServices =>
-                {
-                    runtimeServices.Add(service);                    
-                });
-			}
-		}
-		
-		public void UnregisterService(RuntimeService service)
-		{
-            if (_disposed) throw new ObjectDisposedException("ServiceBusRuntime");
-
-            if (service == null) throw new ArgumentNullException("service");
-
-			lock(_startLock)
-			{
-                if (_started)
-                {
-                    throw new InvalidOperationException("Services cannot be registered or unregistered while the bus is running.");
-                }
-
-                _runtimeServices.Write(runtimeServices =>
-                {
-                    runtimeServices.Remove(service);
-				});   
+        IServiceLocator _serviceLocator;
+        public IServiceLocator ServiceLocator
+        {
+            get
+            {
+                return _serviceLocator;
             }
-		}
-
-        public RuntimeService GetRuntimeService(Type type)
-        {
-            if (_disposed) throw new ObjectDisposedException("ServiceBusRuntime");
-
-            if (type == null) throw new ArgumentNullException("type");
-            
-            RuntimeService retVal = null;
-            _runtimeServices.Read(runtimeServices =>
-            {
-                foreach (RuntimeService service in runtimeServices)
-                {
-                    if (type.IsAssignableFrom(service.GetType()))
-                    {
-                        retVal = (RuntimeService)service;
-                        break;
-                    }
-                }
-            });
-            return retVal;
         }
-
-        public IEnumerable<RuntimeService> GetRuntimeServices(Type type)
-        {
-            if (_disposed) throw new ObjectDisposedException("ServiceBusRuntime");
-
-            if (type == null) throw new ArgumentNullException("type");
-
-            List<RuntimeService> matching = new List<RuntimeService>();
-            _runtimeServices.Read(runtimeServices =>
-            {
-                foreach (RuntimeService service in runtimeServices)
-                {
-                    if (type.IsAssignableFrom(service.GetType()))
-                    {
-                        matching.Add(service);
-                    }
-                }
-
-            });
-            return matching;
-        }
-		
-        ReaderWriterLockedObject<ReadOnlyCollection<RuntimeService>, IList<RuntimeService>> _runtimeServices = new ReaderWriterLockedObject<ReadOnlyCollection<RuntimeService>, IList<RuntimeService>>(new List<RuntimeService>(), l => new ReadOnlyCollection<RuntimeService>(l));
-
-        
+			                      
         
 		public void Start()
 		{
@@ -125,16 +71,9 @@ namespace IServiceOriented.ServiceBus
                     throw new InvalidOperationException("The service bus is already started.");
                 }                
                                 
-                _runtimeServices.Read(runtimeServices =>
-                {
-
-                    int i = 0;
-                    for (; i < runtimeServices.Count; i++)
-                    {
-                        runtimeServices[i].StartInternal(this);
-                    }
-                                        
-                });
+                IEnumerable<RuntimeService> runtimeServices = ServiceLocator.GetAllInstances<RuntimeService>();
+                
+                foreach(RuntimeService rs in runtimeServices) rs.StartInternal(this);                    
 
                 _subscriptions.Read(subscriptions =>
                 {
@@ -190,10 +129,10 @@ namespace IServiceOriented.ServiceBus
 			{                
                 DoSafely(() =>
                 {
-                    CommittableTransaction ct = new CommittableTransaction();
-                    Transaction.Current = ct;
                     try
                     {
+                        CommittableTransaction ct = new CommittableTransaction();
+
                         Transaction.Current = ct;
                         MessageDelivery md = _messageDeliveryQueue.Dequeue(TimeSpan.FromSeconds(DEQUEUE_TIMEOUT_SECONDS));
 
@@ -246,33 +185,40 @@ namespace IServiceOriented.ServiceBus
             int threadIndex = (int)param;
             while(true)
 			{
-                CommittableTransaction ct = new CommittableTransaction();
 
-                try
+                DoSafely(() =>
                 {
-                    Transaction.Current = ct;
-                    MessageDelivery md = _retryQueue.Dequeue(TimeSpan.FromSeconds(DEQUEUE_TIMEOUT_SECONDS));
 
-                    if (md != null)
+                    try
                     {
-                        DeliveryWork work = new DeliveryWork(ct, md);
+                        CommittableTransaction ct = new CommittableTransaction();
+                        Transaction.Current = ct;
+                        MessageDelivery md = _retryQueue.Dequeue(TimeSpan.FromSeconds(DEQUEUE_TIMEOUT_SECONDS));
 
-                        ThreadPool.QueueUserWorkItem((deliveryWork) =>
+                        if (md != null)
                         {
-                            DeliverOne((DeliveryWork)deliveryWork, _retryQueue);
-                        }, work);
-                    }
+                            DeliveryWork work = new DeliveryWork(ct, md);
 
-                    if (_stopping)
+                            ThreadPool.QueueUserWorkItem((deliveryWork) =>
+                            {
+                                DeliverOne((DeliveryWork)deliveryWork, _retryQueue);
+                            }, work);
+                        }
+
+                    }
+                    finally
                     {
-                        _stopWaitHandles[threadIndex].Set();
-                        break;
-                    }                 
-                }
-                finally
+                        Transaction.Current = null;
+                    }
+                });
+
+                if (_stopping)
                 {
-                    Transaction.Current = null;
+                    _stopWaitHandles[threadIndex].Set();
+                    break;
                 }
+                 
+
                 Thread.Sleep(RETRY_SLEEP_MS);
 			}
 		}
@@ -316,14 +262,11 @@ namespace IServiceOriented.ServiceBus
                     }
                 });
 
-                _runtimeServices.Read(runtimeServices =>
+                foreach (RuntimeService service in ServiceLocator.GetAllInstances<RuntimeService>())
                 {
-                    foreach (RuntimeService service in runtimeServices)
-                    {
-                        service.StopInternal();
-                    }
-                });
-
+                    service.StopInternal();
+                }
+        
 			
                 _started = false;
 			}
@@ -387,14 +330,11 @@ namespace IServiceOriented.ServiceBus
                         added = true;
                     }
                     
-                    _runtimeServices.Read(runtimeServices =>
+                    foreach (RuntimeService service in ServiceLocator.GetAllInstances<RuntimeService>())
                     {
-                        foreach (RuntimeService service in runtimeServices)
-                        {
-                            service.OnListenerAdded(endpoint);
-                        }
-                    });                    
-
+                        service.OnListenerAdded(endpoint);
+                    }
+            
                     EventHandler<EndpointEventArgs> listenEvent = ListenerAdded;
                     if (listenEvent != null) listenEvent(this, new EndpointEventArgs(endpoint));
 
@@ -435,14 +375,11 @@ namespace IServiceOriented.ServiceBus
                     }
                     RemoveListener(endpoint);
 
-                    _runtimeServices.Read(runtimeServices =>
+                    foreach (RuntimeService service in ServiceLocator.GetAllInstances<RuntimeService>())
                     {
-                        foreach (RuntimeService service in runtimeServices)
-                        {
-                            service.OnListenerRemoved(endpoint);
-                        }
-                    });                    
-
+                        service.OnListenerRemoved(endpoint);
+                    }
+                
                     EventHandler<EndpointEventArgs> removed = ListenerRemoved;
                     if (removed != null)
                     {
@@ -474,14 +411,12 @@ namespace IServiceOriented.ServiceBus
                         endpoint.Listener.Runtime = null;
 				    }
 
-                    _runtimeServices.Read(runtimeServices =>
+                    
+                    foreach (RuntimeService service in ServiceLocator.GetAllInstances<RuntimeService>())
                     {
-                        foreach (RuntimeService service in runtimeServices)
-                        {
-                            service.OnListenerRemoved(endpoint);
-                        }
-                    });
-
+                        service.OnListenerRemoved(endpoint);
+                    }
+                
                     EventHandler<EndpointEventArgs> unlistenEvent = ListenerRemoved;
                     if (unlistenEvent != null) unlistenEvent(this, new EndpointEventArgs(endpoint));
 
@@ -623,10 +558,10 @@ namespace IServiceOriented.ServiceBus
                                     {
                                         dispatcher.DispatchInternal(delivery);
 
-                                        _runtimeServices.FastRead(runtimeServices =>
+                                        foreach(RuntimeService service in ServiceLocator.GetAllInstances<RuntimeService>())
                                         {
-                                            ForEachSafely(runtimeServices, service => service.OnMessageDelivered(delivery));
-                                        });
+                                            service.OnMessageDelivered(delivery);
+                                        }
                                         InvokeSafely(_messageDelivered, this, new MessageDeliveryEventArgs() { MessageDelivery = delivery });
                                     }
                                 }
@@ -641,10 +576,11 @@ namespace IServiceOriented.ServiceBus
                                 notifyUnhandledException(ex);
                                 retryQueue.Enqueue(retryDelivery);
 
-                                _runtimeServices.FastRead(runtimeServices =>
+                                foreach(RuntimeService service in ServiceLocator.GetAllInstances<RuntimeService>())
                                 {
-                                    ForEachSafely(runtimeServices, service => service.OnMessageDeliveryFailed(delivery, false));
-                                });
+                                    service.OnMessageDeliveryFailed(delivery, false);
+                                }
+                           
                                 InvokeSafely(_messageDeliveryFailed, this, new MessageDeliveryFailedEventArgs() { MessageDelivery = delivery, Permanent = false });
                             }
                             else
@@ -653,10 +589,10 @@ namespace IServiceOriented.ServiceBus
                                 notifyUnhandledException(ex);
                                 _failureQueue.Enqueue(retryDelivery);
 
-                                _runtimeServices.FastRead(runtimeServices =>
+                                foreach(RuntimeService service in ServiceLocator.GetAllInstances<RuntimeService>())
                                 {
-                                    ForEachSafely(runtimeServices, service => service.OnMessageDeliveryFailed(delivery, true));
-                                });
+                                    service.OnMessageDeliveryFailed(delivery, true);
+                                }
                                 InvokeSafely(_messageDeliveryFailed, this, new MessageDeliveryFailedEventArgs() { MessageDelivery = delivery, Permanent = true });
                             }
                         }
@@ -767,7 +703,7 @@ namespace IServiceOriented.ServiceBus
             int subscriptionCount = subscriptions.Length;
 
             List<MessageDelivery> messageDeliveries = new List<MessageDelivery>();
-            ReplyMessageFilter filter;
+            CorrelationMessageFilter filter;
             ActionDispatcher dispatcher;
             SubscriptionEndpoint temporarySubscription = null;
 
@@ -818,13 +754,13 @@ namespace IServiceOriented.ServiceBus
                     if(waitForReply)
                     {
                         latch = new CountdownLatch(messageDeliveries.Count);
-                        filter = new ReplyMessageFilter(messageDeliveries.Select(md => md.MessageId).ToArray());
+                        filter = new CorrelationMessageFilter(messageDeliveries.Select(md => md.MessageId).ToArray());
                         results = new MessageDelivery[messageDeliveries.Count];
                         dispatcher = new ActionDispatcher((se, md) =>
                                 {
                                     for (int j = 0; j < messageDeliveries.Count; j++)
                                     {
-                                        if (messageDeliveries[j].MessageId == (string)md.Context[MessageDelivery.ReplyToMessageId]) // is reply
+                                        if (messageDeliveries[j].MessageId == (string)md.Context[MessageDelivery.CorrelationId]) // is reply
                                         {
                                             results[j] = md;
                                             latch.Tick();
@@ -928,14 +864,12 @@ namespace IServiceOriented.ServiceBus
                         subscription.Dispatcher.StopInternal() ;
                     }
 
-                    _runtimeServices.Read(runtimeServices =>
-                    {
-                        foreach (RuntimeService service in runtimeServices)
-                        {
-                            service.OnSubscriptionAdded(subscription);
-                        }
-                    });
 
+                    foreach (RuntimeService service in ServiceLocator.GetAllInstances<RuntimeService>())
+                    {
+                        service.OnSubscriptionAdded(subscription);
+                    }
+                
                     EventHandler<EndpointEventArgs> subscribedEvent = Subscribed;
                     if (subscribedEvent != null) subscribedEvent(this, new EndpointEventArgs(subscription));                   
 
@@ -993,16 +927,14 @@ namespace IServiceOriented.ServiceBus
                         subscriptions.Remove(subscription);
                         subscription.Dispatcher.Runtime = null;
                         removed = true;
-                    });                    
-                    
-                    _runtimeServices.Read(runtimeServices =>
-                    {
-                        foreach (RuntimeService service in runtimeServices)
-                        {
-                            service.OnSubscriptionRemoved(subscription);
-                        }
                     });
 
+
+                    foreach (RuntimeService service in ServiceLocator.GetAllInstances<RuntimeService>())
+                    {
+                        service.OnSubscriptionRemoved(subscription);
+                    }
+                
                     EventHandler<EndpointEventArgs> unsubscribedEvent = Unsubscribed;
                     if (unsubscribedEvent != null) unsubscribedEvent(this, new EndpointEventArgs(subscription));
                     
@@ -1072,10 +1004,7 @@ namespace IServiceOriented.ServiceBus
                 if (_started)
                 {
                     Stop();
-                }
-
-                if(_runtimeServices != null) _runtimeServices.Dispose();
-                _runtimeServices = null;
+                }                
 
                 if (_subscriptions != null) _subscriptions.Dispose();
                 _subscriptions = null;                
@@ -1094,8 +1023,8 @@ namespace IServiceOriented.ServiceBus
         ~ServiceBusRuntime()
         {
             Dispose(false);
-        }
-	}
+        }        
+    }
 			
 	
 	public class EndpointEventArgs : EventArgs
