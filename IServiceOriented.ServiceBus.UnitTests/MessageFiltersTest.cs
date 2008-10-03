@@ -92,54 +92,56 @@ namespace IServiceOriented.ServiceBus.UnitTests
         [TestMethod]
         public void TestUnhandledMessageFilter()
         {
-            ServiceBusRuntime runtime = new ServiceBusRuntime(new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue());
-
-            int handledCount = 0;
-            int unhandledCount = 0;
-
-            AutoResetEvent reset = new AutoResetEvent(false);
-
-            SubscriptionEndpoint handled = new SubscriptionEndpoint(Guid.NewGuid(), "Handled", null, null, typeof(void), new ActionDispatcher((e, d) => { handledCount++; System.Diagnostics.Trace.WriteLine("Handled Message = " + d.Message); reset.Set(); }), null);
-            SubscriptionEndpoint unhandled = new SubscriptionEndpoint(Guid.NewGuid(), "Unhandled", null, null, typeof(void), new ActionDispatcher((e, d) => { unhandledCount++; System.Diagnostics.Trace.WriteLine("Unhandled Message = " + d.Message); reset.Set(); }), new UnhandledMessageFilter(true, typeof(object)));
-            
-            runtime.Subscribe(handled);
-            runtime.Subscribe(unhandled);
-
-            runtime.Start();
-
-            runtime.Publish(null, null, "Handled");
-
-            // Make sure that unhandled doesn't get the message if it is handled
-            if (reset.WaitOne(1000 * 10, true))
+            using (ServiceBusRuntime runtime = new ServiceBusRuntime(new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue()))
             {
-                Assert.AreEqual(1, handledCount);
-                Assert.AreEqual(0, unhandledCount);
+
+                int handledCount = 0;
+                int unhandledCount = 0;
+
+                AutoResetEvent reset = new AutoResetEvent(false);
+
+                SubscriptionEndpoint handled = new SubscriptionEndpoint(Guid.NewGuid(), "Handled", null, null, typeof(void), new ActionDispatcher((e, d) => { handledCount++; System.Diagnostics.Trace.WriteLine("Handled Message = " + d.Message); reset.Set(); }), null);
+                SubscriptionEndpoint unhandled = new SubscriptionEndpoint(Guid.NewGuid(), "Unhandled", null, null, typeof(void), new ActionDispatcher((e, d) => { unhandledCount++; System.Diagnostics.Trace.WriteLine("Unhandled Message = " + d.Message); reset.Set(); }), new UnhandledMessageFilter(true, typeof(object)));
+
+                runtime.Subscribe(handled);
+                runtime.Subscribe(unhandled);
+
+                runtime.Start();
+
+                runtime.Publish(null, null, "Handled");
+
+                // Make sure that unhandled doesn't get the message if it is handled
+                if (reset.WaitOne(1000 * 10, true))
+                {
+                    Assert.AreEqual(1, handledCount);
+                    Assert.AreEqual(0, unhandledCount);
+                }
+                else
+                {
+                    Assert.Fail("Waited too long");
+                }
+
+                runtime.Unsubscribe(handled);
+
+                handledCount = 0;
+                unhandledCount = 0;
+
+
+                runtime.Publish(null, null, "Unhandled");
+
+                // Make sure that unhandled gets the message if it is handled
+                if (reset.WaitOne(1000 * 10, true))
+                {
+                    Assert.AreEqual(0, handledCount);
+                    Assert.AreEqual(1, unhandledCount);
+                }
+                else
+                {
+                    Assert.Fail("Waited too long");
+                }
+
+                runtime.Stop();
             }
-            else
-            {
-                Assert.Fail("Waited too long");
-            }
-
-            runtime.Unsubscribe(handled);
-
-            handledCount = 0;
-            unhandledCount = 0;
-
-
-            runtime.Publish(null, null, "Unhandled");
-
-            // Make sure that unhandled gets the message if it is handled
-            if (reset.WaitOne(1000 * 10, true))
-            {
-                Assert.AreEqual(0, handledCount);
-                Assert.AreEqual(1, unhandledCount);
-            }
-            else
-            {
-                Assert.Fail("Waited too long");
-            }                        
-
-
         }
     }
 }

@@ -18,6 +18,16 @@ namespace IServiceOriented.ServiceBus
         }
 
         int _count;
+        /// <summary>
+        /// Gets the current count of the countdown
+        /// </summary>
+        public int Count
+        {
+            get
+            {
+                return _count;
+            }
+        }
         ManualResetEvent _handle = new ManualResetEvent(false);
 
         /// <summary>

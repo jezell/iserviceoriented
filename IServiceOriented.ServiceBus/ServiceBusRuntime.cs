@@ -112,7 +112,7 @@ namespace IServiceOriented.ServiceBus
                 int threadIndex = _workerThreads.Count;
                 if (name != null)
                 {
-                    thread.Name = String.Format(CultureInfo.CurrentCulture, name, threadIndex);
+                    thread.Name = String.Format(CultureInfo.CurrentCulture, name, Guid.NewGuid());
                 }
 				_workerThreads.Add(thread);
 				_stopWaitHandles.Add(new AutoResetEvent(false));
@@ -120,45 +120,76 @@ namespace IServiceOriented.ServiceBus
 			}
 		}
         const int DEQUEUE_TIMEOUT_SECONDS = 5;
+        
+        
 
 		void deliveryWorker(object param)
 		{
+            int deliveryMax = 5;
 			int threadIndex = (int)param;
 
-            while(true)
-			{                
-                DoSafely(() =>
+            using (Semaphore deliverySemaphore = new Semaphore(deliveryMax, deliveryMax))
+            {
+                while (true)
                 {
-                    try
+                    DoSafely(() =>
                     {
-                        CommittableTransaction ct = new CommittableTransaction();
-
-                        Transaction.Current = ct;
-                        MessageDelivery md = _messageDeliveryQueue.Dequeue(TimeSpan.FromSeconds(DEQUEUE_TIMEOUT_SECONDS));
-
-                        if (md != null)
+                        if (deliverySemaphore.WaitOne(TimeSpan.FromSeconds(1), true))
                         {
-                            DeliveryWork work = new DeliveryWork(ct, md);
-
-                            ThreadPool.QueueUserWorkItem((deliverWork) =>
+                            bool release = true;
+                            Thread.BeginCriticalRegion();
+                            try
                             {
-                                DeliverOne((DeliveryWork)deliverWork, _retryQueue);
-                            }, work);
+                                CommittableTransaction ct = new CommittableTransaction();
+
+                                Transaction.Current = ct;
+                                MessageDelivery md = _messageDeliveryQueue.Dequeue(TimeSpan.FromSeconds(DEQUEUE_TIMEOUT_SECONDS));
+
+                                if (md != null)
+                                {
+                                    DeliveryWork work = new DeliveryWork(ct, md);
+
+                                    release = false;
+                                    ThreadPool.QueueUserWorkItem((deliverWork) =>
+                                    {
+                                        Thread.BeginCriticalRegion();
+                                        try
+                                        {
+                                            DoSafely(() => DeliverOne((DeliveryWork)deliverWork, _retryQueue));
+                                        }
+                                        finally
+                                        {
+                                            deliverySemaphore.Release();
+                                            Thread.EndCriticalRegion();
+                                        }
+                                    }, work);
+                                }
+                                else
+                                {
+                                    ct.Dispose();
+                                }
+                            }
+                            finally
+                            {
+                                if (release)
+                                {
+                                    deliverySemaphore.Release();
+                                }
+                                Transaction.Current = null;
+                                Thread.EndCriticalRegion();
+                            }
                         }
-                    }
-                    finally
+                    });
+
+                    if (_stopping)
                     {
-                        Transaction.Current = null;
+                        deliverySemaphore.WaitOne(deliveryMax); // wait for worker threads
+                        _stopWaitHandles[threadIndex].Set();
+                        break;
                     }
-                });
 
-                if (_stopping)
-                {
-                    _stopWaitHandles[threadIndex].Set();
-                    break;
                 }
-
-			}
+            }
 		}
 
         protected class DeliveryWork
@@ -179,48 +210,83 @@ namespace IServiceOriented.ServiceBus
                 set;
             }
         }
-        
-		void retryWorker(object param)
-		{            
-            int threadIndex = (int)param;
-            while(true)
-			{
 
-                DoSafely(() =>
+        void retryWorker(object param)
+		{
+            int retryMax = 5;
+            using (Semaphore retrySemaphore = new Semaphore(retryMax, retryMax))
+            {
+                int threadIndex = (int)param;
+                while (true)
                 {
 
-                    try
+                    DoSafely(() =>
                     {
-                        CommittableTransaction ct = new CommittableTransaction();
-                        Transaction.Current = ct;
-                        MessageDelivery md = _retryQueue.Dequeue(TimeSpan.FromSeconds(DEQUEUE_TIMEOUT_SECONDS));
 
-                        if (md != null)
+                        try
                         {
-                            DeliveryWork work = new DeliveryWork(ct, md);
-
-                            ThreadPool.QueueUserWorkItem((deliveryWork) =>
+                            if (retrySemaphore.WaitOne(TimeSpan.FromSeconds(1), true))
                             {
-                                DeliverOne((DeliveryWork)deliveryWork, _retryQueue);
-                            }, work);
+                                bool release = true;
+                                Thread.BeginCriticalRegion();
+                                try
+                                {
+                                    CommittableTransaction ct = new CommittableTransaction();
+                                    Transaction.Current = ct;
+
+                                    MessageDelivery md = _retryQueue.Dequeue(TimeSpan.FromSeconds(DEQUEUE_TIMEOUT_SECONDS));
+
+                                    if (md != null)
+                                    {
+                                        DeliveryWork work = new DeliveryWork(ct, md);
+                                        release = false;
+                                        ThreadPool.QueueUserWorkItem((deliveryWork) =>
+                                        {
+                                            Thread.BeginCriticalRegion();
+                                            try
+                                            {
+                                                DoSafely(() => DeliverOne((DeliveryWork)deliveryWork, _retryQueue));
+                                            }
+                                            finally
+                                            {
+                                                retrySemaphore.Release();
+                                                Thread.EndCriticalRegion();
+                                            }
+                                        }, work);
+                                    }
+                                    else
+                                    {
+                                        ct.Dispose();
+                                    }
+                                }
+                                finally
+                                {
+                                    if (release)
+                                    {
+                                        retrySemaphore.Release();
+                                    }
+                                    Thread.EndCriticalRegion();
+                                }
+                            }
+
                         }
+                        finally
+                        {
+                            Transaction.Current = null;
+                        }
+                    });
 
-                    }
-                    finally
+                    if (_stopping)
                     {
-                        Transaction.Current = null;
+                        retrySemaphore.WaitOne(retryMax); // wait for worker threads
+                        _stopWaitHandles[threadIndex].Set();
+                        break;
                     }
-                });
 
-                if (_stopping)
-                {
-                    _stopWaitHandles[threadIndex].Set();
-                    break;
+
+                    Thread.Sleep(RETRY_SLEEP_MS);
                 }
-                 
-
-                Thread.Sleep(RETRY_SLEEP_MS);
-			}
+            }
 		}
 
         const int peekDelay = 5000;

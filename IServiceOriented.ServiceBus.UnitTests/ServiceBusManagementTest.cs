@@ -69,25 +69,27 @@ namespace IServiceOriented.ServiceBus.UnitTests
             
             NonTransactionalMemoryQueue failureQueue = new NonTransactionalMemoryQueue();
             failureQueue.Enqueue(failure);
-            ServiceBusRuntime runtime = new ServiceBusRuntime(new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue(), failureQueue, SimpleServiceLocator.With(new WcfManagementService()));
-            
-            runtime.Start();
-
-            Service.Use<IServiceBusManagementService>(managementService =>
+            using (ServiceBusRuntime runtime = new ServiceBusRuntime(new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue(), failureQueue, SimpleServiceLocator.With(new WcfManagementService())))
             {
-                Collection<MessageDelivery> failures = managementService.ListMessagesInFailureQueue(null, null);
-                Assert.AreEqual(1, failures.Count);
-                MessageDelivery dequeued = failures[0];
-                Assert.AreEqual(dequeued.MessageId, failure.MessageId);
-                Assert.AreEqual(dequeued.MaxRetries, failure.MaxRetries);
-                Assert.IsTrue(dequeued.Message.Equals(failure.Message));
-                Assert.AreEqual(dequeued.QueueCount, failure.QueueCount);
-                Assert.AreEqual(dequeued.TimeToProcess, failure.TimeToProcess);
-                Assert.AreEqual(dequeued.SubscriptionEndpointId, failure.SubscriptionEndpointId);
-                Assert.AreEqual(dequeued.Action, failure.Action);
-            });
 
-            runtime.Stop();
+                runtime.Start();
+
+                Service.Use<IServiceBusManagementService>(managementService =>
+                {
+                    Collection<MessageDelivery> failures = managementService.ListMessagesInFailureQueue(null, null);
+                    Assert.AreEqual(1, failures.Count);
+                    MessageDelivery dequeued = failures[0];
+                    Assert.AreEqual(dequeued.MessageId, failure.MessageId);
+                    Assert.AreEqual(dequeued.MaxRetries, failure.MaxRetries);
+                    Assert.IsTrue(dequeued.Message.Equals(failure.Message));
+                    Assert.AreEqual(dequeued.QueueCount, failure.QueueCount);
+                    Assert.AreEqual(dequeued.TimeToProcess, failure.TimeToProcess);
+                    Assert.AreEqual(dequeued.SubscriptionEndpointId, failure.SubscriptionEndpointId);
+                    Assert.AreEqual(dequeued.Action, failure.Action);
+                });
+
+                runtime.Stop();
+            }
         }
         
         [TestMethod]

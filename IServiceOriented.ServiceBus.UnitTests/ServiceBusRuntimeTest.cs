@@ -104,45 +104,47 @@ namespace IServiceOriented.ServiceBus.UnitTests
             MsmqMessageDeliveryQueue retryQueue = new MsmqMessageDeliveryQueue(_retryQueuePath);
             MsmqMessageDeliveryQueue failQueue = new MsmqMessageDeliveryQueue(_failQueuePath);
 
-            ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(testQueue, retryQueue, failQueue);
-
-            serviceBusRuntime.ExponentialBackOff = false;
-            serviceBusRuntime.RetryDelay = 1000;
-            serviceBusRuntime.MaxRetries = 1;
-
-
-            serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/test", typeof(IContract), new WcfListener()));
-            string message = "Publish this message";
-            ContractImplementation ci = new ContractImplementation();
-            ci.SetFailCount(1);
-
-            serviceBusRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "", "", typeof(IContract), new MethodDispatcher(ci), new BooleanMessageFilter(false)));
-
-
-            AutoResetEvent wait = new AutoResetEvent(false);
-            serviceBusRuntime.MessageDelivered += (o, mdea) => { wait.Set(); };
-            serviceBusRuntime.MessageDeliveryFailed += (o, mdfea) => { wait.Set(); };
-
-            serviceBusRuntime.Start();
-
-            serviceBusRuntime.Publish(new PublishRequest(typeof(IContract), "PublishThis", message));
-
-            try
+            using (ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(testQueue, retryQueue, failQueue))
             {
-                // Wait for delivery
-                wait.WaitOne(TimeSpan.FromMinutes(.25), false); // give it a few seconds
-            }
-            catch
-            {
-            }
 
-            serviceBusRuntime.Stop();
+                serviceBusRuntime.ExponentialBackOff = false;
+                serviceBusRuntime.RetryDelay = 1000;
+                serviceBusRuntime.MaxRetries = 1;
 
-            Assert.AreEqual(0, ci.PublishedMessages.Count, "There should be no published messages");
-            
-            Assert.IsNull(testQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the initial queue");
-            Assert.IsNull(retryQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the retry queue");
-            Assert.IsNull(failQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the failure queue");         
+
+                serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/test", typeof(IContract), new WcfListener()));
+                string message = "Publish this message";
+                ContractImplementation ci = new ContractImplementation();
+                ci.SetFailCount(1);
+
+                serviceBusRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "", "", typeof(IContract), new MethodDispatcher(ci), new BooleanMessageFilter(false)));
+
+
+                AutoResetEvent wait = new AutoResetEvent(false);
+                serviceBusRuntime.MessageDelivered += (o, mdea) => { wait.Set(); };
+                serviceBusRuntime.MessageDeliveryFailed += (o, mdfea) => { wait.Set(); };
+
+                serviceBusRuntime.Start();
+
+                serviceBusRuntime.Publish(new PublishRequest(typeof(IContract), "PublishThis", message));
+
+                try
+                {
+                    // Wait for delivery
+                    wait.WaitOne(TimeSpan.FromMinutes(.25), false); // give it a few seconds
+                }
+                catch
+                {
+                }
+
+                serviceBusRuntime.Stop();
+
+                Assert.AreEqual(0, ci.PublishedMessages.Count, "There should be no published messages");
+
+                Assert.IsNull(testQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the initial queue");
+                Assert.IsNull(retryQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the retry queue");
+                Assert.IsNull(failQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the failure queue");
+            }
         }
 
         [TestMethod]
@@ -154,38 +156,40 @@ namespace IServiceOriented.ServiceBus.UnitTests
             MsmqMessageDeliveryQueue retryQueue = new MsmqMessageDeliveryQueue(_retryQueuePath);
             MsmqMessageDeliveryQueue failQueue = new MsmqMessageDeliveryQueue(_failQueuePath);
 
-            ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(testQueue, retryQueue, failQueue);
+            using (ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(testQueue, retryQueue, failQueue))
+            {
 
-            serviceBusRuntime.ExponentialBackOff = false;
-            serviceBusRuntime.RetryDelay = 1000;
-            serviceBusRuntime.MaxRetries = 1;
+                serviceBusRuntime.ExponentialBackOff = false;
+                serviceBusRuntime.RetryDelay = 1000;
+                serviceBusRuntime.MaxRetries = 1;
 
-            serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/test", typeof(IContract), new WcfListener()));
-            string message = "Publish this message";
-            ContractImplementation ci = new ContractImplementation();
-            ci.SetFailCount(0);
+                serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/test", typeof(IContract), new WcfListener()));
+                string message = "Publish this message";
+                ContractImplementation ci = new ContractImplementation();
+                ci.SetFailCount(0);
 
-            serviceBusRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "", "", typeof(IContract), new MethodDispatcher(ci), new BooleanMessageFilter(true)));
+                serviceBusRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "", "", typeof(IContract), new MethodDispatcher(ci), new BooleanMessageFilter(true)));
 
-            AutoResetEvent wait = new AutoResetEvent(false);
-            serviceBusRuntime.MessageDelivered += (o, mdea) => { wait.Set(); };
-            serviceBusRuntime.MessageDeliveryFailed += (o, mdfea) => { wait.Set(); };
+                AutoResetEvent wait = new AutoResetEvent(false);
+                serviceBusRuntime.MessageDelivered += (o, mdea) => { wait.Set(); };
+                serviceBusRuntime.MessageDeliveryFailed += (o, mdfea) => { wait.Set(); };
 
-            serviceBusRuntime.Start();
+                serviceBusRuntime.Start();
 
-            serviceBusRuntime.Publish(new PublishRequest(typeof(IContract), "PublishThis", message));
+                serviceBusRuntime.Publish(new PublishRequest(typeof(IContract), "PublishThis", message));
 
-            // Wait for delivery
-            wait.WaitOne(TimeSpan.FromMinutes(1), false); // give it a minute
+                // Wait for delivery
+                wait.WaitOne(TimeSpan.FromMinutes(1), false); // give it a minute
 
-            serviceBusRuntime.Stop();
+                serviceBusRuntime.Stop();
 
-            Assert.AreEqual(1, ci.PublishedMessages.Count, "There should be one published message");
-            Assert.AreEqual(message, ci.PublishedMessages.Dequeue(), "Message was not published properly");
+                Assert.AreEqual(1, ci.PublishedMessages.Count, "There should be one published message");
+                Assert.AreEqual(message, ci.PublishedMessages.Dequeue(), "Message was not published properly");
 
-            Assert.IsNull(testQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the initial queue");
-            Assert.IsNull(retryQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the retry queue");
-            Assert.IsNull(failQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the failure queue");
+                Assert.IsNull(testQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the initial queue");
+                Assert.IsNull(retryQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the retry queue");
+                Assert.IsNull(failQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the failure queue");
+            }
         }
 
         [TestMethod]
@@ -197,34 +201,36 @@ namespace IServiceOriented.ServiceBus.UnitTests
             MsmqMessageDeliveryQueue retryQueue = new MsmqMessageDeliveryQueue(_retryQueuePath);
             MsmqMessageDeliveryQueue failQueue = new MsmqMessageDeliveryQueue(_failQueuePath);
 
-            ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(testQueue, retryQueue, failQueue);
+            using (ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(testQueue, retryQueue, failQueue))
+            {
 
-            serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/test", typeof(IContract), new WcfListener()));
-            string message = "Publish this message";
+                serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/test", typeof(IContract), new WcfListener()));
+                string message = "Publish this message";
 
-            ContractImplementation ci = new ContractImplementation();
-            ci.SetFailCount(0);
-            serviceBusRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "", "", typeof(IContract), new MethodDispatcher(ci), new PassThroughMessageFilter()));
+                ContractImplementation ci = new ContractImplementation();
+                ci.SetFailCount(0);
+                serviceBusRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "", "", typeof(IContract), new MethodDispatcher(ci), new PassThroughMessageFilter()));
 
-            AutoResetEvent wait = new AutoResetEvent(false);
-            serviceBusRuntime.MessageDelivered += (o, mdea) => { wait.Set(); };
-            serviceBusRuntime.MessageDeliveryFailed += (o, mdfea) => { wait.Set(); };
+                AutoResetEvent wait = new AutoResetEvent(false);
+                serviceBusRuntime.MessageDelivered += (o, mdea) => { wait.Set(); };
+                serviceBusRuntime.MessageDeliveryFailed += (o, mdfea) => { wait.Set(); };
 
-            serviceBusRuntime.Start();
+                serviceBusRuntime.Start();
 
-            serviceBusRuntime.Publish(new PublishRequest(typeof(IContract), "PublishThis", message));
+                serviceBusRuntime.Publish(new PublishRequest(typeof(IContract), "PublishThis", message));
 
-            // Wait for delivery
-            wait.WaitOne(TimeSpan.FromMinutes(1), false); // give it a minute
+                // Wait for delivery
+                wait.WaitOne(TimeSpan.FromMinutes(1), false); // give it a minute
 
-            serviceBusRuntime.Stop();
+                serviceBusRuntime.Stop();
 
-            Assert.AreEqual(1, ci.PublishedMessages.Count, "There should be one published message");
-            Assert.AreEqual(message, ci.PublishedMessages.Dequeue(), "Message was not publishe properly");
+                Assert.AreEqual(1, ci.PublishedMessages.Count, "There should be one published message");
+                Assert.AreEqual(message, ci.PublishedMessages.Dequeue(), "Message was not publishe properly");
 
-            Assert.IsNull(testQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the initial queue");
-            Assert.IsNull(retryQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the retry queue");
-            Assert.IsNull(failQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the failure queue");         
+                Assert.IsNull(testQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the initial queue");
+                Assert.IsNull(retryQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the retry queue");
+                Assert.IsNull(failQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the failure queue");
+            }
         }
         
         [TestMethod]
@@ -236,58 +242,61 @@ namespace IServiceOriented.ServiceBus.UnitTests
             MsmqMessageDeliveryQueue retryQueue = new MsmqMessageDeliveryQueue(_retryQueuePath);
             MsmqMessageDeliveryQueue failQueue = new MsmqMessageDeliveryQueue(_failQueuePath);
 
-            ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(testQueue, retryQueue, failQueue, SimpleServiceLocator.With(new PerformanceMonitorRuntimeService()));
-
-            ContractImplementation ci = new ContractImplementation();
-            ci.SetFailCount(0);
-
-            serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/test", typeof(IContract), new WcfListener()));
-            serviceBusRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "", "", typeof(IContract), new MethodDispatcher(ci), new PassThroughMessageFilter()));
-
-
-            int messageCount = 10000;
-
-            DateTime start = DateTime.Now;
-
-            CountdownLatch countDown = new CountdownLatch(messageCount);
-            
-            AutoResetEvent wait = new AutoResetEvent(false);
-            serviceBusRuntime.MessageDelivered += (o, mdea) => { countDown.Tick();  };
-            serviceBusRuntime.MessageDeliveryFailed += (o, mdfea) => { countDown.Tick(); };
-
-            for (int i = 0; i < messageCount; i++)
+            using(ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(testQueue, retryQueue, failQueue, SimpleServiceLocator.With(new PerformanceMonitorRuntimeService())))
             {
-                string message = i.ToString();
-                serviceBusRuntime.Publish(new PublishRequest(typeof(IContract), "PublishThis", message));
+
+                ContractImplementation ci = new ContractImplementation();
+                ci.SetFailCount(0);
+
+                serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/test", typeof(IContract), new WcfListener()));
+                serviceBusRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "", "", typeof(IContract), new MethodDispatcher(ci), new PassThroughMessageFilter()));
+
+
+                int messageCount = 1000;
+
+                DateTime start = DateTime.Now;
+
+                CountdownLatch countDown = new CountdownLatch(messageCount);
+                
+                AutoResetEvent wait = new AutoResetEvent(false);
+                serviceBusRuntime.MessageDelivered += (o, mdea) => { countDown.Tick();  };
+                serviceBusRuntime.MessageDeliveryFailed += (o, mdfea) => { countDown.Tick(); };
+
+                for (int i = 0; i < messageCount; i++)
+                {
+                    string message = i.ToString();
+                    serviceBusRuntime.Publish(new PublishRequest(typeof(IContract), "PublishThis", message));
+                }
+
+                serviceBusRuntime.Start();            
+
+                
+                bool[] results = new bool[messageCount];
+
+                // Wait for delivery
+                countDown.Handle.WaitOne(TimeSpan.FromSeconds(5*60), true);
+                
+
+                DateTime end = DateTime.Now;
+
+                System.Diagnostics.Trace.TraceInformation("Time to deliver "+messageCount+" = "+(end - start)); 
+                serviceBusRuntime.Stop();
+
+                while (ci.PublishedMessages.Count > 0)
+                {
+                    results[Convert.ToInt32(ci.PublishedMessages.Dequeue())] = true;
+                }
+
+                for (int i = 0; i < messageCount; i++)
+                {
+                    Assert.IsTrue(results[i], "Message is missing");
+                }
+
+                Assert.AreEqual(0, ci.PublishedMessages.Count, "There should be no extra messages");            
+                Assert.IsNull(testQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the initial queue");
+                Assert.IsNull(retryQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the retry queue");
+                Assert.IsNull(failQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the failure queue");         
             }
-
-            serviceBusRuntime.Start();            
-
-            
-            bool[] results = new bool[messageCount];
-
-            // Wait for delivery
-            countDown.Handle.WaitOne(TimeSpan.FromMinutes(5), false); // give it 5 minutes
-
-            DateTime end = DateTime.Now;
-
-            System.Diagnostics.Trace.TraceInformation("Time to deliver "+messageCount+" = "+(end - start)); 
-            serviceBusRuntime.Stop();
-
-            while (ci.PublishedMessages.Count > 0)
-            {
-                results[Convert.ToInt32(ci.PublishedMessages.Dequeue())] = true;
-            }
-
-            for (int i = 0; i < messageCount; i++)
-            {
-                Assert.IsTrue(results[i], "Message is missing");
-            }
-
-            Assert.AreEqual(0, ci.PublishedMessages.Count, "There should be no extra messages");            
-            Assert.IsNull(testQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the initial queue");
-            Assert.IsNull(retryQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the retry queue");
-            Assert.IsNull(failQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the failure queue");         
         }
 
         [TestMethod]
@@ -299,63 +308,65 @@ namespace IServiceOriented.ServiceBus.UnitTests
             MsmqMessageDeliveryQueue retryQueue = new MsmqMessageDeliveryQueue(_retryQueuePath);
             MsmqMessageDeliveryQueue failQueue = new MsmqMessageDeliveryQueue(_failQueuePath);
 
-            ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(testQueue, retryQueue, failQueue, SimpleServiceLocator.With(new PerformanceMonitorRuntimeService()));
-
-            serviceBusRuntime.ExponentialBackOff = false;
-            serviceBusRuntime.RetryDelay = 1000;
-            serviceBusRuntime.MaxRetries = 1000;
-            
-            ContractImplementation ci = new ContractImplementation();
-            ci.SetFailCount(0);
-            ci.SetFailInterval(10);
-
-            serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/test", typeof(IContract), new WcfListener()));
-            serviceBusRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "", "", typeof(IContract), new MethodDispatcher(ci), new PassThroughMessageFilter()));
-
-
-            int messageCount = 1000;
-
-            DateTime start = DateTime.Now;
-
-            CountdownLatch countDown = new CountdownLatch(messageCount);
-
-            
-            AutoResetEvent wait = new AutoResetEvent(false);
-            serviceBusRuntime.MessageDelivered += (o, mdea) => { countDown.Tick(); };
-
-            serviceBusRuntime.Start();
-
-
-            for (int i = 0; i < messageCount; i++)
+            using (ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(testQueue, retryQueue, failQueue, SimpleServiceLocator.With(new PerformanceMonitorRuntimeService())))
             {
-                string message = i.ToString();
-                serviceBusRuntime.Publish(new PublishRequest(typeof(IContract), "PublishThis", message));
+
+                serviceBusRuntime.ExponentialBackOff = false;
+                serviceBusRuntime.RetryDelay = 10;
+                serviceBusRuntime.MaxRetries = 1000;
+
+                ContractImplementation ci = new ContractImplementation();
+                ci.SetFailCount(0);
+                ci.SetFailInterval(10);
+
+                serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/test", typeof(IContract), new WcfListener()));
+                serviceBusRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "", "", typeof(IContract), new MethodDispatcher(ci), new PassThroughMessageFilter()));
+
+
+                int messageCount = 1000;
+
+                DateTime start = DateTime.Now;
+
+                CountdownLatch countDown = new CountdownLatch(messageCount);
+
+                for (int i = 0; i < messageCount; i++)
+                {
+                    string message = i.ToString();
+                    serviceBusRuntime.Publish(new PublishRequest(typeof(IContract), "PublishThis", message));
+                }
+
+
+                AutoResetEvent wait = new AutoResetEvent(false);
+                serviceBusRuntime.MessageDelivered += (o, mdea) => { countDown.Tick(); };
+
+                serviceBusRuntime.Start();
+
+
+                bool[] results = new bool[messageCount];
+
+                // Wait for delivery
+                countDown.Handle.WaitOne(TimeSpan.FromSeconds(5 * 60), true);
+
+                DateTime end = DateTime.Now;
+
+                System.Diagnostics.Trace.TraceInformation("Time to deliver " + messageCount + " = " + (end - start));
+                serviceBusRuntime.Stop();
+
+                while (ci.PublishedMessages.Count > 0)
+                {
+                    results[Convert.ToInt32(ci.PublishedMessages.Dequeue())] = true;
+                }
+
+                for (int i = 0; i < messageCount; i++)
+                {
+                    Assert.IsTrue(results[i], "Message is missing");
+                }
+
+                Assert.AreEqual(0, ci.PublishedMessages.Count, "There should be no extra messages");
+                Assert.IsNull(testQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the initial queue");
+                Assert.IsNull(retryQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the retry queue");
+                Assert.IsNull(failQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the failure queue");
             }
-
-            bool[] results = new bool[messageCount];
-
-            // Wait for delivery
-            countDown.Handle.WaitOne(TimeSpan.FromMinutes(5), false); // give it 5 minutes
-
-            DateTime end = DateTime.Now;
-
-            System.Diagnostics.Trace.TraceInformation("Time to deliver " + messageCount + " = " + (end - start));
-            serviceBusRuntime.Stop();
-
-            while (ci.PublishedMessages.Count > 0)
-            {
-                results[Convert.ToInt32(ci.PublishedMessages.Dequeue())] = true;
-            }
-
-            for (int i = 0; i < messageCount; i++)
-            {
-                Assert.IsTrue(results[i], "Message is missing");
-            }
-
-            Assert.AreEqual(0, ci.PublishedMessages.Count, "There should be no extra messages");
-            Assert.IsNull(testQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the initial queue");
-            Assert.IsNull(retryQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the retry queue");
-            Assert.IsNull(failQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the failure queue");
         
         }
 
@@ -368,49 +379,53 @@ namespace IServiceOriented.ServiceBus.UnitTests
             MsmqMessageDeliveryQueue retryQueue = new MsmqMessageDeliveryQueue(_retryQueuePath);
             MsmqMessageDeliveryQueue failQueue = new MsmqMessageDeliveryQueue(_failQueuePath);
 
-            ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(testQueue, retryQueue, failQueue);
+            using (ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(testQueue, retryQueue, failQueue))
+            {
 
-            serviceBusRuntime.ExponentialBackOff = false;
-            serviceBusRuntime.RetryDelay = 1000;
-            serviceBusRuntime.MaxRetries = 1;
+                serviceBusRuntime.ExponentialBackOff = false;
+                serviceBusRuntime.RetryDelay = 1000;
+                serviceBusRuntime.MaxRetries = 1;
 
-            serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/test", typeof(IContract), new WcfListener()));
-            string message = "Publish this message";
-            ContractImplementation ci = new ContractImplementation();
-            ci.SetFailCount(1);
-            serviceBusRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "", "", typeof(IContract), new MethodDispatcher(ci), new PassThroughMessageFilter()));
+                serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/test", typeof(IContract), new WcfListener()));
+                string message = "Publish this message";
+                ContractImplementation ci = new ContractImplementation();
+                ci.SetFailCount(1);
+                serviceBusRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "", "", typeof(IContract), new MethodDispatcher(ci), new PassThroughMessageFilter()));
 
 
-            CountdownLatch latch = new CountdownLatch(2);
+                CountdownLatch latch = new CountdownLatch(2);
 
-            bool failFirst = false;
-            bool deliverSecond = false;            
+                bool failFirst = false;
+                bool deliverSecond = false;
 
-            serviceBusRuntime.MessageDelivered += (o, mdea) => { 
-                int tick; if ((tick = latch.Tick()) == 0) deliverSecond = true; Console.WriteLine("Tick deliver "+tick); 
-            };
-            serviceBusRuntime.MessageDeliveryFailed += (o, mdfea) => { 
-                int tick; if ((tick = latch.Tick()) == 1) failFirst = true; Console.WriteLine("Tick fail "+tick); 
-            };
+                serviceBusRuntime.MessageDelivered += (o, mdea) =>
+                {
+                    int tick; if ((tick = latch.Tick()) == 0) deliverSecond = true; Console.WriteLine("Tick deliver " + tick);
+                };
+                serviceBusRuntime.MessageDeliveryFailed += (o, mdfea) =>
+                {
+                    int tick; if ((tick = latch.Tick()) == 1) failFirst = true; Console.WriteLine("Tick fail " + tick);
+                };
 
-            serviceBusRuntime.Start();
+                serviceBusRuntime.Start();
 
-            serviceBusRuntime.Publish(new PublishRequest(typeof(IContract), "PublishThis", message));
+                serviceBusRuntime.Publish(new PublishRequest(typeof(IContract), "PublishThis", message));
 
-            // Wait for delivery
-            latch.Handle.WaitOne(TimeSpan.FromMinutes(1), false); // give it a minute
+                // Wait for delivery
+                latch.Handle.WaitOne(TimeSpan.FromMinutes(1), false); // give it a minute
 
-            serviceBusRuntime.Stop();
+                serviceBusRuntime.Stop();
 
-            Assert.AreEqual(1, ci.PublishedMessages.Count, "There should be one published message");
-            Assert.AreEqual(message, ci.PublishedMessages.Dequeue(), "Message was not published properly");
+                Assert.AreEqual(1, ci.PublishedMessages.Count, "There should be one published message");
+                Assert.AreEqual(message, ci.PublishedMessages.Dequeue(), "Message was not published properly");
 
-            Assert.AreEqual(true, failFirst, "Call did not fail first");
-            Assert.AreEqual(true, deliverSecond, "Call did not deliver on retry attempt");
+                Assert.AreEqual(true, failFirst, "Call did not fail first");
+                Assert.AreEqual(true, deliverSecond, "Call did not deliver on retry attempt");
 
-            Assert.IsNull(testQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the initial queue");
-            Assert.IsNull(retryQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the retry queue");
-            Assert.IsNull(failQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the failure queue");
+                Assert.IsNull(testQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the initial queue");
+                Assert.IsNull(retryQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the retry queue");
+                Assert.IsNull(failQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the failure queue");
+            }
         }
 
 
@@ -422,44 +437,46 @@ namespace IServiceOriented.ServiceBus.UnitTests
             MsmqMessageDeliveryQueue testQueue = new MsmqMessageDeliveryQueue(_testQueuePath);
             MsmqMessageDeliveryQueue retryQueue = new MsmqMessageDeliveryQueue(_retryQueuePath);
             MsmqMessageDeliveryQueue failQueue = new MsmqMessageDeliveryQueue(_failQueuePath);
-            
-            ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(testQueue, retryQueue, failQueue);
 
-            serviceBusRuntime.ExponentialBackOff = false;
-            serviceBusRuntime.RetryDelay = 1000;
-            serviceBusRuntime.MaxRetries = 1;
-
-            serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/test", typeof(IContract), new WcfListener()));
-            string message = "Publish this message";
-            ContractImplementation ci = new ContractImplementation();
-            ci.SetFailCount(3);
-            serviceBusRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "", "", typeof(IContract), new MethodDispatcher(ci), new PassThroughMessageFilter()));
-
-            CountdownLatch latch = new CountdownLatch(3);
-            
-            serviceBusRuntime.MessageDelivered += (o, mdea) =>
+            using (ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(testQueue, retryQueue, failQueue))
             {
-                latch.Tick();
-            };
-            serviceBusRuntime.MessageDeliveryFailed += (o, mdfea) =>
-            {
-                latch.Tick();
-            };
 
-            serviceBusRuntime.Start();
+                serviceBusRuntime.ExponentialBackOff = false;
+                serviceBusRuntime.RetryDelay = 1000;
+                serviceBusRuntime.MaxRetries = 1;
 
-            serviceBusRuntime.Publish(new PublishRequest(typeof(IContract), "PublishThis", message));
+                serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/test", typeof(IContract), new WcfListener()));
+                string message = "Publish this message";
+                ContractImplementation ci = new ContractImplementation();
+                ci.SetFailCount(3);
+                serviceBusRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "", "", typeof(IContract), new MethodDispatcher(ci), new PassThroughMessageFilter()));
 
-            // Wait for delivery
-            latch.Handle.WaitOne(TimeSpan.FromMinutes(1), false); // give it a minute
+                CountdownLatch latch = new CountdownLatch(3);
 
-            serviceBusRuntime.Stop();
+                serviceBusRuntime.MessageDelivered += (o, mdea) =>
+                {
+                    latch.Tick();
+                };
+                serviceBusRuntime.MessageDeliveryFailed += (o, mdfea) =>
+                {
+                    latch.Tick();
+                };
 
-            Assert.AreEqual(0, ci.PublishedMessages.Count, "There should be no published message");
+                serviceBusRuntime.Start();
 
-            Assert.IsNull(testQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the initial queue");
-            Assert.IsNull(retryQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the retry queue");
-            Assert.IsNotNull(failQueue.Peek(TimeSpan.FromSeconds(1)), "There should be a message in the failure queue");
+                serviceBusRuntime.Publish(new PublishRequest(typeof(IContract), "PublishThis", message));
+
+                // Wait for delivery
+                latch.Handle.WaitOne(TimeSpan.FromMinutes(1), false); // give it a minute
+
+                serviceBusRuntime.Stop();
+
+                Assert.AreEqual(0, ci.PublishedMessages.Count, "There should be no published message");
+
+                Assert.IsNull(testQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the initial queue");
+                Assert.IsNull(retryQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the retry queue");
+                Assert.IsNotNull(failQueue.Peek(TimeSpan.FromSeconds(1)), "There should be a message in the failure queue");
+            }
         }
 
     }

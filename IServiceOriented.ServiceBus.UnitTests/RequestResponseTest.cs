@@ -62,28 +62,28 @@ namespace IServiceOriented.ServiceBus.UnitTests
         [TestMethod]
         public void TestRequestResponse()
         {
-            ServiceBusRuntime runtime = new ServiceBusRuntime(new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue());
-            
-
-            CEcho echo = new CEcho();
-
-            SubscriptionEndpoint replyEndpoint = new SubscriptionEndpoint(Guid.NewGuid(), "test", null, null, typeof(void), new MethodDispatcher(echo, false), new IgnoreReplyFilter());
-            runtime.Subscribe(replyEndpoint);
-            runtime.Start();
-            try
+            using (ServiceBusRuntime runtime = new ServiceBusRuntime(new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue()))
             {
-                string message = "echo this";
+                CEcho echo = new CEcho();
 
-                MessageDelivery[] output = null;
-                runtime.Publish(new PublishRequest(typeof(void), "Echo", message), PublishWait.Timeout, TimeSpan.FromSeconds(10), out output);
+                SubscriptionEndpoint replyEndpoint = new SubscriptionEndpoint(Guid.NewGuid(), "test", null, null, typeof(void), new MethodDispatcher(echo, false), new IgnoreReplyFilter());
+                runtime.Subscribe(replyEndpoint);
+                runtime.Start();
+                try
+                {
+                    string message = "echo this";
 
-                Assert.IsNotNull(output);
-                Assert.AreEqual(1, output.Length);
-                Assert.AreEqual(message, (string)output[0].Message);
-            }
-            finally
-            {
-                runtime.Stop();
+                    MessageDelivery[] output = null;
+                    runtime.Publish(new PublishRequest(typeof(void), "Echo", message), PublishWait.Timeout, TimeSpan.FromSeconds(10), out output);
+
+                    Assert.IsNotNull(output);
+                    Assert.AreEqual(1, output.Length);
+                    Assert.AreEqual(message, (string)output[0].Message);
+                }
+                finally
+                {
+                    runtime.Stop();
+                }
             }
         }
 
