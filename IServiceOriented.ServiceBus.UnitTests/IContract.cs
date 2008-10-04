@@ -21,6 +21,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
         #region IContract Members
 
         int callCount = 0;
+        int publishedCount = 0;
         volatile int failCount = 0;
         int failInterval = 0;
 
@@ -30,16 +31,11 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
             if (value <= failCount || (failInterval != 0 && value % failInterval == 0))
             {
-                System.Diagnostics.Debug.WriteLine("Fail: " + value);
                 throw new Exception("Fail " + value);
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine("PublishThis: " + message);
-                lock (PublishedMessages)
-                {
-                    PublishedMessages.Enqueue(message);
-                }
+                PublishedMessages[Interlocked.Increment(ref publishedCount) - 1] = message;                
             }
         }
 
@@ -54,8 +50,16 @@ namespace IServiceOriented.ServiceBus.UnitTests
             failInterval = value;
         }
 
+        public int PublishedCount
+        {
+            get
+            {
+                return publishedCount;
+            }
+        }
 
-        public Queue<string> PublishedMessages = new Queue<string>();
+        public const int MAX_MESSAGES = 10000;
+        public string[] PublishedMessages = new string[MAX_MESSAGES];
 
         #endregion
     }

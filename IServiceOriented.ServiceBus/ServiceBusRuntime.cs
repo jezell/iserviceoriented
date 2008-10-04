@@ -90,10 +90,12 @@ namespace IServiceOriented.ServiceBus
                         le.Listener.StartInternal();
                     }
                 }
-                
-                addWorker(deliveryWorker, "Delivery worker {0}");
-                addWorker(retryWorker, "Retry worker {0}");
 
+                for (int i = 0; i < Environment.ProcessorCount; i++)
+                {
+                    addWorker(deliveryWorker, "Delivery worker {0}");
+                    addWorker(retryWorker, "Retry worker {0}");
+                }
                 EventHandler started = Started;
                 if (started != null)
                 {

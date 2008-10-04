@@ -110,11 +110,44 @@ namespace IServiceOriented.ServiceBus
             }
         }
 
-        public static void CreateDB(string server, string dbName)
+        public static void DropConnectionsToDB(string server, string dbName)
         {
             using (SqlConnection connection = new SqlConnection("Data Source=" + server + "; Integrated Security=SSPI;"))
             {
                 connection.Open();
+
+                using (SqlCommand command = new SqlCommand(@" DECLARE @dbname sysname
+
+                    SET @dbname = '"+dbName+@"'
+
+                    DECLARE @spid int
+                    SELECT @spid = min(spid) from master.dbo.sysprocesses where dbid = db_id(@dbname)
+                    WHILE @spid IS NOT NULL
+                    BEGIN
+                    EXECUTE ('KILL ' + @spid)
+                    SELECT @spid = min(spid) from master.dbo.sysprocesses where dbid = db_id(@dbname) AND spid > @spid
+                    END", connection))
+                {
+                    command.ExecuteNonQuery();
+                }
+
+                
+            }
+        }
+
+        public static void CreateDB(string server, string dbName, bool dropIfExists)
+        {
+            using (SqlConnection connection = new SqlConnection("Data Source=" + server + "; Integrated Security=SSPI;"))
+            {
+                connection.Open();
+                if (dropIfExists)
+                {
+                    using (SqlCommand dropDb = new SqlCommand("IF EXISTS(SELECT * FROM sysdatabases WHERE name='" + dbName + "')  DROP DATABASE [" + dbName + "]", connection))
+                    {
+                        dropDb.ExecuteNonQuery();
+                    }
+                }
+
                 using (SqlCommand createDb = new SqlCommand("CREATE DATABASE [" + dbName + "]", connection))
                 {
                     createDb.ExecuteNonQuery();
@@ -189,7 +222,6 @@ namespace IServiceOriented.ServiceBus
             List<ListenerEndpoint> listenerEndpoints = new List<ListenerEndpoint>();
             using (SqlConnection connection = getConnection())
             {
-
                 using (SqlCommand command = new SqlCommand("sp_listener_list", connection))
                 {
                     command.CommandType = CommandType.StoredProcedure;

@@ -17,12 +17,13 @@ namespace IServiceOriented.ServiceBus.UnitTests
         [ClassInitialize]
         public static void Initialize(TestContext context)
         {            
-            SqlSubscriptionDB.CreateDB(@"(local)", "ServiceBus");
+            SqlSubscriptionDB.CreateDB(@"(local)", "ServiceBus", true);
         }
 
         [ClassCleanup]        
         public static void Cleanup()
         {
+            SqlSubscriptionDB.DropConnectionsToDB("(local)", "ServiceBus");
             SqlSubscriptionDB.DropDB(@"(local)", "ServiceBus");               
         }
 

@@ -139,7 +139,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
                 serviceBusRuntime.Stop();
 
-                Assert.AreEqual(0, ci.PublishedMessages.Count, "There should be no published messages");
+                Assert.AreEqual(0, ci.PublishedCount, "There should be no published messages");
 
                 Assert.IsNull(testQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the initial queue");
                 Assert.IsNull(retryQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the retry queue");
@@ -183,8 +183,8 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
                 serviceBusRuntime.Stop();
 
-                Assert.AreEqual(1, ci.PublishedMessages.Count, "There should be one published message");
-                Assert.AreEqual(message, ci.PublishedMessages.Dequeue(), "Message was not published properly");
+                Assert.AreEqual(1, ci.PublishedCount, "There should be one published message");
+                Assert.AreEqual(message, ci.PublishedMessages[0], "Message was not published properly");
 
                 Assert.IsNull(testQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the initial queue");
                 Assert.IsNull(retryQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the retry queue");
@@ -224,8 +224,8 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
                 serviceBusRuntime.Stop();
 
-                Assert.AreEqual(1, ci.PublishedMessages.Count, "There should be one published message");
-                Assert.AreEqual(message, ci.PublishedMessages.Dequeue(), "Message was not publishe properly");
+                Assert.AreEqual(1, ci.PublishedCount, "There should be one published message");
+                Assert.AreEqual(message, ci.PublishedMessages[0], "Message was not published properly");
 
                 Assert.IsNull(testQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the initial queue");
                 Assert.IsNull(retryQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the retry queue");
@@ -252,7 +252,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
                 serviceBusRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "", "", typeof(IContract), new MethodDispatcher(ci), new PassThroughMessageFilter()));
 
 
-                int messageCount = 1000;
+                int messageCount = 10000;
 
                 DateTime start = DateTime.Now;
 
@@ -282,9 +282,9 @@ namespace IServiceOriented.ServiceBus.UnitTests
                 System.Diagnostics.Trace.TraceInformation("Time to deliver "+messageCount+" = "+(end - start)); 
                 serviceBusRuntime.Stop();
 
-                while (ci.PublishedMessages.Count > 0)
+                for(int i = 0; i < ci.PublishedCount; i++)
                 {
-                    results[Convert.ToInt32(ci.PublishedMessages.Dequeue())] = true;
+                    results[Convert.ToInt32(ci.PublishedMessages[i])] = true;
                 }
 
                 for (int i = 0; i < messageCount; i++)
@@ -292,7 +292,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
                     Assert.IsTrue(results[i], "Message is missing");
                 }
 
-                Assert.AreEqual(0, ci.PublishedMessages.Count, "There should be no extra messages");            
+                Assert.AreEqual(messageCount, ci.PublishedCount, "There should be no extra messages");            
                 Assert.IsNull(testQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the initial queue");
                 Assert.IsNull(retryQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the retry queue");
                 Assert.IsNull(failQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the failure queue");         
@@ -352,9 +352,9 @@ namespace IServiceOriented.ServiceBus.UnitTests
                 System.Diagnostics.Trace.TraceInformation("Time to deliver " + messageCount + " = " + (end - start));
                 serviceBusRuntime.Stop();
 
-                while (ci.PublishedMessages.Count > 0)
+                for (int i = 0; i < ci.PublishedCount; i++)
                 {
-                    results[Convert.ToInt32(ci.PublishedMessages.Dequeue())] = true;
+                    results[Convert.ToInt32(ci.PublishedMessages[i])] = true;
                 }
 
                 for (int i = 0; i < messageCount; i++)
@@ -362,7 +362,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
                     Assert.IsTrue(results[i], "Message is missing");
                 }
 
-                Assert.AreEqual(0, ci.PublishedMessages.Count, "There should be no extra messages");
+                Assert.AreEqual(messageCount, ci.PublishedCount, "There should be no extra messages");
                 Assert.IsNull(testQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the initial queue");
                 Assert.IsNull(retryQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the retry queue");
                 Assert.IsNull(failQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the failure queue");
@@ -416,8 +416,8 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
                 serviceBusRuntime.Stop();
 
-                Assert.AreEqual(1, ci.PublishedMessages.Count, "There should be one published message");
-                Assert.AreEqual(message, ci.PublishedMessages.Dequeue(), "Message was not published properly");
+                Assert.AreEqual(1, ci.PublishedCount, "There should be one published message");
+                Assert.AreEqual(message, ci.PublishedMessages[0], "Message was not published properly");
 
                 Assert.AreEqual(true, failFirst, "Call did not fail first");
                 Assert.AreEqual(true, deliverSecond, "Call did not deliver on retry attempt");
@@ -471,7 +471,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
                 serviceBusRuntime.Stop();
 
-                Assert.AreEqual(0, ci.PublishedMessages.Count, "There should be no published message");
+                Assert.AreEqual(0, ci.PublishedCount, "There should be no published message");
 
                 Assert.IsNull(testQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the initial queue");
                 Assert.IsNull(retryQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the retry queue");
