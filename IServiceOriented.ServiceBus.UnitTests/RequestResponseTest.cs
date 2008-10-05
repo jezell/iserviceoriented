@@ -62,7 +62,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
         [TestMethod]
         public void TestRequestResponse()
         {
-            using (ServiceBusRuntime runtime = new ServiceBusRuntime(new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue()))
+            using (ServiceBusRuntime runtime = new ServiceBusRuntime(SimpleServiceLocator.With(new TripleQueueDeliveryCore(new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue()))))
             {
                 CEcho echo = new CEcho();
 

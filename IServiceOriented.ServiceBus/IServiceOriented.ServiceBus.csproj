@@ -87,6 +87,7 @@
   <ItemGroup>
     <Compile Include="ActionDispatcher.cs" />
     <Compile Include="CountdownLatch.cs" />
+    <Compile Include="DeliveryCore.cs" />
     <Compile Include="Dispatcher.cs" />
     <Compile Include="DuplicateIdentifierException.cs" />
     <Compile Include="Endpoint.cs" />

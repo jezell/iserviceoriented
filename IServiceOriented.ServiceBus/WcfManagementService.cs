@@ -22,12 +22,7 @@ namespace IServiceOriented.ServiceBus
         public const string ListListenersResponse = "urn:ListListenersResponse";
 
         public const string ListSubscribers = "urn:ListSubscribers";
-        public const string ListSubscribersResponse = "urn:ListSubscribersResponse";
-
-        public const string ListMessagesInFailureQueue = "urn:ListMessagesInFailureQueueRequest";
-        public const string ListMessagesInFailureQueueResponse = "urn:ListMessagesInFailureQueueRequest";
-
-        public const string RetryFailedMessageDelivery = "urn:RetryFailedMessageDelivery";
+        public const string ListSubscribersResponse = "urn:ListSubscribersResponse";        
     }
 
     public class WcfManagementService : RuntimeService
@@ -91,14 +86,6 @@ namespace IServiceOriented.ServiceBus
 
         [OperationContract(Action = WcfManagementServiceActions.ListSubscribers, ReplyAction = WcfManagementServiceActions.ListSubscribersResponse)]
         Collection<SubscriptionEndpoint> ListSubscribers();
-
-        [OperationContract(Action = WcfManagementServiceActions.ListMessagesInFailureQueue, ReplyAction = WcfManagementServiceActions.ListMessagesInFailureQueueResponse)]
-        [return: MessageParameter(Name="Messages")]
-        Collection<MessageDelivery> ListMessagesInFailureQueue([MessageParameter(Name = "MaxResults")] int? maxResults, [MessageParameter(Name = "LastMessageID")]string lastMessageId);
-
-        [OperationContract(Action = WcfManagementServiceActions.RetryFailedMessageDelivery)]
-        [FaultContract(typeof(MessageDeliveryNotFoundFault))]
-        void RetryFailedMessageDelivery(string messageId);
     }
 
     [ServiceBehavior(InstanceContextMode=InstanceContextMode.Single)]
@@ -150,54 +137,7 @@ namespace IServiceOriented.ServiceBus
                 throw new FaultException<ListenerNotFoundFault>(new ListenerNotFoundFault(listenerId));
             }
         }
-
-        [OperationBehavior]
-        public void RetryFailedMessageDelivery(string messageId)
-        {
-            using(TransactionScope ts = new TransactionScope())
-            {
-                MessageDelivery delivery = Runtime.FailureQueue.Dequeue(messageId, TimeSpan.FromSeconds(30));
-                if (delivery != null)
-                {
-                    Runtime.RetryQueue.Enqueue(delivery.CreateRetry(true, DateTime.Now));
-                }
-                else
-                {
-                    throw new FaultException<MessageDeliveryNotFoundFault>(new MessageDeliveryNotFoundFault(messageId));
-                }
-                ts.Complete();
-            }
-        }
-
-        [OperationBehavior]
-        public Collection<MessageDelivery> ListMessagesInFailureQueue(int? maxResults, string lastMessageId)
-        {
-            Collection<MessageDelivery> messages = new Collection<MessageDelivery>();
-            bool found = lastMessageId == null;
-            foreach (MessageDelivery md in Runtime.FailureQueue.ListMessages())
-            {
-                if (maxResults != null && maxResults.Value >= messages.Count)
-                {
-                    break;
-                }
-
-                if (found)
-                {
-                    messages.Add(md);
-                }
-
-                if (lastMessageId != null)
-                {
-                    if (md.MessageId == lastMessageId)
-                    {
-                        found = true;
-                    }
-                }
-            }
-
-            return messages;        
-        }
-
+        
         [OperationBehavior]
         public Collection<SubscriptionEndpoint> ListSubscribers()
         {

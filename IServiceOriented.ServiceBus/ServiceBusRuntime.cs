@@ -15,12 +15,8 @@ namespace IServiceOriented.ServiceBus
 {
 	public class ServiceBusRuntime : IDisposable
 	{
-        public ServiceBusRuntime(IMessageDeliveryQueue deliveryQueue, IMessageDeliveryQueue retryQueue, IMessageDeliveryQueue failureQueue, IServiceLocator serviceLocator)
-        {
-            if (deliveryQueue == null) throw new ArgumentNullException("deliveryQueue");
-            if (retryQueue == null) throw new ArgumentNullException("retryQueue");
-            if (failureQueue == null) throw new ArgumentNullException("failureQueue");
-
+        public ServiceBusRuntime(IServiceLocator serviceLocator)
+        {            
             try
             {
                 serviceLocator = Microsoft.Practices.ServiceLocation.ServiceLocator.Current;
@@ -34,22 +30,15 @@ namespace IServiceOriented.ServiceBus
                 serviceLocator = new SimpleServiceLocator(); // default to simple service locator
             }
 
-            _messageDeliveryQueue = deliveryQueue;
-            _retryQueue = retryQueue;
-            _failureQueue = failureQueue;
-
             _serviceLocator = serviceLocator;
         }
-		public ServiceBusRuntime(IMessageDeliveryQueue deliveryQueue, IMessageDeliveryQueue retryQueue, IMessageDeliveryQueue failureQueue) : this(deliveryQueue, retryQueue, failureQueue, null)
+		public ServiceBusRuntime() : this(null)
 		{
             
 		}
 		
 		object _startLock = new object();
-		
-		List<Thread> _workerThreads = new List<Thread>();
-        object _workerThreadsLock = new object();
-
+				
         IServiceLocator _serviceLocator;
         public IServiceLocator ServiceLocator
         {
@@ -63,6 +52,15 @@ namespace IServiceOriented.ServiceBus
 		public void Start()
 		{
             if (_disposed) throw new ObjectDisposedException("ServiceBusRuntime");
+
+            try
+            {
+                System.Diagnostics.Trace.Write("Starting Bus. Service Bus Core = " + ServiceLocator.GetInstance<DeliveryCore>());
+            }
+            catch(ActivationException)
+            {
+                throw new InvalidOperationException("An object implementing ServiceBusCore must be registered with the ServiceLocator before starting the bus");
+            }
 
             lock (_startLock)
             {
@@ -90,12 +88,7 @@ namespace IServiceOriented.ServiceBus
                         le.Listener.StartInternal();
                     }
                 }
-
-                for (int i = 0; i < Environment.ProcessorCount; i++)
-                {
-                    addWorker(deliveryWorker, "Delivery worker {0}");
-                    addWorker(retryWorker, "Retry worker {0}");
-                }
+                
                 EventHandler started = Started;
                 if (started != null)
                 {
@@ -104,193 +97,8 @@ namespace IServiceOriented.ServiceBus
                 _started = true;                 
             }
 		}
-		
-		void addWorker(ParameterizedThreadStart start, string name)
-		{
-			lock(_workerThreadsLock)
-			{
-				Thread thread = new Thread(start);			
-				thread.IsBackground = true;
-                int threadIndex = _workerThreads.Count;
-                if (name != null)
-                {
-                    thread.Name = String.Format(CultureInfo.CurrentCulture, name, Guid.NewGuid());
-                }
-				_workerThreads.Add(thread);
-				_stopWaitHandles.Add(new AutoResetEvent(false));
-                thread.Start(threadIndex);
-			}
-		}
-        const int DEQUEUE_TIMEOUT_SECONDS = 5;
-        
-        
-
-		void deliveryWorker(object param)
-		{
-            int deliveryMax = 5;
-			int threadIndex = (int)param;
-
-            using (Semaphore deliverySemaphore = new Semaphore(deliveryMax, deliveryMax))
-            {
-                while (true)
-                {
-                    DoSafely(() =>
-                    {
-                        if (deliverySemaphore.WaitOne(TimeSpan.FromSeconds(1), true))
-                        {
-                            bool release = true;
-                            Thread.BeginCriticalRegion();
-                            try
-                            {
-                                CommittableTransaction ct = new CommittableTransaction();
-
-                                Transaction.Current = ct;
-                                MessageDelivery md = _messageDeliveryQueue.Dequeue(TimeSpan.FromSeconds(DEQUEUE_TIMEOUT_SECONDS));
-
-                                if (md != null)
-                                {
-                                    DeliveryWork work = new DeliveryWork(ct, md);
-
-                                    release = false;
-                                    ThreadPool.QueueUserWorkItem((deliverWork) =>
-                                    {
-                                        Thread.BeginCriticalRegion();
-                                        try
-                                        {
-                                            DoSafely(() => DeliverOne((DeliveryWork)deliverWork, _retryQueue));
-                                        }
-                                        finally
-                                        {
-                                            deliverySemaphore.Release();
-                                            Thread.EndCriticalRegion();
-                                        }
-                                    }, work);
-                                }
-                                else
-                                {
-                                    ct.Dispose();
-                                }
-                            }
-                            finally
-                            {
-                                if (release)
-                                {
-                                    deliverySemaphore.Release();
-                                }
-                                Transaction.Current = null;
-                                Thread.EndCriticalRegion();
-                            }
-                        }
-                    });
-
-                    if (_stopping)
-                    {
-                        deliverySemaphore.WaitOne(deliveryMax); // wait for worker threads
-                        _stopWaitHandles[threadIndex].Set();
-                        break;
-                    }
-
-                }
-            }
-		}
-
-        protected class DeliveryWork
-        {
-            public DeliveryWork(CommittableTransaction transaction, MessageDelivery delivery)
-            {
-                Transaction = transaction;
-                Delivery = delivery;
-            }
-            public CommittableTransaction Transaction
-            {
-                get;
-                set;
-            }
-            public MessageDelivery Delivery
-            {
-                get;
-                set;
-            }
-        }
-
-        void retryWorker(object param)
-		{
-            int retryMax = 5;
-            using (Semaphore retrySemaphore = new Semaphore(retryMax, retryMax))
-            {
-                int threadIndex = (int)param;
-                while (true)
-                {
-
-                    DoSafely(() =>
-                    {
-
-                        try
-                        {
-                            if (retrySemaphore.WaitOne(TimeSpan.FromSeconds(1), true))
-                            {
-                                bool release = true;
-                                Thread.BeginCriticalRegion();
-                                try
-                                {
-                                    CommittableTransaction ct = new CommittableTransaction();
-                                    Transaction.Current = ct;
-
-                                    MessageDelivery md = _retryQueue.Dequeue(TimeSpan.FromSeconds(DEQUEUE_TIMEOUT_SECONDS));
-
-                                    if (md != null)
-                                    {
-                                        DeliveryWork work = new DeliveryWork(ct, md);
-                                        release = false;
-                                        ThreadPool.QueueUserWorkItem((deliveryWork) =>
-                                        {
-                                            Thread.BeginCriticalRegion();
-                                            try
-                                            {
-                                                DoSafely(() => DeliverOne((DeliveryWork)deliveryWork, _retryQueue));
-                                            }
-                                            finally
-                                            {
-                                                retrySemaphore.Release();
-                                                Thread.EndCriticalRegion();
-                                            }
-                                        }, work);
-                                    }
-                                    else
-                                    {
-                                        ct.Dispose();
-                                    }
-                                }
-                                finally
-                                {
-                                    if (release)
-                                    {
-                                        retrySemaphore.Release();
-                                    }
-                                    Thread.EndCriticalRegion();
-                                }
-                            }
-
-                        }
-                        finally
-                        {
-                            Transaction.Current = null;
-                        }
-                    });
-
-                    if (_stopping)
-                    {
-                        retrySemaphore.WaitOne(retryMax); // wait for worker threads
-                        _stopWaitHandles[threadIndex].Set();
-                        break;
-                    }
-
-
-                    Thread.Sleep(RETRY_SLEEP_MS);
-                }
-            }
-		}
-
+		    
+	    
         const int peekDelay = 5000;
 
 		public bool Stop()
@@ -304,16 +112,7 @@ namespace IServiceOriented.ServiceBus
                 {
                     throw new InvalidOperationException("Service bus is already stopped");
                 }
-				_stopping = true;
-
-                lock (_workerThreadsLock)
-                {
-                    WaitHandle.WaitAll(_stopWaitHandles.ToArray());
-
-                    _workerThreads.Clear();
-                    _stopWaitHandles.Clear();
-                }
-                
+				
                 lock(_listenerEndpointsLock)
                 {
                     foreach (ListenerEndpoint le in _listenerEndpoints)
@@ -349,9 +148,6 @@ namespace IServiceOriented.ServiceBus
 		}
 
         volatile bool _started;
-        volatile bool _stopping = false;
-
-        List<AutoResetEvent> _stopWaitHandles = new List<AutoResetEvent>();		
          
         public event EventHandler Started;
         public event EventHandler Stopped;        
@@ -506,35 +302,7 @@ namespace IServiceOriented.ServiceBus
 
 		}
 
-        public event UnhandledExceptionEventHandler UnhandledException;
-		
-		readonly IMessageDeliveryQueue _messageDeliveryQueue;
-        public IMessageDeliveryQueue MessageDeliveryQueue
-        {
-            get
-            {
-                return _messageDeliveryQueue;
-            }
-        }
-
-        readonly IMessageDeliveryQueue _retryQueue;
-        public IMessageDeliveryQueue RetryQueue
-        {
-            get
-            {
-                return _retryQueue;
-            }
-        }
-
-        readonly IMessageDeliveryQueue _failureQueue;
-        public IMessageDeliveryQueue FailureQueue
-        {
-            get
-            {
-                return _failureQueue;
-            }
-        }
-
+        		
         public SubscriptionEndpoint GetSubscription(Guid subscriptionEndpointId)
         {
             if (_disposed) throw new ObjectDisposedException("ServiceBusRuntime");
@@ -560,186 +328,6 @@ namespace IServiceOriented.ServiceBus
             }            
         }
 
-        bool _exponentialBackOff;
-        public bool ExponentialBackOff
-        {
-            get
-            {
-                return _exponentialBackOff;
-            }
-            set
-            {
-                _exponentialBackOff = value;
-            }
-        }
-
-        int _retryDelayMS = 1000;
-        public int RetryDelay
-        {
-            get
-            {
-                return _retryDelayMS;
-            }
-            set
-            {
-                _retryDelayMS = value;
-            }
-        }
-
-		const int RETRY_SLEEP_MS = 100;
-        const int FUTURE_SLEEP_MS = 100;
-
-        
-		protected void DeliverOne(DeliveryWork work, IMessageDeliveryQueue retryQueue)
-		{
-            using (System.Transactions.Transaction.Current = work.Transaction)
-            {
-                try
-                {
-                    MessageDelivery delivery = work.Delivery;
-                    if (delivery != null)
-                    {
-                        if (delivery.TimeToProcess != null)
-                        {
-                            int mDelay = (int)(delivery.TimeToProcess.Value - DateTime.Now).TotalMilliseconds;
-                            if (mDelay > 0)
-                            {
-                                System.Diagnostics.Debug.WriteLine("Time to process is " + mDelay + " milliseconds away. Requeuing in " + FUTURE_SLEEP_MS);
-                                Thread.Sleep(FUTURE_SLEEP_MS); // Sleep briefly in case we are in a loop of future messages, should be a little smarter
-                                retryQueue.Enqueue(delivery);
-                                return;
-                            }
-                        }
-
-                        try
-                        {
-                            SubscriptionEndpoint endpoint = GetSubscription(delivery.SubscriptionEndpointId);
-                            if (endpoint != null)
-                            {
-                                Dispatcher dispatcher = endpoint.Dispatcher;
-
-                                if (endpoint != null) // subscriber might have been removed since enqueue
-                                {
-
-
-                                    if (dispatcher != null)
-                                    {
-                                        dispatcher.DispatchInternal(delivery);
-
-                                        foreach(RuntimeService service in ServiceLocator.GetAllInstances<RuntimeService>())
-                                        {
-                                            service.OnMessageDelivered(delivery);
-                                        }
-                                        InvokeSafely(_messageDelivered, this, new MessageDeliveryEventArgs() { MessageDelivery = delivery });
-                                    }
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            MessageDelivery retryDelivery = delivery.CreateRetry(false, DateTime.Now.AddMilliseconds((_exponentialBackOff ? (_retryDelayMS * delivery.RetryCount * delivery.RetryCount) : _retryDelayMS)));
-                            if (!delivery.RetriesMaxed)
-                            {
-                                System.Diagnostics.Trace.TraceError("Sending to retry queue due to unhandled exception: " + ex.Message);
-                                notifyUnhandledException(ex);
-                                retryQueue.Enqueue(retryDelivery);
-
-                                foreach(RuntimeService service in ServiceLocator.GetAllInstances<RuntimeService>())
-                                {
-                                    service.OnMessageDeliveryFailed(delivery, false);
-                                }
-                           
-                                InvokeSafely(_messageDeliveryFailed, this, new MessageDeliveryFailedEventArgs() { MessageDelivery = delivery, Permanent = false });
-                            }
-                            else
-                            {
-                                System.Diagnostics.Trace.TraceError("Sending to failure queue due to unhandled exception: " + ex.Message);
-                                notifyUnhandledException(ex);
-                                _failureQueue.Enqueue(retryDelivery);
-
-                                foreach(RuntimeService service in ServiceLocator.GetAllInstances<RuntimeService>())
-                                {
-                                    service.OnMessageDeliveryFailed(delivery, true);
-                                }
-                                InvokeSafely(_messageDeliveryFailed, this, new MessageDeliveryFailedEventArgs() { MessageDelivery = delivery, Permanent = true });
-                            }
-                        }
-                    }
-                    work.Transaction.Commit();
-                }
-                catch
-                {
-                    work.Transaction.Rollback();
-                    throw;
-                }
-            }
-		}
-				
-        /// <summary>
-        /// Execute a block of code, passing any unhandled exceptions to the unhandled exception handler
-        /// </summary>
-        /// <param name="action"></param>
-        protected void DoSafely(Action action)
-        {
-            try
-            {
-                action();
-            }
-            catch(Exception ex)
-            {
-                System.Diagnostics.Trace.TraceError("UNHANDLED EXCEPTION: "+ex);
-                notifyUnhandledException(ex);                
-            }
-        }
-
-
-        private void notifyUnhandledException(Exception ex)
-        {
-            notifyUnhandledException(ex, false);
-        }
-        private void notifyUnhandledException(Exception ex, bool isTerminating)
-        {       
-            // Warning: unhandled exception inside unhandled exception event handlers could cause bad things to happen
-            UnhandledExceptionEventHandler ueHandler = UnhandledException;
-            if (ueHandler != null) ueHandler(this, new UnhandledExceptionEventArgs(ex, isTerminating));            
-        }
-
-        protected bool DoSafely<T>(Action<T> action, T value)
-        {
-            bool clean = false;
-            try
-            {
-                action(value);
-                clean = true;
-            }
-            catch (Exception ex)
-            {
-                UnhandledExceptionEventHandler ueHandler = UnhandledException;
-
-                if (ueHandler != null)
-                {
-                    ueHandler(this, new UnhandledExceptionEventArgs(ex, false));
-                }
-            }
-            return clean;
-        }
-        protected bool ForEachSafely<T>(IEnumerable<T> collection, Action<T> action)
-        {
-            bool clean = true;
-            foreach (T value in collection)
-            {
-                clean = clean && DoSafely(action, value);
-            }
-            return clean;
-        }
-
-        protected bool InvokeSafely(Delegate handler, params object[] parameters)
-        {
-            if(handler == null) return true;
-            Delegate[] list = handler.GetInvocationList();
-            return ForEachSafely(list, d => d.DynamicInvoke(parameters));
-        }
-
         public void Publish(Type contractType, string action, object message)
         {
             MessageDelivery[] results;
@@ -752,15 +340,10 @@ namespace IServiceOriented.ServiceBus
             Publish(publishRequest, PublishWait.None, TimeSpan.MinValue, out results);
         }
 
+        
 		public void Publish(PublishRequest publishRequest, PublishWait wait, TimeSpan timeout, out MessageDelivery[] res)
 		{
-            bool waitForReply = wait != PublishWait.None;
- 
-            if (_disposed) throw new ObjectDisposedException("ServiceBusRuntime");
-
-            res = null;
-
-            MessageDelivery[] results = null;
+            DeliveryCore deliveryCore = ServiceLocator.GetInstance<DeliveryCore>();
 
             SubscriptionEndpoint[] subscriptions = null;
             _subscriptions.Read(endpoints =>
@@ -768,7 +351,13 @@ namespace IServiceOriented.ServiceBus
                 subscriptions = endpoints.ToArray();
             });
 
-            int subscriptionCount = subscriptions.Length;
+            bool waitForReply = wait != PublishWait.None;
+
+            res = null;
+
+            MessageDelivery[] results = null;
+
+            int subscriptionCount = subscriptions.Count();
 
             List<MessageDelivery> messageDeliveries = new List<MessageDelivery>();
             CorrelationMessageFilter filter;
@@ -802,8 +391,8 @@ namespace IServiceOriented.ServiceBus
                         }
 
                         if (include)
-                        {                                                             
-                            MessageDelivery delivery = new MessageDelivery(subscription.Id, publishRequest.ContractType, publishRequest.Action, publishRequest.Message, _maxRetries, publishRequest.Context);
+                        {
+                            MessageDelivery delivery = new MessageDelivery(subscription.Id, publishRequest.ContractType, publishRequest.Action, publishRequest.Message, MaxRetries, publishRequest.Context);
                             messageDeliveries.Add(delivery);
                             handled = true;
                         }
@@ -814,39 +403,39 @@ namespace IServiceOriented.ServiceBus
                     {
                         foreach (SubscriptionEndpoint subscription in unhandledFilters)
                         {
-                            MessageDelivery delivery = new MessageDelivery(subscription.Id, publishRequest.ContractType, publishRequest.Action, publishRequest.Message, _maxRetries, publishRequest.Context);
+                            MessageDelivery delivery = new MessageDelivery(subscription.Id, publishRequest.ContractType, publishRequest.Action, publishRequest.Message, MaxRetries, publishRequest.Context);
                             messageDeliveries.Add(delivery);
                         }
                     }
 
-                    if(waitForReply)
+                    if (waitForReply)
                     {
                         latch = new CountdownLatch(messageDeliveries.Count);
                         filter = new CorrelationMessageFilter(messageDeliveries.Select(md => md.MessageId).ToArray());
                         results = new MessageDelivery[messageDeliveries.Count];
                         dispatcher = new ActionDispatcher((se, md) =>
+                        {
+                            for (int j = 0; j < messageDeliveries.Count; j++)
+                            {
+                                if (messageDeliveries[j].MessageId == (string)md.Context[MessageDelivery.CorrelationId]) // is reply
                                 {
-                                    for (int j = 0; j < messageDeliveries.Count; j++)
-                                    {
-                                        if (messageDeliveries[j].MessageId == (string)md.Context[MessageDelivery.CorrelationId]) // is reply
-                                        {
-                                            results[j] = md;
-                                            latch.Tick();
-                                        }
-                                    }
-                                });
+                                    results[j] = md;
+                                    latch.Tick();
+                                }
+                            }
+                        });
 
-                        temporarySubscription = new SubscriptionEndpoint(Guid.NewGuid(), "Temporary subscription", null, null, typeof(void), dispatcher, filter, true);                            
+                        temporarySubscription = new SubscriptionEndpoint(Guid.NewGuid(), "Temporary subscription", null, null, typeof(void), dispatcher, filter, true);
                         Subscribe(temporarySubscription);
-                    }                        
-                                   
+                    }
+
                     Thread.MemoryBarrier(); // make sure variable assignment doesn't move after enqueue
 
                     foreach (MessageDelivery md in messageDeliveries)
                     {
-                        _messageDeliveryQueue.Enqueue(md);
+                        deliveryCore.QueueDelivery(md);
                     }
-                    
+
                     ts.Complete();
                 }
 
@@ -857,7 +446,7 @@ namespace IServiceOriented.ServiceBus
             }
             finally
             {
-                if(temporarySubscription != null)
+                if (temporarySubscription != null)
                 {
                     Unsubscribe(temporarySubscription);
                 }
@@ -866,7 +455,7 @@ namespace IServiceOriented.ServiceBus
                     latch.Dispose();
                 }
             }
-        
+
 
             res = results;
 		}
@@ -1023,46 +612,41 @@ namespace IServiceOriented.ServiceBus
             }
 		}
 
-        object _messageDeliveredEventLock = new object();
-        event EventHandler<MessageDeliveryEventArgs> _messageDelivered;
-        public event EventHandler<MessageDeliveryEventArgs> MessageDelivered
+        internal void NotifyUnhandledException(Exception ex, bool isTerminating)
         {
-            add
+            UnhandledExceptionEventHandler ueHandler = UnhandledException;
+            if (ueHandler != null) ueHandler(this, new UnhandledExceptionEventArgs(ex, isTerminating));
+        }
+
+        internal void NotifyDelivery(MessageDelivery delivery)
+        {
+            foreach (RuntimeService service in ServiceLocator.GetAllInstances<RuntimeService>())
             {
-                lock (_messageDeliveredEventLock)
-                {
-                    _messageDelivered += value;
-                }
+                service.OnMessageDelivered(delivery);
             }
-            remove
+
+            var handler = MessageDelivered;
+            if (handler != null)
             {
-                lock (_messageDeliveredEventLock)
-                {
-                    _messageDelivered -= value;
-                }
+                handler(this, new MessageDeliveryEventArgs() { MessageDelivery = delivery });
             }
         }
 
-        object _messageDeliveryFailedEventLock = new object();
-        event EventHandler<MessageDeliveryFailedEventArgs> _messageDeliveryFailed;
-        public event EventHandler<MessageDeliveryFailedEventArgs> MessageDeliveryFailed
+        internal void NotifyFailure(MessageDelivery delivery, bool permanent)
         {
-            add
+            foreach (RuntimeService service in ServiceLocator.GetAllInstances<RuntimeService>())
             {
-                lock (_messageDeliveryFailedEventLock)
-                {
-                    _messageDeliveryFailed += value;
-                }
+                service.OnMessageDeliveryFailed(delivery, false);
             }
-            remove
-            {
-                lock (_messageDeliveryFailedEventLock)
-                {
-                    _messageDeliveryFailed -= value;
-                }
-            }
+
+            var failed = MessageDeliveryFailed;
+            if (failed != null) failed(this, new MessageDeliveryFailedEventArgs() { MessageDelivery = delivery, Permanent = false });
         }
 
+        public event UnhandledExceptionEventHandler UnhandledException;		
+        public event EventHandler<MessageDeliveryEventArgs> MessageDelivered;
+        public event EventHandler<MessageDeliveryFailedEventArgs> MessageDeliveryFailed;
+        
         volatile bool _disposed;
 
         protected virtual void Dispose(bool disposing)

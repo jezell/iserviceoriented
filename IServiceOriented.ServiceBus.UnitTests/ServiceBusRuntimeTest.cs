@@ -104,11 +104,11 @@ namespace IServiceOriented.ServiceBus.UnitTests
             MsmqMessageDeliveryQueue retryQueue = new MsmqMessageDeliveryQueue(_retryQueuePath);
             MsmqMessageDeliveryQueue failQueue = new MsmqMessageDeliveryQueue(_failQueuePath);
 
-            using (ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(testQueue, retryQueue, failQueue))
+            using (ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(SimpleServiceLocator.With(new TripleQueueDeliveryCore(testQueue, retryQueue, failQueue))))
             {
 
-                serviceBusRuntime.ExponentialBackOff = false;
-                serviceBusRuntime.RetryDelay = 1000;
+                serviceBusRuntime.ServiceLocator.GetInstance<TripleQueueDeliveryCore>().ExponentialBackOff = false;
+                serviceBusRuntime.ServiceLocator.GetInstance<TripleQueueDeliveryCore>().RetryDelay = 1000;
                 serviceBusRuntime.MaxRetries = 1;
 
 
@@ -156,11 +156,11 @@ namespace IServiceOriented.ServiceBus.UnitTests
             MsmqMessageDeliveryQueue retryQueue = new MsmqMessageDeliveryQueue(_retryQueuePath);
             MsmqMessageDeliveryQueue failQueue = new MsmqMessageDeliveryQueue(_failQueuePath);
 
-            using (ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(testQueue, retryQueue, failQueue))
+            using (ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(SimpleServiceLocator.With(new TripleQueueDeliveryCore(testQueue, retryQueue, failQueue))))
             {
 
-                serviceBusRuntime.ExponentialBackOff = false;
-                serviceBusRuntime.RetryDelay = 1000;
+                serviceBusRuntime.ServiceLocator.GetInstance<TripleQueueDeliveryCore>().ExponentialBackOff = false;
+                serviceBusRuntime.ServiceLocator.GetInstance<TripleQueueDeliveryCore>().RetryDelay = 1000;
                 serviceBusRuntime.MaxRetries = 1;
 
                 serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/test", typeof(IContract), new WcfListener()));
@@ -201,7 +201,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
             MsmqMessageDeliveryQueue retryQueue = new MsmqMessageDeliveryQueue(_retryQueuePath);
             MsmqMessageDeliveryQueue failQueue = new MsmqMessageDeliveryQueue(_failQueuePath);
 
-            using (ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(testQueue, retryQueue, failQueue))
+            using (ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(SimpleServiceLocator.With(new TripleQueueDeliveryCore(testQueue, retryQueue, failQueue))))
             {
 
                 serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/test", typeof(IContract), new WcfListener()));
@@ -242,7 +242,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
             MsmqMessageDeliveryQueue retryQueue = new MsmqMessageDeliveryQueue(_retryQueuePath);
             MsmqMessageDeliveryQueue failQueue = new MsmqMessageDeliveryQueue(_failQueuePath);
 
-            using(ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(testQueue, retryQueue, failQueue, SimpleServiceLocator.With(new PerformanceMonitorRuntimeService())))
+            using(ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(SimpleServiceLocator.With(new TripleQueueDeliveryCore( testQueue, retryQueue, failQueue), new PerformanceMonitorRuntimeService())))
             {
 
                 ContractImplementation ci = new ContractImplementation();
@@ -276,7 +276,6 @@ namespace IServiceOriented.ServiceBus.UnitTests
                 // Wait for delivery
                 countDown.Handle.WaitOne(TimeSpan.FromSeconds(5*60), true);
                 
-
                 DateTime end = DateTime.Now;
 
                 System.Diagnostics.Trace.TraceInformation("Time to deliver "+messageCount+" = "+(end - start)); 
@@ -308,11 +307,11 @@ namespace IServiceOriented.ServiceBus.UnitTests
             MsmqMessageDeliveryQueue retryQueue = new MsmqMessageDeliveryQueue(_retryQueuePath);
             MsmqMessageDeliveryQueue failQueue = new MsmqMessageDeliveryQueue(_failQueuePath);
 
-            using (ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(testQueue, retryQueue, failQueue, SimpleServiceLocator.With(new PerformanceMonitorRuntimeService())))
+            using (ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(SimpleServiceLocator.With(new TripleQueueDeliveryCore(testQueue, retryQueue, failQueue), new PerformanceMonitorRuntimeService())))
             {
 
-                serviceBusRuntime.ExponentialBackOff = false;
-                serviceBusRuntime.RetryDelay = 10;
+                serviceBusRuntime.ServiceLocator.GetInstance<TripleQueueDeliveryCore>().ExponentialBackOff = false;
+                serviceBusRuntime.ServiceLocator.GetInstance<TripleQueueDeliveryCore>().RetryDelay = 10;
                 serviceBusRuntime.MaxRetries = 1000;
 
                 ContractImplementation ci = new ContractImplementation();
@@ -379,11 +378,11 @@ namespace IServiceOriented.ServiceBus.UnitTests
             MsmqMessageDeliveryQueue retryQueue = new MsmqMessageDeliveryQueue(_retryQueuePath);
             MsmqMessageDeliveryQueue failQueue = new MsmqMessageDeliveryQueue(_failQueuePath);
 
-            using (ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(testQueue, retryQueue, failQueue))
+            using (ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(SimpleServiceLocator.With(new TripleQueueDeliveryCore(testQueue, retryQueue, failQueue))))
             {
 
-                serviceBusRuntime.ExponentialBackOff = false;
-                serviceBusRuntime.RetryDelay = 1000;
+                serviceBusRuntime.ServiceLocator.GetInstance<TripleQueueDeliveryCore>().ExponentialBackOff = false;
+                serviceBusRuntime.ServiceLocator.GetInstance<TripleQueueDeliveryCore>().RetryDelay = 1000;
                 serviceBusRuntime.MaxRetries = 1;
 
                 serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/test", typeof(IContract), new WcfListener()));
@@ -438,11 +437,11 @@ namespace IServiceOriented.ServiceBus.UnitTests
             MsmqMessageDeliveryQueue retryQueue = new MsmqMessageDeliveryQueue(_retryQueuePath);
             MsmqMessageDeliveryQueue failQueue = new MsmqMessageDeliveryQueue(_failQueuePath);
 
-            using (ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(testQueue, retryQueue, failQueue))
+            using (ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(SimpleServiceLocator.With(new TripleQueueDeliveryCore(testQueue, retryQueue, failQueue))))
             {
 
-                serviceBusRuntime.ExponentialBackOff = false;
-                serviceBusRuntime.RetryDelay = 1000;
+                serviceBusRuntime.ServiceLocator.GetInstance<TripleQueueDeliveryCore>().ExponentialBackOff = false;
+                serviceBusRuntime.ServiceLocator.GetInstance<TripleQueueDeliveryCore>().RetryDelay = 1000;
                 serviceBusRuntime.MaxRetries = 1;
 
                 serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/test", typeof(IContract), new WcfListener()));

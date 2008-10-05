@@ -92,7 +92,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
         [TestMethod]
         public void TestUnhandledMessageFilter()
         {
-            using (ServiceBusRuntime runtime = new ServiceBusRuntime(new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue()))
+            using (ServiceBusRuntime runtime = new ServiceBusRuntime(SimpleServiceLocator.With(new TripleQueueDeliveryCore(new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue()))))
             {
 
                 int handledCount = 0;
