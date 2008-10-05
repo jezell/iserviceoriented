@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+using IServiceOriented.ServiceBus.Collections;
+
 namespace IServiceOriented.ServiceBus.Samples.Chat
 {
     public class ChatServer

@@ -11,6 +11,8 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Security.Principal;
 
+using IServiceOriented.ServiceBus.Collections;
+
 namespace IServiceOriented.ServiceBus
 {
     /// <summary>

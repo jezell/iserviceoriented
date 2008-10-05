@@ -86,22 +86,23 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ActionDispatcher.cs" />
-    <Compile Include="CountdownLatch.cs" />
+    <Compile Include="Threading\CountdownLatch.cs" />
     <Compile Include="DeliveryCore.cs" />
     <Compile Include="Dispatcher.cs" />
     <Compile Include="DuplicateIdentifierException.cs" />
     <Compile Include="Endpoint.cs" />
-    <Compile Include="IReadOnlyDictionary.cs" />
+    <Compile Include="Collections\IReadOnlyDictionary.cs" />
     <Compile Include="ISubscriptionDB.cs" />
     <Compile Include="Listener.cs" />
-    <Compile Include="ILockedObject.cs" />
+    <Compile Include="Threading\ILockedObject.cs" />
     <Compile Include="InvalidContractException.cs" />
     <Compile Include="ListenerEndpoint.cs" />
     <Compile Include="IMessageDeliveryQueue.cs" />
     <Compile Include="ListenerEndpointCollection.cs" />
     <Compile Include="NullUserNamePasswordValidator.cs" />
     <Compile Include="PublishRequest.cs" />
-    <Compile Include="ReadOnlyDictionary.cs" />
+    <Compile Include="QueuedDeliveryCore.cs" />
+    <Compile Include="Collections\ReadOnlyDictionary.cs" />
     <Compile Include="CorrelationMessageFilter.cs" />
     <Compile Include="SimpleServiceLocator.cs" />
     <Compile Include="SqlSubscriptionDB.cs" />
@@ -110,7 +111,7 @@
     </Compile>
     <Compile Include="SubscriptionEndpointCollection.cs" />
     <Compile Include="TransformationDispatcher.cs" />
-    <Compile Include="ReaderWriterLockedObject.cs" />
+    <Compile Include="Threading\ReaderWriterLockedObject.cs" />
     <Compile Include="UnhandledMessageFilter.cs" />
     <Compile Include="PerformanceMonitorRuntimeService.cs" />
     <Compile Include="RuntimeService.cs" />

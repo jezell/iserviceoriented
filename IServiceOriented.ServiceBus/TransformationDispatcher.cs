@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 
 using System.Runtime.Serialization;
+using IServiceOriented.ServiceBus.Threading;
+using IServiceOriented.ServiceBus.Collections;
 namespace IServiceOriented.ServiceBus
 {
     /// <summary>

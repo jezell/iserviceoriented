@@ -6,6 +6,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using System.Runtime.Serialization;
+using IServiceOriented.ServiceBus.Collections;
 
 namespace IServiceOriented.ServiceBus.UnitTests
 {

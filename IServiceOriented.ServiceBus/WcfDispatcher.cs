@@ -6,6 +6,8 @@ using System.ServiceModel;
 using System.Reflection;
 
 using System.Runtime.Serialization;
+using IServiceOriented.ServiceBus.Threading;
+using IServiceOriented.ServiceBus.Collections;
 
 namespace IServiceOriented.ServiceBus
 {    
