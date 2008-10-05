@@ -5,6 +5,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading;
 using IServiceOriented.ServiceBus.Threading;
+using System.Collections.ObjectModel;
 
 namespace IServiceOriented.ServiceBus.UnitTests
 {
@@ -437,7 +438,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
             MsmqMessageDeliveryQueue testQueue = new MsmqMessageDeliveryQueue(_testQueuePath);
             MsmqMessageDeliveryQueue retryQueue = new MsmqMessageDeliveryQueue(_retryQueuePath);
             MsmqMessageDeliveryQueue failQueue = new MsmqMessageDeliveryQueue(_failQueuePath);
-
+           
             using (ServiceBusRuntime serviceBusRuntime = new ServiceBusRuntime(SimpleServiceLocator.With(new QueuedDeliveryCore(testQueue, retryQueue, failQueue))))
             {
 
@@ -475,7 +476,14 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
                 Assert.IsNull(testQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the initial queue");
                 Assert.IsNull(retryQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the retry queue");
-                Assert.IsNotNull(failQueue.Peek(TimeSpan.FromSeconds(1)), "There should be a message in the failure queue");
+
+                MessageDelivery delivery = failQueue.Peek(TimeSpan.FromSeconds(1));
+                Assert.IsNotNull(delivery, "There should be a message in the failure queue");
+                Assert.AreEqual(3, ((ReadOnlyCollection<string>)delivery.Context[MessageDelivery.Exceptions]).Count());
+                for (int i = 0; i < 3; i++)
+                {
+                    Assert.IsNotNull(((ReadOnlyCollection<string>)delivery.Context[MessageDelivery.Exceptions])[i]);
+                }
             }
         }
 

@@ -7,6 +7,7 @@ using System.Threading;
 using System.Runtime.Serialization;
 using IServiceOriented.ServiceBus.Threading;
 using IServiceOriented.ServiceBus.Collections;
+using System.Collections.ObjectModel;
 
 namespace IServiceOriented.ServiceBus
 {
@@ -54,7 +55,7 @@ namespace IServiceOriented.ServiceBus
             }
         }
         
-        static List<Type> _knownTypes = new List<Type>(new Type[] { typeof(UnhandledMessageFilter), typeof(Guid[]), typeof(WcfListener), typeof(WcfDispatcher), typeof(TypedMessageFilter) } );
+        static List<Type> _knownTypes = new List<Type>(new Type[] { typeof(UnhandledMessageFilter), typeof(Guid[]), typeof(WcfListener), typeof(WcfDispatcher), typeof(TypedMessageFilter), typeof(ReadOnlyCollection<string>) } );
         /// <summary>
         /// Clears the list of types registered for message delivery.
         /// </summary>
@@ -289,9 +290,40 @@ namespace IServiceOriented.ServiceBus
             return new MessageDelivery(_messageId, _subscriptionEndpointId, _contractType, _action, _message, _maxRetries, retryCount, timeToDeliver, QueueCount+1, _context);             
         }
 
+
+        /// <summary>
+        /// Create a retry message based off of this message.
+        /// </summary>
+        /// <param name="resetRetryCount">Whether or not to reset the retry count.</param>
+        /// <param name="timeToDeliver">Time to deliver the retry message.</param>
+        /// <param name="exception">The exception that caused the retry.</param>
+        /// <remarks>The exception will be attached to the message context.</remarks>
+        /// <returns>A new MessageDelivery.</returns>
+        public MessageDelivery CreateRetry(bool resetRetryCount, DateTime timeToDeliver, Exception exception)
+        {
+            int retryCount = resetRetryCount ? 0 : (_retryCount + 1);
+            
+            var context = _context.ToDictionary();
+
+            if(!context.ContainsKey(Exceptions))
+            {
+                var exceptions = new List<string>();
+                exceptions.Add(exception.ToString());
+                context.Add(Exceptions, new ReadOnlyCollection<string>(exceptions));
+            }
+            else
+            {
+                var exceptions = new List<string>((IEnumerable<string>)context[Exceptions]);
+                exceptions.Add(exception.ToString());
+                context[Exceptions] = new ReadOnlyCollection<string>(exceptions);
+            }            
+                        
+            return new MessageDelivery(_messageId, _subscriptionEndpointId, _contractType, _action, _message, _maxRetries, retryCount, timeToDeliver, QueueCount + 1, context.MakeReadOnly());
+        }
         public const string PrimaryIdentityNameKey = "PrimaryIdentityName";        
         public const string WindowsIdentityNameKey = "WindowsIdentityName";
         public const string WindowsIdentityImpersonationLevelKey = "WindowsImpersonationLevel";
         public const string CorrelationId = "CorrelationId";
+        public const string Exceptions = "Exceptions";
     }
 }

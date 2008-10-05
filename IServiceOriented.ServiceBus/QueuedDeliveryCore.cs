@@ -274,7 +274,7 @@ namespace IServiceOriented.ServiceBus
                                 {
                                     System.Diagnostics.Debug.WriteLine("Time to process is " + mDelay + " milliseconds away. Requeuing in " + FUTURE_SLEEP_MS);
                                     Thread.Sleep(FUTURE_SLEEP_MS); // Sleep briefly in case we are in a loop of future messages, should be a little smarter
-                                    QueueRetry(delivery);
+                                    Requeue(delivery);
                                     return;
                                 }
                             }
@@ -311,11 +311,11 @@ namespace IServiceOriented.ServiceBus
 
                             if (retry)
                             {
-                                QueueRetry(work.Delivery);
+                                QueueRetry(work.Delivery, ex);
                             }
                             else
                             {
-                                QueueFail(work.Delivery);
+                                QueueFail(work.Delivery, ex);
                             }
 
                             work.Transaction.Commit();
@@ -339,15 +339,21 @@ namespace IServiceOriented.ServiceBus
             _messageDeliveryQueue.Enqueue(delivery);
         }
 
-        protected void QueueRetry(MessageDelivery delivery)
+        protected void Requeue(MessageDelivery delivery)
         {
             MessageDelivery retryDelivery = delivery.CreateRetry(false, DateTime.Now.AddMilliseconds((_exponentialBackOff ? (_retryDelayMS * delivery.RetryCount * delivery.RetryCount) : _retryDelayMS)));
             (_retryQueue ?? _messageDeliveryQueue).Enqueue(retryDelivery);
         }
 
-        protected void QueueFail(MessageDelivery delivery)
+        protected void QueueRetry(MessageDelivery delivery, Exception exception)
         {
-            MessageDelivery retryDelivery = delivery.CreateRetry(false, DateTime.Now.AddMilliseconds((_exponentialBackOff ? (_retryDelayMS * delivery.RetryCount * delivery.RetryCount) : _retryDelayMS)));
+            MessageDelivery retryDelivery = delivery.CreateRetry(false, DateTime.Now.AddMilliseconds((_exponentialBackOff ? (_retryDelayMS * delivery.RetryCount * delivery.RetryCount) : _retryDelayMS)), exception);
+            (_retryQueue ?? _messageDeliveryQueue).Enqueue(retryDelivery);
+        }
+
+        protected void QueueFail(MessageDelivery delivery, Exception exception)
+        {
+            MessageDelivery retryDelivery = delivery.CreateRetry(false, DateTime.Now.AddMilliseconds((_exponentialBackOff ? (_retryDelayMS * delivery.RetryCount * delivery.RetryCount) : _retryDelayMS)), exception);
             _failureQueue.Enqueue(retryDelivery);
         }
 
