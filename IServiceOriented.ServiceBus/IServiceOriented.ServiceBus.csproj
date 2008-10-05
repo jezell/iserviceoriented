@@ -92,7 +92,7 @@
     <Compile Include="DuplicateIdentifierException.cs" />
     <Compile Include="Endpoint.cs" />
     <Compile Include="Collections\IReadOnlyDictionary.cs" />
-    <Compile Include="ISubscriptionDB.cs" />
+    <Compile Include="Data\ISubscriptionDB.cs" />
     <Compile Include="Listener.cs" />
     <Compile Include="Threading\ILockedObject.cs" />
     <Compile Include="InvalidContractException.cs" />
@@ -105,7 +105,7 @@
     <Compile Include="Collections\ReadOnlyDictionary.cs" />
     <Compile Include="CorrelationMessageFilter.cs" />
     <Compile Include="SimpleServiceLocator.cs" />
-    <Compile Include="SqlSubscriptionDB.cs" />
+    <Compile Include="Data\SqlSubscriptionDB.cs" />
     <Compile Include="SqlSubscriptionPersistenceService.cs">
       <SubType>Code</SubType>
     </Compile>

@@ -1,5 +1,5 @@
 ﻿using System;
-namespace IServiceOriented.ServiceBus
+namespace IServiceOriented.ServiceBus.Data
 {
     public interface ISubscriptionDB
     {

@@ -10,7 +10,7 @@ using System.Data.SqlClient;
 using System.Runtime.Serialization;
 
 
-namespace IServiceOriented.ServiceBus
+namespace IServiceOriented.ServiceBus.Data
 {
     /// <summary>
     /// Provides data access functionality for SqlSubscriptionPersistenceService

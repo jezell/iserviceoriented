@@ -6,6 +6,8 @@ using System.Resources;
 
 using System.IO;
 
+using IServiceOriented.ServiceBus.Data;
+
 namespace IServiceOriented.ServiceBus
 {    
     /// <summary>
