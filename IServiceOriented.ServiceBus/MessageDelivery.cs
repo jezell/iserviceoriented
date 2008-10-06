@@ -8,6 +8,8 @@ using System.Runtime.Serialization;
 using IServiceOriented.ServiceBus.Threading;
 using IServiceOriented.ServiceBus.Collections;
 using System.Collections.ObjectModel;
+using System.ServiceModel.Channels;
+
 
 namespace IServiceOriented.ServiceBus
 {
@@ -19,7 +21,7 @@ namespace IServiceOriented.ServiceBus
     [KnownType("GetKnownTypes")]
     public class MessageDelivery 
     {
-        public MessageDelivery(Guid subscriptionEndpointId, Type contractType, string action, object message, int maxRetries, ReadOnlyDictionary<string,object> context)
+        public MessageDelivery(Guid subscriptionEndpointId, Type contractType, string action, object message, int maxRetries, MessageDeliveryContext context)
         {
             _messageId = Guid.NewGuid().ToString();
             _subscriptionEndpointId = subscriptionEndpointId;
@@ -30,7 +32,7 @@ namespace IServiceOriented.ServiceBus
             ContractType = contractType;
         }
 
-        public MessageDelivery(string messageId, Guid subscriptionEndpointId, Type contractType, string action, object message, int maxRetries, int retryCount, DateTime? timeToProcess, int queueCount, ReadOnlyDictionary<string, object> context)
+        public MessageDelivery(string messageId, Guid subscriptionEndpointId, Type contractType, string action, object message, int maxRetries, int retryCount, DateTime? timeToProcess, MessageDeliveryContext context)
         {
             _messageId = messageId;
             _subscriptionEndpointId = subscriptionEndpointId;
@@ -38,7 +40,6 @@ namespace IServiceOriented.ServiceBus
             _message = message;
             _retryCount = retryCount;
             _timeToProcess = timeToProcess;
-            _queueCount = queueCount;
             _maxRetries = maxRetries;
             _context = context;
             ContractType = contractType;
@@ -54,8 +55,8 @@ namespace IServiceOriented.ServiceBus
                 return _knownTypes.ToArray();
             }
         }
-        
-        static List<Type> _knownTypes = new List<Type>(new Type[] { typeof(UnhandledMessageFilter), typeof(Guid[]), typeof(WcfListener), typeof(WcfDispatcher), typeof(TypedMessageFilter), typeof(ReadOnlyCollection<string>) } );
+
+        static List<Type> _knownTypes = new List<Type>(new Type[] { typeof(UnhandledMessageFilter), typeof(WcfListener), typeof(WcfDispatcher), typeof(TypedMessageFilter), typeof(ReadOnlyCollection<string>), typeof(ReadOnlyCollection<short>), typeof(ReadOnlyCollection<int>), typeof(ReadOnlyCollection<bool>), typeof(ReadOnlyCollection<decimal>), typeof(ReadOnlyCollection<float>), typeof(ReadOnlyCollection<double>), typeof(ReadOnlyCollection<long>), typeof(ReadOnlyCollection<Guid>), typeof(MessageDeliveryContext) });
         /// <summary>
         /// Clears the list of types registered for message delivery.
         /// </summary>
@@ -95,35 +96,7 @@ namespace IServiceOriented.ServiceBus
             }
         }
 
-
-        int _queueCount;
-        /// <summary>
-        /// The number of times that this message has been queued
-        /// </summary>
-        [DataMember]
-        public int QueueCount
-        {
-            get
-            {
-                return _queueCount;
-            }
-            private set
-            {
-                _queueCount = value;
-            }
-        }
         
-        /// <summary>
-        /// Increment the queue count.
-        /// </summary>
-        /// <returns>The new queue count.</returns>
-        /// <remarks>This method is not thread safe.</remarks>
-        public int IncrementQueueCount()
-        {
-            return _queueCount++; 
-        }
-
-
         private string _messageId;
         /// <summary>
         /// Gets the unique identifier of this message
@@ -258,13 +231,13 @@ namespace IServiceOriented.ServiceBus
             }
         }
 
-        ReadOnlyDictionary<string, object> _context = new ReadOnlyDictionary<string, object>();
+        MessageDeliveryContext _context = new MessageDeliveryContext();
         
         /// <summary>
         /// Gets the context associated with this message.
         /// </summary>
         [DataMember]
-        public ReadOnlyDictionary<string, object> Context
+        public MessageDeliveryContext Context
         {
             get
             {
@@ -287,7 +260,7 @@ namespace IServiceOriented.ServiceBus
         public MessageDelivery CreateRetry(bool resetRetryCount, DateTime timeToDeliver)
         {            
             int retryCount = resetRetryCount ? 0 : (_retryCount + 1);            
-            return new MessageDelivery(_messageId, _subscriptionEndpointId, _contractType, _action, _message, _maxRetries, retryCount, timeToDeliver, QueueCount+1, _context);             
+            return new MessageDelivery(_messageId, _subscriptionEndpointId, _contractType, _action, _message, _maxRetries, retryCount, timeToDeliver, _context);             
         }
 
 
@@ -307,23 +280,26 @@ namespace IServiceOriented.ServiceBus
 
             if(!context.ContainsKey(Exceptions))
             {
-                var exceptions = new List<string>();
+                List<string> exceptions = new List<string>();
                 exceptions.Add(exception.ToString());
                 context.Add(Exceptions, new ReadOnlyCollection<string>(exceptions));
             }
             else
             {
-                var exceptions = new List<string>((IEnumerable<string>)context[Exceptions]);
+                List<string> exceptions = new List<string>((IEnumerable<string>)context[Exceptions]);
                 exceptions.Add(exception.ToString());
                 context[Exceptions] = new ReadOnlyCollection<string>(exceptions);
             }            
                         
-            return new MessageDelivery(_messageId, _subscriptionEndpointId, _contractType, _action, _message, _maxRetries, retryCount, timeToDeliver, QueueCount + 1, context.MakeReadOnly());
+            return new MessageDelivery(_messageId, _subscriptionEndpointId, _contractType, _action, _message, _maxRetries, retryCount, timeToDeliver, new MessageDeliveryContext(context));
         }
+
         public const string PrimaryIdentityNameKey = "PrimaryIdentityName";        
         public const string WindowsIdentityNameKey = "WindowsIdentityName";
         public const string WindowsIdentityImpersonationLevelKey = "WindowsImpersonationLevel";
         public const string CorrelationId = "CorrelationId";
         public const string Exceptions = "Exceptions";
+
+        
     }
 }

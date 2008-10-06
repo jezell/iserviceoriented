@@ -124,7 +124,7 @@ namespace IServiceOriented.ServiceBus
                         {
                             KeyValuePair<string, object>[] replyData = new KeyValuePair<string, object>[1];
                             replyData[0] = new KeyValuePair<string, object>(MessageDelivery.CorrelationId, messageDelivery.MessageId);
-                            Runtime.Publish(new PublishRequest(endpoint.ContractType, _replyActionLookup[messageDelivery.Action], result, new ReadOnlyDictionary<string,object>( replyData ))); 
+                            Runtime.Publish(new PublishRequest(endpoint.ContractType, _replyActionLookup[messageDelivery.Action], result, new MessageDeliveryContext( replyData ))); 
                         }
                     }
                     catch(System.Reflection.TargetInvocationException ex)
@@ -136,7 +136,7 @@ namespace IServiceOriented.ServiceBus
                         
                             if (ex.InnerException is FaultException)
                             {
-                                Runtime.Publish(new PublishRequest(endpoint.ContractType, _replyActionLookup[messageDelivery.Action], ex.InnerException, new ReadOnlyDictionary<string, object>(replyData)));
+                                Runtime.Publish(new PublishRequest(endpoint.ContractType, _replyActionLookup[messageDelivery.Action], ex.InnerException, new MessageDeliveryContext(replyData)));
                             }
                             else
                             {

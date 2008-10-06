@@ -256,12 +256,15 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
                 int messageCount = 10000;
 
+                int count = 0;
+
+
                 DateTime start = DateTime.Now;
 
                 CountdownLatch countDown = new CountdownLatch(messageCount);
                 
                 AutoResetEvent wait = new AutoResetEvent(false);
-                serviceBusRuntime.MessageDelivered += (o, mdea) => { countDown.Tick();  };
+                serviceBusRuntime.MessageDelivered += (o, mdea) => { Interlocked.Increment(ref count); countDown.Tick(); };
                 serviceBusRuntime.MessageDeliveryFailed += (o, mdfea) => { countDown.Tick(); };
 
                 for (int i = 0; i < messageCount; i++)
@@ -283,9 +286,12 @@ namespace IServiceOriented.ServiceBus.UnitTests
                 System.Diagnostics.Trace.TraceInformation("Time to deliver "+messageCount+" = "+(end - start)); 
                 serviceBusRuntime.Stop();
 
+                Assert.AreEqual(messageCount, ci.PublishedCount, "There should be no extra messages");            
+                
                 for(int i = 0; i < ci.PublishedCount; i++)
                 {
-                    results[Convert.ToInt32(ci.PublishedMessages[i])] = true;
+                    int j = Convert.ToInt32(ci.PublishedMessages[i]);
+                    results[j] = true;                    
                 }
 
                 for (int i = 0; i < messageCount; i++)
@@ -293,7 +299,6 @@ namespace IServiceOriented.ServiceBus.UnitTests
                     Assert.IsTrue(results[i], "Message is missing");
                 }
 
-                Assert.AreEqual(messageCount, ci.PublishedCount, "There should be no extra messages");            
                 Assert.IsNull(testQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the initial queue");
                 Assert.IsNull(retryQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the retry queue");
                 Assert.IsNull(failQueue.Peek(TimeSpan.FromSeconds(1)), "There should be no messages in the failure queue");         
@@ -479,11 +484,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
                 MessageDelivery delivery = failQueue.Peek(TimeSpan.FromSeconds(1));
                 Assert.IsNotNull(delivery, "There should be a message in the failure queue");
-                Assert.AreEqual(3, ((ReadOnlyCollection<string>)delivery.Context[MessageDelivery.Exceptions]).Count());
-                for (int i = 0; i < 3; i++)
-                {
-                    Assert.IsNotNull(((ReadOnlyCollection<string>)delivery.Context[MessageDelivery.Exceptions])[i]);
-                }
+                Assert.AreEqual(3, ((IEnumerable<string>)delivery.Context[MessageDelivery.Exceptions]).Count());           
             }
         }
 

@@ -33,7 +33,8 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
             {
                 if (request.From != "System")
                 {
-                    _serviceBus.Publish(new PublishRequest(typeof(IChatService), "SendMessage", new SendMessageRequest("System", request.From, request.To + " is an invalid user"), (new Dictionary<string,object>() { { MessageDelivery.PrimaryIdentityNameKey, "SYSTEM" } }).MakeReadOnly() ));
+                    _serviceBus.Publish(new PublishRequest(typeof(IChatService), "SendMessage", new SendMessageRequest("System", request.From, request.To + " is an invalid user"), 
+                        new MessageDeliveryContext(new KeyValuePair<string,object>[] { new KeyValuePair<string,object>(MessageDelivery.PrimaryIdentityNameKey, "SYSTEM" ) })));
                 }
             }
         }

@@ -8,6 +8,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Runtime.Serialization;
 using IServiceOriented.ServiceBus.Collections;
 
+using System.ServiceModel;
+using IServiceOriented.ServiceBus.Formatters;
+
 namespace IServiceOriented.ServiceBus.UnitTests
 {
     [Serializable]
@@ -53,6 +56,22 @@ namespace IServiceOriented.ServiceBus.UnitTests
             return !v1.Equals(v2);
         }
     }
+
+    [MessageContract]
+    public class MessageContractMessage
+    {
+        [MessageBodyMember]
+        public string Data;
+    }
+
+
+    [DataContract]
+    public class DataContractMessage
+    {
+        [DataMember]
+        public string Data;
+    }
+
 
     [TestClass]
     public class MsmqMessageDeliveryQueueTest
@@ -118,8 +137,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
             }
             catch
             {
-            }
-        
+            }        
 
             // Create test queue
             MsmqMessageDeliveryQueue.Create(_testQueuePath);
@@ -133,7 +151,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
             SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "SubscriptionName", "http://localhost/test", "SubscriptionConfigName", typeof(IContract), new WcfDispatcher(), new PassThroughMessageFilter());
 
-            MessageDelivery enqueued = new MessageDelivery(endpoint.Id, typeof(MessageDelivery), "randomAction","randomMessageData", 3, new ReadOnlyDictionary<string,object>());
+            MessageDelivery enqueued = new MessageDelivery(endpoint.Id, typeof(MessageDelivery), "randomAction","randomMessageData", 3, new MessageDeliveryContext());
             Assert.IsNull(queue.Peek(TimeSpan.FromSeconds(1)), "Queue must be empty to start transaction test");
 
             // Enqueue, but abort transaction
@@ -175,9 +193,82 @@ namespace IServiceOriented.ServiceBus.UnitTests
                 MessageDelivery dequeued = queue.Dequeue(TimeSpan.FromSeconds(5));
                 Assert.IsNull(dequeued, "Committed transaction should have dequeued the message");
             }
-
         }
 
+        [TestMethod]
+        public void TestMessageContractFormatterWithDataContract()
+        {
+            MessageDeliveryFormatter formatter = new MessageDeliveryFormatter();
+            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(_testQueuePath);
+            queue.Formatter = formatter;
+            string action = "http://test";
+            DataContractMessage outgoing = new DataContractMessage() { Data = "This is a test" };
+
+            Dictionary<string, object> context = new Dictionary<string, object>();
+            context.Add("test", "value");
+
+            MessageDelivery outgoingDelivery = new MessageDelivery(Guid.NewGuid(), null, action, outgoing, 5, new MessageDeliveryContext(context));
+            using (TransactionScope ts = new TransactionScope())
+            {
+                queue.Enqueue(outgoingDelivery);
+                ts.Complete();
+            }
+            using (TransactionScope ts = new TransactionScope())
+            {
+                MessageDelivery delivery = queue.Dequeue(TimeSpan.FromMinutes(1));
+                Assert.AreEqual(typeof(DataContractMessage), delivery.Message.GetType());
+                DataContractMessage incoming = (DataContractMessage)delivery.Message;
+                Assert.AreEqual(incoming.Data, outgoing.Data);
+                Assert.AreEqual(context["test"], delivery.Context["test"]);
+
+                Assert.AreEqual(outgoingDelivery.Action, delivery.Action);
+                Assert.AreEqual(outgoingDelivery.ContractType, delivery.ContractType);
+                Assert.AreEqual(outgoingDelivery.MaxRetries, delivery.MaxRetries);
+                Assert.AreEqual(outgoingDelivery.MessageId, delivery.MessageId);
+                Assert.AreEqual(outgoingDelivery.RetryCount, delivery.RetryCount);
+                Assert.AreEqual(outgoingDelivery.TimeToProcess, delivery.TimeToProcess);
+                Assert.AreEqual(outgoingDelivery.SubscriptionEndpointId, delivery.SubscriptionEndpointId);
+                ts.Complete();
+            }
+        }
+
+
+        [TestMethod]
+        public void TestMessageContractFormatterWithMessageContract()
+        {
+            MessageDeliveryFormatter formatter = new MessageDeliveryFormatter();
+            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(_testQueuePath);
+            queue.Formatter = formatter;
+            string action = "http://test";
+            MessageContractMessage outgoing = new MessageContractMessage() { Data = "This is a test" };
+
+            Dictionary<string, object> context = new Dictionary<string, object>();
+            context.Add("test", "value");
+
+            MessageDelivery outgoingDelivery = new MessageDelivery(Guid.NewGuid(), null, action, outgoing, 5, new MessageDeliveryContext(context));
+            using (TransactionScope ts = new TransactionScope())
+            {
+                queue.Enqueue(outgoingDelivery);
+                ts.Complete();
+            }
+            using (TransactionScope ts = new TransactionScope())
+            {
+                MessageDelivery delivery = queue.Dequeue(TimeSpan.FromMinutes(1));
+                Assert.AreEqual(typeof(MessageContractMessage), delivery.Message.GetType());
+                MessageContractMessage incoming = (MessageContractMessage)delivery.Message;
+                Assert.AreEqual(incoming.Data, outgoing.Data);
+                Assert.AreEqual(context["test"], delivery.Context["test"]);
+
+                Assert.AreEqual(outgoingDelivery.Action, delivery.Action);
+                Assert.AreEqual(outgoingDelivery.ContractType, delivery.ContractType);
+                Assert.AreEqual(outgoingDelivery.MaxRetries, delivery.MaxRetries);
+                Assert.AreEqual(outgoingDelivery.MessageId, delivery.MessageId);
+                Assert.AreEqual(outgoingDelivery.RetryCount, delivery.RetryCount);
+                Assert.AreEqual(outgoingDelivery.TimeToProcess, delivery.TimeToProcess);
+                Assert.AreEqual(outgoingDelivery.SubscriptionEndpointId, delivery.SubscriptionEndpointId);
+                ts.Complete();
+            }
+        }
         [TestMethod]
         public void TestWithComplexData()
         {
@@ -197,7 +288,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
             SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "SubscriptionName", "http://localhost/test", "SubscriptionConfigName", typeof(IContract), new WcfDispatcher(), new PassThroughMessageFilter());
 
-            MessageDelivery enqueued = new MessageDelivery(endpoint.Id, typeof(MessageDelivery), messageAction, messageData, 3, new ReadOnlyDictionary<string,object>());
+            MessageDelivery enqueued = new MessageDelivery(endpoint.Id, typeof(MessageDelivery), messageAction, messageData, 3, new MessageDeliveryContext());
                 
             using (TransactionScope ts = new TransactionScope())
             {

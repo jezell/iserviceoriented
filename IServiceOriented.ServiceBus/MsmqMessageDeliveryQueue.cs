@@ -6,66 +6,13 @@ using System.IO;
 using System.Runtime.Serialization;
 
 using System.Messaging;
+using System.ServiceModel.Description;
+using System.Xml;
+using IServiceOriented.ServiceBus.Collections;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace IServiceOriented.ServiceBus
-{
-    /// <summary>
-    /// Provides support for formatting messages using a DataContractSerializer
-    /// </summary>
-    /// <remarks>
-    /// Using the MessageDeliveryDataContractFormatter with a service bus that will be delivering messages to WCF endpoints ensures that the same serialization is used when placing messages into the queue as sending them to endpoints.
-    /// </remarks>
-    public class MessageDeliveryDataContractFormatter : IMessageFormatter
-    {
-        #region IMessageFormatter Members
-
-        public bool CanRead(Message message)
-        {
-            return message.Body is MessageDelivery;
-        }
-
-        DataContractSerializer _serializer;
-        DataContractSerializer getSerializer(bool refresh)
-        {
-            if (_serializer == null || refresh) // doesn't have to be thread safe. ok to overwrite on race.
-            {
-                _serializer = new DataContractSerializer(typeof(MessageDelivery), MessageDelivery.GetKnownTypes());
-            }
-            return _serializer;
-        }
-
-        public void RefreshKnownTypes()
-        {
-            getSerializer(true);
-        }
-
-        public object Read(Message message)
-        {
-            DataContractSerializer serializer = getSerializer(false);
-            return (MessageDelivery)serializer.ReadObject(message.BodyStream);
-        }
-        
-        public void Write(Message message, object obj)
-        {
-            MemoryStream ms = new MemoryStream();
-            DataContractSerializer serializer = getSerializer(false);
-            serializer.WriteObject(ms, obj);
-            ms.Position = 0;
-            message.BodyStream = ms;            
-        }
-
-        #endregion
-
-        #region ICloneable Members
-
-        public object Clone()
-        {
-            return new MessageDeliveryDataContractFormatter();
-        }
-
-        #endregion
-    }
-
+{    
     /// <summary>
     /// Provides support for queuing messages using MSMQ
     /// </summary>
@@ -74,13 +21,13 @@ namespace IServiceOriented.ServiceBus
         public MsmqMessageDeliveryQueue(string path)
         {
             _queue = new MessageQueue(path);
-            _formatter = new MessageDeliveryDataContractFormatter();
+            _formatter = new Formatters.MessageDeliveryFormatter();
         }
-
+        
         public MsmqMessageDeliveryQueue(string path, MessageQueueTransactionType transactionType)
         {
             _queue = new MessageQueue(path);
-            _formatter = new MessageDeliveryDataContractFormatter();
+            _formatter = new Formatters.MessageDeliveryFormatter();
             _transactionType = transactionType;
         }
 
@@ -95,14 +42,14 @@ namespace IServiceOriented.ServiceBus
                 }
             }
             _queue = new MessageQueue(path);
-            _formatter = new MessageDeliveryDataContractFormatter();
+            _formatter = new Formatters.MessageDeliveryFormatter();
         }
 
         
         public MsmqMessageDeliveryQueue(MessageQueue queue)
         {
             _queue = queue;
-            _formatter = new MessageDeliveryDataContractFormatter();
+            _formatter = new Formatters.MessageDeliveryFormatter();
         }
 
         /// <summary>
@@ -179,9 +126,8 @@ namespace IServiceOriented.ServiceBus
         public void Enqueue(MessageDelivery value)
         {
             if (_disposed) throw new ObjectDisposedException("MsmqMessageDeliveryQueue");
-            
+
             System.Messaging.Message message = createMessage(value);
-            value.IncrementQueueCount();
             _queue.Send(message, _transactionType);
         }
 

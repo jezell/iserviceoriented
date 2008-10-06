@@ -16,11 +16,11 @@ namespace IServiceOriented.ServiceBus
         {
         }
 
-        public PublishRequest(Type contract, string action, object message) : 
-            this(contract, action, message, new ReadOnlyDictionary<string,object>())
+        public PublishRequest(Type contract, string action, object message) :
+            this(contract, action, message, new MessageDeliveryContext())
         {
         }
-        public PublishRequest(Type contract, string action, object message, ReadOnlyDictionary<string, object> context)
+        public PublishRequest(Type contract, string action, object message, MessageDeliveryContext context)
         {
             ContractType = contract;
             Action = action;
@@ -58,7 +58,7 @@ namespace IServiceOriented.ServiceBus
         /// <summary>
         /// Gets the contex associated with the message
         /// </summary>
-        public ReadOnlyDictionary<string, object> Context
+        public MessageDeliveryContext Context
         {
             get;
             private set;

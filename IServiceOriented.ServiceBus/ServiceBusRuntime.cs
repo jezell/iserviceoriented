@@ -70,11 +70,7 @@ namespace IServiceOriented.ServiceBus
                 {
                     throw new InvalidOperationException("The service bus is already started.");
                 }                
-                                
-                IEnumerable<RuntimeService> runtimeServices = ServiceLocator.GetAllInstances<RuntimeService>();
-                
-                foreach(RuntimeService rs in runtimeServices) rs.StartInternal(this);                    
-
+                                               
                 _subscriptions.Read(subscriptions =>
                 {
                     foreach (SubscriptionEndpoint se in subscriptions)
@@ -90,7 +86,23 @@ namespace IServiceOriented.ServiceBus
                         le.Listener.StartInternal();
                     }
                 }
+
+                IEnumerable<RuntimeService> runtimeServices = ServiceLocator.GetAllInstances<RuntimeService>();
+                foreach (RuntimeService rs in runtimeServices)
+                {
+                    // start delivery after other services
+                    if (!(rs is DeliveryCore))
+                    {
+                        rs.StartInternal(this);
+                    }
+                }
+
+                foreach (DeliveryCore core in ServiceLocator.GetAllInstances<DeliveryCore>())
+                {
+                    core.StartInternal(this);
+                }
                 
+
                 EventHandler started = Started;
                 if (started != null)
                 {
@@ -131,9 +143,18 @@ namespace IServiceOriented.ServiceBus
                     }
                 });
 
+                // stop delivery first
+                foreach (DeliveryCore core in ServiceLocator.GetAllInstances<DeliveryCore>())
+                {
+                    core.StopInternal();
+                }
+                // stop rest of services
                 foreach (RuntimeService service in ServiceLocator.GetAllInstances<RuntimeService>())
                 {
-                    service.StopInternal();
+                    if (!(service is DeliveryCore))
+                    {
+                        service.StopInternal();
+                    }
                 }
         
 			
@@ -333,7 +354,7 @@ namespace IServiceOriented.ServiceBus
         public void Publish(Type contractType, string action, object message)
         {
             MessageDelivery[] results;
-            Publish(new PublishRequest(contractType, action, message, new ReadOnlyDictionary<string,object>()), PublishWait.None, TimeSpan.MinValue, out results);
+            Publish(new PublishRequest(contractType, action, message, new MessageDeliveryContext()), PublishWait.None, TimeSpan.MinValue, out results);
         }
 
         public void Publish(PublishRequest publishRequest)
@@ -616,18 +637,19 @@ namespace IServiceOriented.ServiceBus
 
         internal void NotifyUnhandledException(Exception ex, bool isTerminating)
         {
-            UnhandledExceptionEventHandler ueHandler = UnhandledException;
+            UnhandledExceptionEventHandler ueHandler = _unhandledException;
             if (ueHandler != null) ueHandler(this, new UnhandledExceptionEventArgs(ex, isTerminating));
         }
 
+
+        
         internal void NotifyDelivery(MessageDelivery delivery)
         {
             foreach (RuntimeService service in ServiceLocator.GetAllInstances<RuntimeService>())
             {
                 service.OnMessageDelivered(delivery);
             }
-
-            var handler = MessageDelivered;
+            var handler = _messageDelivered;
             if (handler != null)
             {
                 handler(this, new MessageDeliveryEventArgs() { MessageDelivery = delivery });
@@ -641,14 +663,69 @@ namespace IServiceOriented.ServiceBus
                 service.OnMessageDeliveryFailed(delivery, false);
             }
 
-            var failed = MessageDeliveryFailed;
+            var failed = _messageDeliveryFailed;
             if (failed != null) failed(this, new MessageDeliveryFailedEventArgs() { MessageDelivery = delivery, Permanent = false });
         }
 
-        public event UnhandledExceptionEventHandler UnhandledException;		
-        public event EventHandler<MessageDeliveryEventArgs> MessageDelivered;
-        public event EventHandler<MessageDeliveryFailedEventArgs> MessageDeliveryFailed;
-        
+        object _eventLock = new Object();
+
+        UnhandledExceptionEventHandler _unhandledException;
+        public event UnhandledExceptionEventHandler UnhandledException
+        {
+            add
+            {
+                lock (_eventLock)
+                {
+                    _unhandledException += value;
+                }
+            }
+            remove
+            {
+                lock (_eventLock)
+                {
+                    _unhandledException -= value;
+                }
+            }
+        }
+
+        EventHandler<MessageDeliveryEventArgs> _messageDelivered;
+        public event EventHandler<MessageDeliveryEventArgs> MessageDelivered
+        {
+            add
+            {
+                lock (_eventLock)
+                {
+                    _messageDelivered += value;
+                }
+            }
+            remove
+            {
+                lock (_eventLock)
+                {
+                    _messageDelivered -= value;
+                }
+            }
+        }
+
+
+        EventHandler<MessageDeliveryFailedEventArgs> _messageDeliveryFailed;
+        public event EventHandler<MessageDeliveryFailedEventArgs> MessageDeliveryFailed
+        {
+            add
+            {
+                lock (_eventLock)
+                {
+                    _messageDeliveryFailed += value;
+                }
+            }
+            remove
+            {
+                lock (_eventLock)
+                {
+                    _messageDeliveryFailed -= value;
+                }
+            }
+        }
         volatile bool _disposed;
 
         protected virtual void Dispose(bool disposing)

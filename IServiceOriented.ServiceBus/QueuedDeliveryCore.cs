@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Transactions;
 using System.Globalization;
+using System.Messaging;
 
 namespace IServiceOriented.ServiceBus
 {
@@ -27,10 +28,11 @@ namespace IServiceOriented.ServiceBus
 
         public class DeliveryWork
         {
-            public DeliveryWork(CommittableTransaction transaction, MessageDelivery delivery)
+            public DeliveryWork(CommittableTransaction transaction, MessageDelivery delivery, Semaphore deliverySemaphore)
             {
                 Transaction = transaction;
                 Delivery = delivery;
+                DeliverySemaphore = deliverySemaphore;
             }
             public CommittableTransaction Transaction
             {
@@ -38,6 +40,12 @@ namespace IServiceOriented.ServiceBus
                 set;
             }
             public MessageDelivery Delivery
+            {
+                get;
+                set;
+            }
+
+            public Semaphore DeliverySemaphore
             {
                 get;
                 set;
@@ -113,7 +121,7 @@ namespace IServiceOriented.ServiceBus
 
                     if (_stopping)
                     {
-                        deliverySemaphore.WaitOne(deliveryMax); // wait for worker threads
+                        for (int i = 0; i < deliveryMax; i++) deliverySemaphore.WaitOne(); // wait for worker threads
                         _stopWaitHandles[threadIndex].Set();
                         break;
                     }
@@ -136,7 +144,7 @@ namespace IServiceOriented.ServiceBus
 
                     if (_stopping)
                     {
-                        retrySemaphore.WaitOne(retryMax); // wait for worker threads
+                        for(int i = 0; i < retryMax; i++) retrySemaphore.WaitOne(); // wait for worker threads
                         _stopWaitHandles[threadIndex].Set();
                         break;
                     }
@@ -146,54 +154,48 @@ namespace IServiceOriented.ServiceBus
 
         void deliveryWork(Semaphore deliverySemaphore, IMessageDeliveryQueue queue)
         {
-            DoSafely(() =>
+            if (deliverySemaphore.WaitOne(TimeSpan.FromSeconds(1), true))
             {
-                if (deliverySemaphore.WaitOne(TimeSpan.FromSeconds(1), true))
+                bool release = true;
+                try
                 {
-                    bool release = true;
-                    Thread.BeginCriticalRegion();
-                    try
+                    CommittableTransaction ct = new CommittableTransaction();
+
+                    Transaction.Current = ct;
+                    MessageDelivery md = queue.Dequeue(TimeSpan.FromSeconds(DEQUEUE_TIMEOUT_SECONDS));
+
+                    if (md != null)
                     {
-                        CommittableTransaction ct = new CommittableTransaction();
+                        DeliveryWork work = new DeliveryWork(ct, md, deliverySemaphore);
 
-                        Transaction.Current = ct;
-                        MessageDelivery md = queue.Dequeue(TimeSpan.FromSeconds(DEQUEUE_TIMEOUT_SECONDS));
-
-                        if (md != null)
+                        release = false;
+                        ThreadPool.QueueUserWorkItem((deliverWork) =>
                         {
-                            DeliveryWork work = new DeliveryWork(ct, md);
-
-                            release = false;
-                            ThreadPool.QueueUserWorkItem((deliverWork) =>
+                            try
                             {
-                                Thread.BeginCriticalRegion();
-                                try
-                                {
-                                    DoSafely(() => DeliverOne((DeliveryWork)deliverWork, _retryQueue ?? _messageDeliveryQueue, _failureQueue));
-                                }
-                                finally
-                                {
-                                    deliverySemaphore.Release();
-                                    Thread.EndCriticalRegion();
-                                }
-                            }, work);
-                        }
-                        else
-                        {
-                            ct.Dispose();
-                        }
+                                DoSafely(() => DeliverOne((DeliveryWork)deliverWork, _retryQueue ?? _messageDeliveryQueue, _failureQueue));
+                            }
+                            finally
+                            {
+                                work.DeliverySemaphore.Release();                                    
+                            }
+                        }, work);
                     }
-                    finally
+                    else
                     {
-                        if (release)
-                        {
-                            deliverySemaphore.Release();
-                        }
-                        Transaction.Current = null;
-                        Thread.EndCriticalRegion();
+                        ct.Dispose();
                     }
                 }
-            });
+                finally
+                {
+                    if (release)
+                    {
+                        deliverySemaphore.Release();
+                    }
+                    Transaction.Current = null;                    
+                }
+            }
+        
         }
         const int FUTURE_SLEEP_MS = 100;
         const int RETRY_SLEEP_MS = 100;
@@ -257,7 +259,6 @@ namespace IServiceOriented.ServiceBus
         protected void DeliverOne(DeliveryWork work, IMessageDeliveryQueue retryQueue, IMessageDeliveryQueue failQueue)
         {
             System.Transactions.Transaction.Current = work.Transaction;
-            bool sent = false;
             try
             {
                 using (work.Transaction)
@@ -299,37 +300,32 @@ namespace IServiceOriented.ServiceBus
                             }
                         }
 
+                        NotifyDelivery(delivery);                                  
+
                         work.Transaction.Commit();
-                        sent = true;
-                        NotifyDelivery(delivery);
                     }
                     catch (Exception ex)
                     {
                         bool retry = !work.Delivery.RetriesMaxed;
-                        if (!sent)
+                        if (retry)
                         {
-
-                            if (retry)
-                            {
-                                QueueRetry(work.Delivery, ex);
-                            }
-                            else
-                            {
-                                QueueFail(work.Delivery, ex);
-                            }
-
-                            work.Transaction.Commit();
+                            QueueRetry(work.Delivery, ex);
                         }
+                        else
+                        {
+                            QueueFail(work.Delivery, ex);
+                        }
+
                         NotifyUnhandledException(ex, false);
-                        if (!sent)
-                        {
-                            NotifyFailure(work.Delivery, !retry);
-                        }
+                        NotifyFailure(work.Delivery, !retry);
+                        
+                        work.Transaction.Commit();
                     }
                 }
             }
             finally
             {
+                work.Transaction.Dispose();
                 System.Transactions.Transaction.Current = null;
             }
         }
@@ -381,6 +377,7 @@ namespace IServiceOriented.ServiceBus
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Trace.TraceError("UNHANDLED EXCEPTION: " + ex);
                 NotifyUnhandledException(ex, false);
             }
             return clean;

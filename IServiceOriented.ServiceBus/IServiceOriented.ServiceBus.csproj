@@ -86,6 +86,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ActionDispatcher.cs" />
+    <Compile Include="Formatters\MessageDeliveryConverter.cs" />
+    <Compile Include="Formatters\MessageDeliveryMessageContractFormatter.cs" />
+    <Compile Include="MessageDeliveryContext.cs" />
     <Compile Include="Threading\CountdownLatch.cs" />
     <Compile Include="DeliveryCore.cs" />
     <Compile Include="Dispatcher.cs" />

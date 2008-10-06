@@ -215,7 +215,7 @@ namespace IServiceOriented.ServiceBus
                     //context.Add(MessageDelivery.PrimaryIdentityImpersonationLevelKey, primaryIdentity);
                 }
             }
-            PublishRequest pr = new PublishRequest(contractType, action, message, context.MakeReadOnly());
+            PublishRequest pr = new PublishRequest(contractType, action, message, new MessageDeliveryContext(context));
             Runtime.Publish(pr);
         }
 

@@ -85,7 +85,7 @@ namespace IServiceOriented.ServiceBus
                 {
                     KeyValuePair<string, object>[] replyData = new KeyValuePair<string, object>[1];
                     replyData[0] = new KeyValuePair<string, object>(MessageDelivery.CorrelationId, messageDelivery.MessageId);                         
-                    Runtime.Publish(new PublishRequest(endpoint.ContractType, replyAction, result, new ReadOnlyDictionary<string, object>(replyData)));
+                    Runtime.Publish(new PublishRequest(endpoint.ContractType, replyAction, result, new MessageDeliveryContext(replyData)));
                 }
             }
             else

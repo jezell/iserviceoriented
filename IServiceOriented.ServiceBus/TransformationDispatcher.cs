@@ -6,6 +6,7 @@ using System.Text;
 using System.Runtime.Serialization;
 using IServiceOriented.ServiceBus.Threading;
 using IServiceOriented.ServiceBus.Collections;
+using System.Collections.ObjectModel;
 namespace IServiceOriented.ServiceBus
 {
     /// <summary>
@@ -28,32 +29,51 @@ namespace IServiceOriented.ServiceBus
         protected abstract PublishRequest Transform(PublishRequest request);
 
         /// <summary>
-        /// The name of the context key that stores a the IDs (Guid[]) of the endpoints which have been involved in message transformation.
+        /// The name of the context key that stores a the IDs (ReadOnlyCollection of Guids) of the endpoints which have been involved in message transformation.
         /// </summary>
         public const string TransformedByKeyName = "TransformedBy";
-        
+
+        public class TransformationList : ReadOnlyCollection<string>
+        {
+            public TransformationList() : base (new string[0] )
+            {
+            }
+
+            public TransformationList(IList<string> list) : base(list)
+            {
+            }
+        }
 
         protected override sealed void Dispatch(SubscriptionEndpoint endpoint, MessageDelivery messageDelivery)
         {
-            ReadOnlyDictionary<string, object> context = messageDelivery.Context;
+            MessageDeliveryContext context = messageDelivery.Context;
 
             Dictionary<string, object> newContext = context.ToDictionary();
 
-            Guid[] oldTransformedByList = new Guid[0];
+            TransformationList oldTransformedByList = new TransformationList();
 
             if (context.ContainsKey(TransformedByKeyName))
             {
-                oldTransformedByList = (Guid[])context[TransformedByKeyName];
+                oldTransformedByList = (TransformationList)context[TransformedByKeyName];
             }
 
             // Don't transform this message more than once
-            if (!oldTransformedByList.Contains(endpoint.Id) || AllowMultipleTransforms)
+            if (!oldTransformedByList.Contains(endpoint.Id.ToString()) || AllowMultipleTransforms)
             {
-                Guid[] newTransformedByList = new Guid[oldTransformedByList.Length + 1];
-                newTransformedByList[newTransformedByList.Length - 1] = endpoint.Id;
-                newContext[TransformedByKeyName] = newTransformedByList;
+                if (oldTransformedByList.Count() > 0)
+                {
+                    List<string> list = new List<string>(oldTransformedByList);
+                    list.Add(endpoint.Id.ToString());
+                    newContext[TransformedByKeyName] = new TransformationList(list);
+                }
+                else
+                {
+                    List<string> list = new List<string>();
+                    list.Add(endpoint.Id.ToString());
+                    newContext[TransformedByKeyName] = new TransformationList();
+                }
 
-                context = newContext.MakeReadOnly();
+                context = new MessageDeliveryContext(newContext);
 
                 PublishRequest result = Transform(new PublishRequest(endpoint.ContractType, messageDelivery.Action, messageDelivery.Message, context));
                 if (result != null)
