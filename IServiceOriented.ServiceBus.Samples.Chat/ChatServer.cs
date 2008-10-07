@@ -11,7 +11,7 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
     {
         public ChatServer()
         {            
-            _serviceBus = new ServiceBusRuntime(SimpleServiceLocator.With(new MsmqMessageDeliveryQueue(".\\private$\\chat_deliver", true), new MsmqMessageDeliveryQueue(".\\private$\\chat_retry", true), new MsmqMessageDeliveryQueue(".\\private$\\chat_fail", true), SimpleServiceLocator.With(new WcfManagementService())));
+            _serviceBus = new ServiceBusRuntime(SimpleServiceLocator.With(new QueuedDeliveryCore(new MsmqMessageDeliveryQueue(".\\private$\\chat_deliver", true), new MsmqMessageDeliveryQueue(".\\private$\\chat_retry", true), new MsmqMessageDeliveryQueue(".\\private$\\chat_fail", true)), new WcfManagementService()));
             _serviceBus.AddListener(new ListenerEndpoint(Guid.NewGuid(), "Chat Service", "ChatServer", "http://localhost/chatServer", typeof(IChatService), new WcfListener()));
             _serviceBus.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "No subscribers", "ChatClient", "", typeof(IChatService), new MethodDispatcher(new UnhandledReplyHandler(_serviceBus)), new UnhandledMessageFilter(typeof(SendMessageRequest))));
             _serviceBus.UnhandledException+= (o, ex) =>

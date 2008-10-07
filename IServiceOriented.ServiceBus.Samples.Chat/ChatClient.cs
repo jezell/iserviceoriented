@@ -19,10 +19,11 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
         {
             _host.Open();
 
-            Service.Use<IServiceBusManagementService>(serviceBus =>
+            // This should happen automatically now
+            /*Service.Use<IServiceBusManagementService>(serviceBus =>
             {
                     serviceBus.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), _from, "ChatClientOut", "http://localhost/chat/" + _from + "/send", typeof(IChatService), new WcfDispatcher() { ApplyCredentials = true }, new ChatFilter(_from)));                    
-            });
+            });*/
         }
 
         string _from;   
@@ -45,6 +46,7 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
         }
 
         [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConfigurationName = "ChatServerOut")]
+        [AutoSubscribe("Autosubscribed", "ChatClientOut", typeof(IChatService))] 
         public class IncomingHandler : IChatService
         {
             #region IChatService Members
