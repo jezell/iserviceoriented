@@ -22,7 +22,6 @@ namespace IServiceOriented.ServiceBus
         {
             
         }
-
         
         // TODO: if the same dispatcher instance is reused with another type this will be invalid
         void initActionLookup()
@@ -58,28 +57,10 @@ namespace IServiceOriented.ServiceBus
             _replyActionLookup = replyActionLookup;
             
         }
-
-        /// <summary>
-        /// Specifies whether to apply the credentials of the user that published the message.
-        /// </summary>
-        /// <remarks>Credentials will be passed as UserName credentials, not using Windows impersonation or delegation.</remarks>
-        [DataMember]
-        public bool ApplyCredentials
-        {
-            get;
-            set;
-        }
+       
 
         protected virtual void ApplySecurityContext(ChannelFactory factory)
-        {
-            if (ApplyCredentials)
-            {
-                if (DispatchContext.MessageDelivery.Context.ContainsKey(MessageDelivery.PrimaryIdentityNameKey))
-                {
-                    factory.Credentials.UserName.UserName = (string)DispatchContext.MessageDelivery.Context[MessageDelivery.PrimaryIdentityNameKey];
-                    factory.Credentials.UserName.Password = "";
-                }
-            }
+        {         
         }
         
         protected override void Dispatch(SubscriptionEndpoint endpoint, MessageDelivery messageDelivery)
@@ -172,6 +153,11 @@ namespace IServiceOriented.ServiceBus
         [NonSerialized]
         Dictionary<string, MethodInfo> _actionLookup;
 
+
+        public static MessageFilter CreateMessageFilter(Type interfaceType)
+        {               
+            return new TypedMessageFilter(WcfServiceHostFactory.GetMessageTypes(interfaceType));
+        }
     }
 
 		

@@ -18,7 +18,7 @@ namespace IServiceOriented.ServiceBus
     /// <summary>
     /// Creates WCF service hosts. Used by WcfListener.
     /// </summary>
-    public static class WcfServiceHostFactory
+    internal static class WcfServiceHostFactory
     {
         /// <summary>
         /// Determines whether the specified method is marked as OperationContract and supported.

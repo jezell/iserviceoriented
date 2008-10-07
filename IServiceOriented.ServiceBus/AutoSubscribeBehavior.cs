@@ -35,20 +35,30 @@ namespace IServiceOriented.ServiceBus
         void owner_Opened(object sender, EventArgs e)
         {
             Service.Use<IServiceBusManagementService>(managementService =>
-                {
-                    managementService.Subscribe(Subscription);
-                });
+            {
+                bool alreadyAdded = (from s in managementService.ListSubscribers() where s.Id == Subscription.Id select s).Count() > 0;
+                if(!alreadyAdded) managementService.Subscribe(Subscription);
+            });
         }
 
         void owner_Closed(object sender, EventArgs e)
         {
-            Service.Use<IServiceBusManagementService>(managementService =>
+            if (UnsubscribeOnClosing)
             {
-                managementService.Unsubscribe(Subscription.Id);
-            });
+                Service.Use<IServiceBusManagementService>(managementService =>
+                {
+                    managementService.Unsubscribe(Subscription.Id);
+                });
+            }
         }
 
         public SubscriptionEndpoint Subscription
+        {
+            get;
+            set;
+        }
+
+        public bool UnsubscribeOnClosing
         {
             get;
             set;
@@ -68,25 +78,50 @@ namespace IServiceOriented.ServiceBus
     {
         public AutoSubscribe()
         {
+            UnsubscribeOnClosing = true;
         }
 
-        public AutoSubscribe(string name, string configurationName, Type contractType)
+        public AutoSubscribe(string name, string configurationName, Type contractType) 
+            : this()
         {
+            Name = name;
+            ConfigurationName = configurationName;
+            ContractType = contractType;           
+        }
+
+        public AutoSubscribe(Guid subscriptionId, string name, string configurationName, Type contractType)
+            : this()
+        {
+            SubscriptionId = subscriptionId;
             Name = name;
             ConfigurationName = configurationName;
             ContractType = contractType;
         }
 
+
         #region IServiceBehavior Members
+        
 
         public void AddBindingParameters(ServiceDescription serviceDescription, ServiceHostBase serviceHostBase, System.Collections.ObjectModel.Collection<ServiceEndpoint> endpoints, System.ServiceModel.Channels.BindingParameterCollection bindingParameters)
         {
-            // Todo: Add configuration support
-            // Todo: Add message filter automatically
-            // Todo: Figure out how to handle service hosts with multiple endpoionts
+            // Todo: Add configuration support  
+            // Todo: Do custom message filters need to be supported?
 
-            SubscriptionEndpoint subscription = new SubscriptionEndpoint(Guid.NewGuid(), Name, ConfigurationName, serviceDescription.Endpoints[0].Address.Uri.ToString(), ContractType, new WcfDispatcher() { ApplyCredentials = true }, null);
-            serviceHostBase.Extensions.Add(new SubscriptionExtension(subscription));            
+            Dispatcher dispatcher;
+
+            if (DispatcherType != null)
+            {
+                dispatcher = (Dispatcher)Activator.CreateInstance(DispatcherType);
+            }
+            else
+            {
+                dispatcher = new WcfDispatcher();
+            }
+
+            SubscriptionEndpoint subscription = new SubscriptionEndpoint(SubscriptionId ?? Guid.NewGuid(), Name, ConfigurationName, Address ?? serviceDescription.Endpoints[0].Address.Uri.ToString(), ContractType, dispatcher, WcfDispatcher.CreateMessageFilter(ContractType));
+            SubscriptionExtension extension = new SubscriptionExtension(subscription);
+            extension.UnsubscribeOnClosing = UnsubscribeOnClosing;
+            serviceHostBase.Extensions.Add(extension);
         }
 
 
@@ -97,24 +132,87 @@ namespace IServiceOriented.ServiceBus
 
         public void Validate(ServiceDescription serviceDescription, ServiceHostBase serviceHostBase)
         {
-            
+            if (Address == null)
+            {
+                // Make sure the endpoint contains an address if we are going to default to the first.
+                if (serviceDescription.Endpoints.Count == 0)
+                {
+                    throw new InvalidOperationException("The service description does not contain any endpoints");
+                }
+            }
         }
 
         #endregion
 
+
+        /// <summary>
+        /// Gets or sets the Name used for the subscription.
+        /// </summary>
         public string Name
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// Gets or sets the ConfigurationName used by the subscription
+        /// </summary>
         public string ConfigurationName
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// Gets or sets the type of the contract to be used by the subscription.
+        /// </summary>
         public Type ContractType
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets the address to be used by the subscription.
+        /// </summary>
+        /// <remarks> If null, the address of the first endpoint in the service description will be used.</remarks>
+        public string Address
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets whether the subscription should be persisted
+        /// </summary>
+        public bool Persistent
+        {
+            get;
+            set;
+        }
+
+
+        public bool UnsubscribeOnClosing
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets the ID used by the subscription.
+        /// </summary>
+        /// <remarks>If null, a new GUID will be generated.</remarks>
+        public Guid? SubscriptionId
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets the Dispatcher type used by the subscription.
+        /// </summary>
+        /// <remarks>If null, WcfDispatcher will be used</remarks>
+        public Type DispatcherType
         {
             get;
             set;
