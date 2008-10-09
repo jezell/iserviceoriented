@@ -12,6 +12,11 @@ namespace IServiceOriented.ServiceBus
     [DataContract]
     public sealed class ListenerEndpoint : Endpoint
     {
+        public ListenerEndpoint(string name, string configurationName, string address, Type contractType, Listener listener)
+            : base(Guid.NewGuid(), name, configurationName, address, contractType)
+        {
+        }
+
         public ListenerEndpoint(Guid id, string name, string configurationName, string address, Type contractType, Listener listener) : base(id, name, configurationName, address, contractType)
         {            
             Listener = listener;

@@ -19,6 +19,27 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
         ServiceBusRuntime serviceBusRuntime;
 
+        public void AssertEqual(SubscriptionEndpoint endpoint1, SubscriptionEndpoint endpoint2)
+        {
+            Assert.AreEqual(endpoint1.Id, endpoint2.Id);
+            Assert.AreEqual(endpoint1.Name, endpoint2.Name);
+            Assert.AreEqual(endpoint1.ConfigurationName, endpoint2.ConfigurationName);
+            Assert.AreEqual(endpoint1.ContractType, endpoint2.ContractType);
+            Assert.AreEqual(endpoint1.Address, endpoint2.Address);
+            Assert.AreEqual(endpoint1.Filter.GetType(), endpoint2.Filter.GetType()); // todo: should we require .Equals?
+            Assert.IsInstanceOfType(endpoint1.Dispatcher.GetType(), endpoint2.Dispatcher);
+        }
+
+        public void AssertEqual(ListenerEndpoint endpoint1, ListenerEndpoint endpoint2)
+        {
+            Assert.AreEqual(endpoint1.Id, endpoint2.Id);
+            Assert.AreEqual(endpoint1.Name, endpoint2.Name);
+            Assert.AreEqual(endpoint1.ConfigurationName, endpoint2.ConfigurationName);
+            Assert.AreEqual(endpoint1.ContractType, endpoint2.ContractType);
+            Assert.AreEqual(endpoint1.Address, endpoint2.Address);
+            Assert.IsInstanceOfType(endpoint1.Listener.GetType(), endpoint2.Listener); // todo: should we require .Equals?
+        }
+
         public void VerifyQueuesEmpty()
         {
             QueuedDeliveryCore core = serviceBusRuntime.ServiceLocator.GetInstance<QueuedDeliveryCore>();

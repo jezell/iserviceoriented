@@ -15,8 +15,8 @@ namespace IServiceOriented.ServiceBus
     {
         public const string Subscribe = "urn:SubscribeRequest";
         public const string Unsubscribe = "urn:UnsubscribeRequest";
-        public const string AddListener = "urn:AddListenerRequest";
-        public const string RemoveListener = "urn:RemoveListenerRequest";
+        public const string Listen = "urn:ListenRequest";
+        public const string StopListening = "urn:StopListeningRequest";
 
         public const string ListListeners = "urn:ListListeners";
         public const string ListListenersResponse = "urn:ListListenersResponse";
@@ -74,12 +74,12 @@ namespace IServiceOriented.ServiceBus
         [FaultContract(typeof(SubscriptionNotFoundFault))]
         void Unsubscribe([MessageParameter(Name = "SubscriptionID")] Guid subscriptionId);
 
-        [OperationContract(Action = WcfManagementServiceActions.AddListener)]
-        void AddListener([MessageParameter(Name = "ListenerEndpoint")] ListenerEndpoint endpoint);
+        [OperationContract(Action = WcfManagementServiceActions.Listen)]
+        void Listen([MessageParameter(Name = "ListenerEndpoint")] ListenerEndpoint endpoint);
 
-        [OperationContract(Action= WcfManagementServiceActions.RemoveListener)]
+        [OperationContract(Action= WcfManagementServiceActions.StopListening)]
         [FaultContract(typeof(ListenerNotFoundFault))]
-        void RemoveListener([MessageParameter(Name = "ListenerID")] Guid listenerId);
+        void StopListening([MessageParameter(Name = "ListenerID")] Guid listenerId);
 
         [OperationContract(Action = WcfManagementServiceActions.ListListeners, ReplyAction = WcfManagementServiceActions.ListListenersResponse)]
         Collection<ListenerEndpoint> ListListeners();
@@ -120,13 +120,13 @@ namespace IServiceOriented.ServiceBus
         }
 
         [OperationBehavior]
-        public void AddListener([MessageParameter(Name = "Endpoint")] ListenerEndpoint endpoint)
+        public void Listen([MessageParameter(Name = "Endpoint")] ListenerEndpoint endpoint)
         {
             Runtime.AddListener(endpoint);
         }
 
         [OperationBehavior]
-        public void RemoveListener(Guid listenerId)
+        public void StopListening(Guid listenerId)
         {
             try
             {
