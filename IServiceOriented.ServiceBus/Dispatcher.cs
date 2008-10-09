@@ -115,38 +115,5 @@ namespace IServiceOriented.ServiceBus
             Dispose(false);
         }
     }
-
-
-    public class DispatchContext
-    {
-        public DispatchContext()
-        {
-        }
-
-        public DispatchContext(ServiceBusRuntime runtime, SubscriptionEndpoint endpoint, MessageDelivery messageDelivery)
-        {
-            MessageDelivery = messageDelivery;
-            Runtime = runtime;
-            Endpoint = endpoint;
-        }
-
-        public ServiceBusRuntime Runtime
-        {
-            get;
-            private set;
-        }
-
-        public SubscriptionEndpoint Endpoint
-        {
-            get;
-            private set;
-        }
-
-        public MessageDelivery MessageDelivery
-        {
-            get;
-            private set;
-        }
-    }	
 	
 }

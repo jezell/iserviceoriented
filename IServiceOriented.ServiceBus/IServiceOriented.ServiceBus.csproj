@@ -87,8 +87,8 @@
   <ItemGroup>
     <Compile Include="Dispatchers\ActionDispatcher.cs" />
     <Compile Include="Delivery\DirectDeliveryCore.cs" />
-    <Compile Include="Formatters\MessageDeliveryConverter.cs" />
-    <Compile Include="Formatters\MessageDeliveryMessageContractFormatter.cs" />
+    <Compile Include="Delivery\Formatters\MessageDeliveryConverter.cs" />
+    <Compile Include="Delivery\Formatters\MessageDeliveryFormatter.cs" />
     <Compile Include="MessageDeliveryContext.cs" />
     <Compile Include="AutoSubscribeBehavior.cs" />
     <Compile Include="Threading\CountdownLatch.cs" />
@@ -130,7 +130,7 @@
     <Compile Include="ServiceBusRuntime.cs" />
     <Compile Include="SubscriptionEndpoint.cs" />
     <Compile Include="SubscriptionNotFoundException.cs" />
-    <Compile Include="SubscriptionPersistenceService.cs" />
+    <Compile Include="Services\SubscriptionPersistenceService.cs" />
     <Compile Include="TypedMessageFilter.cs" />
     <Compile Include="Dispatchers\WcfDispatcher.cs" />
     <Compile Include="Listeners\WcfListener.cs" />

@@ -9,8 +9,8 @@ using System.Runtime.Serialization;
 using IServiceOriented.ServiceBus.Collections;
 
 using System.ServiceModel;
-using IServiceOriented.ServiceBus.Formatters;
 using IServiceOriented.ServiceBus.Delivery;
+using IServiceOriented.ServiceBus.Delivery.Formatters;
 using IServiceOriented.ServiceBus.Dispatchers;
 
 namespace IServiceOriented.ServiceBus.UnitTests
