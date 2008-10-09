@@ -3,62 +3,16 @@ using System.Threading;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace IServiceOriented.ServiceBus.UnitTests
 {
-    /// <summary>
-    /// Summary description for MessageFiltersTest
-    /// </summary>
-    [TestClass]
-    public class MessageFiltersTest
+    [TestFixture]
+    public class TestMessageFilters
     {
-        public MessageFiltersTest()
+        public TestMessageFilters()
         {
-            //
-            // TODO: Add constructor logic here
-            //
         }
-
-        private TestContext testContextInstance;
-
-        /// <summary>
-        ///Gets or sets the test context which provides
-        ///information about and functionality for the current test run.
-        ///</summary>
-        public TestContext TestContext
-        {
-            get
-            {
-                return testContextInstance;
-            }
-            set
-            {
-                testContextInstance = value;
-            }
-        }
-
-        #region Additional test attributes
-        //
-        // You can use the following additional attributes as you write your tests:
-        //
-        // Use ClassInitialize to run code before running the first test in the class
-        // [ClassInitialize()]
-        // public static void MyClassInitialize(TestContext testContext) { }
-        //
-        // Use ClassCleanup to run code after all tests in a class have run
-        // [ClassCleanup()]
-        // public static void MyClassCleanup() { }
-        //
-        // Use TestInitialize to run code before running each test 
-        // [TestInitialize()]
-        // public void MyTestInitialize() { }
-        //
-        // Use TestCleanup to run code after each test has run
-        // [TestCleanup()]
-        // public void MyTestCleanup() { }
-        //
-        #endregion
 
         class C1
         {
@@ -67,7 +21,8 @@ namespace IServiceOriented.ServiceBus.UnitTests
         class C1IsMyBase : C1
         {
         }
-        [TestMethod]
+        
+        [Test]
         public void TypedMessageFilterIncludeWithoutInherit()
         {
             TypedMessageFilter tmf = new TypedMessageFilter(false, typeof(int), typeof(string), typeof(C1));
@@ -78,7 +33,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
             Assert.IsFalse(tmf.Include(new PublishRequest(null, null, new C1IsMyBase())));
         }
 
-        [TestMethod]
+        [Test]
         public void TypedMessageFilterIncludeWithInherit()
         {
             TypedMessageFilter tmf = new TypedMessageFilter(true, typeof(int), typeof(string), typeof(C1));
@@ -88,13 +43,12 @@ namespace IServiceOriented.ServiceBus.UnitTests
             Assert.IsTrue(tmf.Include(new PublishRequest(null, null, new C1())));
             Assert.IsTrue(tmf.Include(new PublishRequest(null, null, new C1IsMyBase())));
         }
-        
-        [TestMethod]
+
+        [Test]
         public void TestUnhandledMessageFilter()
         {
-            using (ServiceBusRuntime runtime = new ServiceBusRuntime(SimpleServiceLocator.With(new QueuedDeliveryCore(new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue()))))
+            using (var runtime = Create.MemoryQueueRuntime())
             {
-
                 int handledCount = 0;
                 int unhandledCount = 0;
 
@@ -118,7 +72,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
                 }
                 else
                 {
-                    Assert.Fail("Waited too long");
+                    throw new InvalidOperationException("Waited too long");
                 }
 
                 runtime.Unsubscribe(handled);
@@ -137,7 +91,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
                 }
                 else
                 {
-                    Assert.Fail("Waited too long");
+                    throw new InvalidOperationException("Waited too long");
                 }
 
                 runtime.Stop();

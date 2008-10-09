@@ -2,72 +2,21 @@
 using System.Threading;
 using System.Text;
 using System.Collections.Generic;
-using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using NUnit.Framework;
 
 using IServiceOriented.ServiceBus.UnitTests;
 
 namespace IServiceOriented.ServiceBus.Scripting.UnitTests
 {
-    /// <summary>
-    /// Summary description for ScriptTransformationDispatcherTest
-    /// </summary>
-    [TestClass]
+    [TestFixture]
     public class ScriptTransformationDispatcherTest
-    {
-        public ScriptTransformationDispatcherTest()
-        {
-            //
-            // TODO: Add constructor logic here
-            //
-        }
-
-        private TestContext testContextInstance;
-
-        /// <summary>
-        ///Gets or sets the test context which provides
-        ///information about and functionality for the current test run.
-        ///</summary>
-        public TestContext TestContext
-        {
-            get
-            {
-                return testContextInstance;
-            }
-            set
-            {
-                testContextInstance = value;
-            }
-        }
-
-        #region Additional test attributes
-        //
-        // You can use the following additional attributes as you write your tests:
-        //
-        // Use ClassInitialize to run code before running the first test in the class
-        // [ClassInitialize()]
-        // public static void MyClassInitialize(TestContext testContext) { }
-        //
-        // Use ClassCleanup to run code after all tests in a class have run
-        // [ClassCleanup()]
-        // public static void MyClassCleanup() { }
-        //
-        // Use TestInitialize to run code before running each test 
-        // [TestInitialize()]
-        // public void MyTestInitialize() { }
-        //
-        // Use TestCleanup to run code after each test has run
-        // [TestCleanup()]
-        // public void MyTestCleanup() { }
-        //
-        #endregion
-
-        [TestMethod]
+    {        
+        [Test]
         public void TestPythonTransformation()
         {
             ScriptTransformationDispatcher dispatcher = new ScriptTransformationDispatcher("py",
-
-@"import clr
+                @"import clr
 
 clr.AddReference(""IServiceOriented.ServiceBus"")
 clr.AddReference(""IServiceOriented.ServiceBus.Scripting.UnitTests"")
@@ -79,9 +28,7 @@ def Execute():
     outgoing = AfterTransformation(int(request.Message.Value));
     return PublishRequest(request.ContractType, request.Action, outgoing)
 "
-
-
-, System.Scripting.SourceCodeKind.Statements);
+                , Microsoft.Scripting.SourceCodeKind.Statements);
 
             dispatcher.Script.Check();
 
@@ -91,7 +38,7 @@ def Execute():
 
             bool success = false;
 
-            ServiceBusRuntime runtime = new ServiceBusRuntime(new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue());
+            ServiceBusRuntime runtime = new ServiceBusRuntime(SimpleServiceLocator.With(new QueuedDeliveryCore( new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue() )));
             runtime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "Tranformation", null, null, typeof(void), dispatcher, new TypedMessageFilter(typeof(BeforeTransformation))));
             runtime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "AfterTransformation", null, null, typeof(void), new ActionDispatcher( (subscription, md) =>
             {

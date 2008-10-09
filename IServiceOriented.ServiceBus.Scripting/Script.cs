@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Scripting;
 using System.Runtime.Serialization;
 
+using Microsoft.Scripting;
 using Microsoft.Scripting.Hosting;
+using Microsoft;
 
 namespace IServiceOriented.ServiceBus.Scripting
 {
@@ -103,6 +103,8 @@ namespace IServiceOriented.ServiceBus.Scripting
         public object ExecuteWithVariables(IDictionary<string, object> variables)
         {
             ScriptScope scope = ScriptContext.Current.ScriptRuntime.CreateScope();
+            ScriptEngine engine = ScriptContext.Current.ScriptRuntime.GetEngine(LanguageId);
+
             foreach (string key in variables.Keys)
             {
                 scope.SetVariable(key, variables[key]);
@@ -114,7 +116,10 @@ namespace IServiceOriented.ServiceBus.Scripting
             else
             {
                 ScriptSource.Execute(scope);
-                return (scope.GetVariable <Func<object>>("Execute")).Invoke();
+                var handle = scope.GetVariableHandle("Execute");
+                if (handle == null) throw new InvalidOperationException("Script does not define an Execute method");        
+                Func<Object> func = engine.Operations.Unwrap<Microsoft.Func<object>>(handle);                
+                return func.Invoke();
             }
         }
     }

@@ -7,8 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IServiceOriented.ServiceBus
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E4D3918D-955D-4AB0-9764-A9B001521895}"
 	ProjectSection(SolutionItems) = preProject
-		IServiceOriented.vsmdi = IServiceOriented.vsmdi
-		LocalTestRun.testrunconfig = LocalTestRun.testrunconfig
+		License.txt = License.txt
+		Readme.txt = Readme.txt
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IServiceOriented.ServiceBus.ConsoleUtility", "IServiceOriented.ServiceBus.ConsoleUtility\IServiceOriented.ServiceBus.ConsoleUtility.csproj", "{31896FE3-1DDA-4B36-951C-1079DCAAFB51}"
@@ -20,9 +20,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IServiceOriented.ServiceBus.Scripting.UnitTests", "IServiceOriented.ServiceBus.Scripting.UnitTests\IServiceOriented.ServiceBus.Scripting.UnitTests.csproj", "{B1B626F7-8C3E-4274-9A46-F4950BC6688A}"
 EndProject
 Global
-	GlobalSection(TestCaseManagementSettings) = postSolution
-		CategoryFile = IServiceOriented.vsmdi
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug with Scripting|Any CPU = Debug with Scripting|Any CPU
 		Debug|Any CPU = Debug|Any CPU

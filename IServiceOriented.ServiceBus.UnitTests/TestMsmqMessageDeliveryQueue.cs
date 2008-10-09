@@ -3,7 +3,7 @@ using System.Transactions;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 using System.Runtime.Serialization;
 using IServiceOriented.ServiceBus.Collections;
@@ -72,60 +72,18 @@ namespace IServiceOriented.ServiceBus.UnitTests
         public string Data;
     }
 
-
-    [TestClass]
-    public class MsmqMessageDeliveryQueueTest
+    [TestFixture]
+    public class TestMsmqMessageDeliveryQueue
     {
-        public MsmqMessageDeliveryQueueTest()
+        public TestMsmqMessageDeliveryQueue()
         {
             
         }
 
-        private TestContext testContextInstance;
-
-        /// <summary>
-        ///Gets or sets the test context which provides
-        ///information about and functionality for the current test run.
-        ///</summary>
-        public TestContext TestContext
-        {
-            get
-            {
-                return testContextInstance;
-            }
-            set
-            {
-                testContextInstance = value;
-            }
-        }
-
-        #region Additional test attributes
-        //
-        // You can use the following additional attributes as you write your tests:
-        //
-        // Use ClassInitialize to run code before running the first test in the class
-        // [ClassInitialize()]
-        // public static void MyClassInitialize(TestContext testContext) { }
-        //
-        // Use ClassCleanup to run code after all tests in a class have run
-        // [ClassCleanup()]
-        // public static void MyClassCleanup() { }
-        //
-        // Use TestInitialize to run code before running each test 
-        // [TestInitialize()]
-        // public void MyTestInitialize() { }
-        //
-        // Use TestCleanup to run code after each test has run
-        // [TestCleanup()]
-        // public void MyTestCleanup() { }
-        //
-        #endregion
-
-
         const string _testQueuePath = ".\\private$\\esb_test_queue";
-        
-        [ClassInitialize]
-        public static void Initialize(TestContext context)
+
+        [TestFixtureSetUp]
+        public void Initialize()
         {
             MessageDelivery.RegisterKnownType(typeof(ComplexData));
             
@@ -143,8 +101,8 @@ namespace IServiceOriented.ServiceBus.UnitTests
             MsmqMessageDeliveryQueue.Create(_testQueuePath);
             
         }
-        
-        [TestMethod]
+
+        [Test]
         public void TestTransactionSupport()
         {
             MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(_testQueuePath);
@@ -152,7 +110,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
             SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "SubscriptionName", "http://localhost/test", "SubscriptionConfigName", typeof(IContract), new WcfDispatcher(), new PassThroughMessageFilter());
 
             MessageDelivery enqueued = new MessageDelivery(endpoint.Id, typeof(MessageDelivery), "randomAction","randomMessageData", 3, new MessageDeliveryContext());
-            Assert.IsNull(queue.Peek(TimeSpan.FromSeconds(1)), "Queue must be empty to start transaction test");
+            Assert.IsNull(queue.Peek(TimeSpan.FromSeconds(1)));
 
             // Enqueue, but abort transaction
             using (TransactionScope ts = new TransactionScope())
@@ -163,7 +121,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
             using (TransactionScope ts = new TransactionScope())
             {
                 MessageDelivery dequeued = queue.Dequeue(TimeSpan.FromSeconds(5));
-                Assert.IsNull(dequeued, "Aborted transaction should have prevented the message from being queued");
+                Assert.IsNull(dequeued);
             }
 
             // Enqueue and commit transaction
@@ -176,26 +134,26 @@ namespace IServiceOriented.ServiceBus.UnitTests
             using (TransactionScope ts = new TransactionScope())
             {
                 MessageDelivery dequeued = queue.Dequeue(TimeSpan.FromSeconds(10));
-                Assert.IsNotNull(dequeued, "Committed transaction should have queued the message");
-                Assert.AreEqual(dequeued.MessageId, enqueued.MessageId, "Wrong message dequeued");
+                Assert.IsNotNull(dequeued);
+                Assert.AreEqual(dequeued.MessageId, enqueued.MessageId);
             }
 
             using (TransactionScope ts = new TransactionScope())
             {
                 MessageDelivery dequeued = queue.Dequeue(TimeSpan.FromSeconds(10));
-                Assert.IsNotNull(dequeued, "Aborted transaction should not have dequeued the message");
-                Assert.AreEqual(dequeued.MessageId, enqueued.MessageId, "Wrong message dequeued");
+                Assert.IsNotNull(dequeued);
+                Assert.AreEqual(dequeued.MessageId, enqueued.MessageId);
                 ts.Complete();
             }
 
             using (TransactionScope ts = new TransactionScope())
             {
                 MessageDelivery dequeued = queue.Dequeue(TimeSpan.FromSeconds(5));
-                Assert.IsNull(dequeued, "Committed transaction should have dequeued the message");
+                Assert.IsNull(dequeued);
             }
         }
 
-        [TestMethod]
+        [Test]
         public void TestMessageContractFormatterWithDataContract()
         {
             MessageDeliveryFormatter formatter = new MessageDeliveryFormatter();
@@ -233,7 +191,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
         }
 
 
-        [TestMethod]
+        [Test]
         public void TestMessageContractFormatterWithMessageContract()
         {
             MessageDeliveryFormatter formatter = new MessageDeliveryFormatter();
@@ -269,13 +227,13 @@ namespace IServiceOriented.ServiceBus.UnitTests
                 ts.Complete();
             }
         }
-        [TestMethod]
+        [Test]
         public void TestWithComplexData()
         {
             testMessageDelivery("testAction", new ComplexData(91302,1120));
         }
 
-        [TestMethod]
+        [Test]
         public void TestWithSimpleData()
         {
             testMessageDelivery("testAction", "testMessageData");

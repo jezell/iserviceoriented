@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
-using System.Scripting;
-
 using System.Runtime.Serialization;
+using Microsoft.Scripting;
 
 namespace IServiceOriented.ServiceBus.Scripting
 {
@@ -31,7 +29,7 @@ namespace IServiceOriented.ServiceBus.Scripting
         }
         
         public override bool Include(PublishRequest request)
-        {
+        {            
             return (bool)Script.ExecuteWithVariables(new Dictionary<string, object>() { { "request", request } });
         }
     }

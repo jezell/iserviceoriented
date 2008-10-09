@@ -13,7 +13,7 @@ namespace IServiceOriented.ServiceBus
     {
         public SubscriptionExtension(SubscriptionEndpoint subscription)
         {
-            Subscription = subscription;   
+            Subscription = subscription;
         }
 
         #region IExtension<ServiceHostBase> Members
@@ -28,7 +28,7 @@ namespace IServiceOriented.ServiceBus
         public void Detach(ServiceHostBase owner)
         {
             owner.Opened -= owner_Opened;
-            owner.Closing += owner_Closed;
+            owner.Closing -= owner_Closed;
             ServiceHost = null;
         }
 
@@ -118,7 +118,7 @@ namespace IServiceOriented.ServiceBus
                 dispatcher = new WcfDispatcher();
             }
 
-            SubscriptionEndpoint subscription = new SubscriptionEndpoint(SubscriptionId ?? Guid.NewGuid(), Name, ConfigurationName, Address ?? serviceDescription.Endpoints[0].Address.Uri.ToString(), ContractType, dispatcher, WcfDispatcher.CreateMessageFilter(ContractType));
+            SubscriptionEndpoint subscription = new SubscriptionEndpoint(SubscriptionId ?? Guid.NewGuid(), Name, ConfigurationName, Address ?? serviceDescription.Endpoints[0].Address.Uri.ToString(), ContractType, dispatcher, WcfDispatcher.CreateMessageFilter(ContractType), Transient);
             SubscriptionExtension extension = new SubscriptionExtension(subscription);
             extension.UnsubscribeOnClosing = UnsubscribeOnClosing;
             serviceHostBase.Extensions.Add(extension);
@@ -183,9 +183,9 @@ namespace IServiceOriented.ServiceBus
         }
 
         /// <summary>
-        /// Gets or sets whether the subscription should be persisted
+        /// Gets or sets whether the subscription should be transient
         /// </summary>
-        public bool Persistent
+        public bool Transient
         {
             get;
             set;

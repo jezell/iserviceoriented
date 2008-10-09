@@ -70,6 +70,16 @@ namespace IServiceOriented.ServiceBus
             MessageQueue.Delete(path);
         }
 
+        /// <summary>
+        /// Determines if a message queue with the specified path exists
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public static bool Exists(string path)
+        {
+            return MessageQueue.Exists(path);
+        }
+
         MessageQueueTransactionType _transactionType = MessageQueueTransactionType.Automatic;
         /// <summary>
         /// Gets or sets the TransactionType that will be used when communicating with the message queue
