@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using IServiceOriented.ServiceBus.Delivery;
 
 namespace IServiceOriented.ServiceBus.UnitTests
 {
@@ -9,7 +10,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
     {
         public static ServiceBusRuntime MemoryQueueRuntime()
         {
-            ServiceBusRuntime runtime = new ServiceBusRuntime(SimpleServiceLocator.With(new QueuedDeliveryCore(new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue())));
+            ServiceBusRuntime runtime = new ServiceBusRuntime(new QueuedDeliveryCore(new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue()));
             return runtime;
         }
 
@@ -38,7 +39,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
             MsmqMessageDeliveryQueue retryQueue = new MsmqMessageDeliveryQueue(_retryQueuePath);
             MsmqMessageDeliveryQueue failQueue = new MsmqMessageDeliveryQueue(_failQueuePath);
 
-            return new ServiceBusRuntime(SimpleServiceLocator.With(new QueuedDeliveryCore(testQueue, retryQueue, failQueue)));
+            return new ServiceBusRuntime(new QueuedDeliveryCore(testQueue, retryQueue, failQueue));
         }
 
         const string _testQueuePath = ".\\private$\\esb_test_queue";

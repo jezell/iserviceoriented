@@ -3,6 +3,8 @@ using System.Text;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using IServiceOriented.ServiceBus.Delivery;
+using IServiceOriented.ServiceBus.Dispatchers;
 
 namespace IServiceOriented.ServiceBus.UnitTests
 {
@@ -17,7 +19,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
         [Test]
         public void Echo()
         {
-            using (ServiceBusRuntime runtime = new ServiceBusRuntime(SimpleServiceLocator.With(new QueuedDeliveryCore(new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue()))))
+            using (ServiceBusRuntime runtime = new ServiceBusRuntime(new QueuedDeliveryCore(new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue())))
             {
                 CEcho echo = new CEcho();
 

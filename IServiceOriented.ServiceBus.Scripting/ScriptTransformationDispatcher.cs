@@ -4,6 +4,7 @@ using System.Text;
 
 using System.Runtime.Serialization;
 using Microsoft.Scripting;
+using IServiceOriented.ServiceBus.Dispatchers;
 
 namespace IServiceOriented.ServiceBus.Scripting
 {

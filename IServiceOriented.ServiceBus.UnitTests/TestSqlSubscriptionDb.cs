@@ -5,6 +5,8 @@ using System.Linq;
 using NUnit.Framework;
 
 using IServiceOriented.ServiceBus.Data;
+using IServiceOriented.ServiceBus.Listeners;
+using IServiceOriented.ServiceBus.Dispatchers;
 
 namespace IServiceOriented.ServiceBus.UnitTests
 {

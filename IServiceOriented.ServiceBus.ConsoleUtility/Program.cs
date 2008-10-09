@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 
 using IServiceOriented.ServiceBus;
+using IServiceOriented.ServiceBus.Services;
 
 namespace IServiceOriented.ServiceBus.ConsoleUtility
 {

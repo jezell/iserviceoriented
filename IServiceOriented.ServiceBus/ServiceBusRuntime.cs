@@ -12,6 +12,8 @@ using System.Globalization;
 using Microsoft.Practices.ServiceLocation;
 using IServiceOriented.ServiceBus.Threading;
 using IServiceOriented.ServiceBus.Collections;
+using IServiceOriented.ServiceBus.Delivery;
+using IServiceOriented.ServiceBus.Dispatchers;
 
 namespace IServiceOriented.ServiceBus
 {
@@ -29,13 +31,17 @@ namespace IServiceOriented.ServiceBus
 
             if (serviceLocator == null)
             {                
-                serviceLocator = SimpleServiceLocator.With(new DirectDeliveryCore()); // default to simple service locator with direct message delivery
+                serviceLocator = SimpleServiceLocator.With(new Delivery.DirectDeliveryCore()); // default to simple service locator with direct message delivery
                 
             }
 
             _serviceLocator = serviceLocator;
         }
-		public ServiceBusRuntime() : this(null)
+
+        public ServiceBusRuntime(params RuntimeService[] runtimeServices) : this(SimpleServiceLocator.With(runtimeServices))
+        {            
+        }
+		public ServiceBusRuntime() : this((IServiceLocator)null)
 		{
             
 		}

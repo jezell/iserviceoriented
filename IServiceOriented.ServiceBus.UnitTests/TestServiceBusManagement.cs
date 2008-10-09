@@ -6,6 +6,10 @@ using System.Text;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using IServiceOriented.ServiceBus.Delivery;
+using IServiceOriented.ServiceBus.Services;
+using IServiceOriented.ServiceBus.Listeners;
+using IServiceOriented.ServiceBus.Dispatchers;
 
 namespace IServiceOriented.ServiceBus.UnitTests
 {
@@ -19,7 +23,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
         [Test]
         public void CanAddAndRemoveSubscription()
         {
-            using(ServiceBusRuntime runtime = new ServiceBusRuntime(SimpleServiceLocator.With(new DirectDeliveryCore(), new WcfManagementService())))
+            using(ServiceBusRuntime runtime = new ServiceBusRuntime(new DirectDeliveryCore(), new WcfManagementService()))
             {
                 ServiceBusTest tester = new ServiceBusTest(runtime);
                 tester.StartAndStop(() =>
@@ -42,7 +46,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
         [Test]
         public void CanAddAndRemoveListener()
         {
-            using (ServiceBusRuntime runtime = new ServiceBusRuntime(SimpleServiceLocator.With(new DirectDeliveryCore(), new WcfManagementService())))
+            using (ServiceBusRuntime runtime = new ServiceBusRuntime(new DirectDeliveryCore(), new WcfManagementService()))
             {
                 MessageDelivery.RegisterKnownType(typeof(PassThroughMessageFilter));
 

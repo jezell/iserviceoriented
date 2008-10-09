@@ -18,6 +18,13 @@ namespace IServiceOriented.ServiceBus
     [DataContract]
     public abstract class Dispatcher : IDisposable
     {
+        protected Dispatcher()
+        {
+        }
+        protected Dispatcher(SubscriptionEndpoint endpoint)
+        {
+            _endpoint = endpoint;
+        }
         [NonSerialized]
         ServiceBusRuntime _runtime;
         /// <summary>
@@ -32,6 +39,23 @@ namespace IServiceOriented.ServiceBus
             internal set
             {
                 _runtime = value;
+            }
+        }
+
+        [NonSerialized]
+        SubscriptionEndpoint _endpoint;        
+        /// <summary>
+        /// Gets the subscription endpoint associated with this dispatcher.
+        /// </summary>
+        public SubscriptionEndpoint Endpoint
+        {
+            get
+            {
+                return _endpoint;
+            }
+            internal set
+            {
+                _endpoint = value;
             }
         }
 
@@ -65,7 +89,7 @@ namespace IServiceOriented.ServiceBus
         /// <summary>
         /// Handles sending a message to a subscriber endpoint.
         /// </summary>
-        public abstract void Dispatch(SubscriptionEndpoint endpoint, MessageDelivery messageDelivery);
+        public abstract void Dispatch(MessageDelivery messageDelivery);
 
         /// <summary>
         /// Dispose any resources held by this dispatcher.

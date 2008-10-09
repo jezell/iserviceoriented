@@ -4,6 +4,7 @@ using System.Text;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using IServiceOriented.ServiceBus.Dispatchers;
 
 namespace IServiceOriented.ServiceBus.UnitTests
 {
@@ -26,8 +27,8 @@ namespace IServiceOriented.ServiceBus.UnitTests
             
             string message = "blah blah test test";
 
-            WcfDispatcher contractDispatcher = new WcfDispatcher();
-            contractDispatcher.Dispatch(endpoint, new MessageDelivery(endpoint.Id, typeof(IContract), "PublishThis", message, 3, new MessageDeliveryContext()));
+            WcfDispatcher contractDispatcher = new WcfDispatcher(endpoint);
+            contractDispatcher.Dispatch(new MessageDelivery(endpoint.Id, typeof(IContract), "PublishThis", message, 3, new MessageDeliveryContext()));
 
             Assert.AreEqual(1, ci.PublishedCount);
             Assert.AreEqual(message, ci.PublishedMessages[0]);

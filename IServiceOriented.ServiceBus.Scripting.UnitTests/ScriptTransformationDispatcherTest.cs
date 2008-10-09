@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using NUnit.Framework;
 
 using IServiceOriented.ServiceBus.UnitTests;
+using IServiceOriented.ServiceBus.Delivery;
+using IServiceOriented.ServiceBus.Dispatchers;
 
 namespace IServiceOriented.ServiceBus.Scripting.UnitTests
 {
@@ -38,7 +40,7 @@ def Execute():
 
             bool success = false;
 
-            ServiceBusRuntime runtime = new ServiceBusRuntime(SimpleServiceLocator.With(new QueuedDeliveryCore( new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue() )));
+            ServiceBusRuntime runtime = new ServiceBusRuntime(new QueuedDeliveryCore( new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue() ));
             runtime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "Tranformation", null, null, typeof(void), dispatcher, new TypedMessageFilter(typeof(BeforeTransformation))));
             runtime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "AfterTransformation", null, null, typeof(void), new ActionDispatcher( (subscription, md) =>
             {

@@ -85,14 +85,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ActionDispatcher.cs" />
-    <Compile Include="DirectDeliveryCore.cs" />
+    <Compile Include="Dispatchers\ActionDispatcher.cs" />
+    <Compile Include="Delivery\DirectDeliveryCore.cs" />
     <Compile Include="Formatters\MessageDeliveryConverter.cs" />
     <Compile Include="Formatters\MessageDeliveryMessageContractFormatter.cs" />
     <Compile Include="MessageDeliveryContext.cs" />
     <Compile Include="AutoSubscribeBehavior.cs" />
     <Compile Include="Threading\CountdownLatch.cs" />
-    <Compile Include="DeliveryCore.cs" />
+    <Compile Include="Delivery\DeliveryCore.cs" />
     <Compile Include="Dispatcher.cs" />
     <Compile Include="DuplicateIdentifierException.cs" />
     <Compile Include="Endpoint.cs" />
@@ -102,29 +102,29 @@
     <Compile Include="Threading\ILockedObject.cs" />
     <Compile Include="InvalidContractException.cs" />
     <Compile Include="ListenerEndpoint.cs" />
-    <Compile Include="IMessageDeliveryQueue.cs" />
+    <Compile Include="Delivery\IMessageDeliveryQueue.cs" />
     <Compile Include="ListenerEndpointCollection.cs" />
     <Compile Include="PublishRequest.cs" />
-    <Compile Include="QueuedDeliveryCore.cs" />
+    <Compile Include="Delivery\QueuedDeliveryCore.cs" />
     <Compile Include="Collections\ReadOnlyDictionary.cs" />
-    <Compile Include="CorrelationMessageFilter.cs" />
+    <Compile Include="Delivery\CorrelationMessageFilter.cs" />
     <Compile Include="SimpleServiceLocator.cs" />
     <Compile Include="Data\SqlSubscriptionDB.cs" />
-    <Compile Include="SqlSubscriptionPersistenceService.cs">
+    <Compile Include="Services\SqlSubscriptionPersistenceService.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="SubscriptionEndpointCollection.cs" />
-    <Compile Include="TransformationDispatcher.cs" />
+    <Compile Include="Dispatchers\TransformationDispatcher.cs" />
     <Compile Include="Threading\ReaderWriterLockedObject.cs" />
     <Compile Include="UnhandledMessageFilter.cs" />
-    <Compile Include="PerformanceMonitorRuntimeService.cs" />
+    <Compile Include="Services\PerformanceMonitorRuntimeService.cs" />
     <Compile Include="RuntimeService.cs" />
     <Compile Include="ListenerNotFoundException.cs" />
     <Compile Include="MessageDelivery.cs" />
     <Compile Include="MessageFilter.cs" />
-    <Compile Include="MethodDispatcher.cs" />
-    <Compile Include="MsmqMessageDeliveryQueue.cs" />
-    <Compile Include="PoisonMessageException.cs" />
+    <Compile Include="Dispatchers\MethodDispatcher.cs" />
+    <Compile Include="Delivery\MsmqMessageDeliveryQueue.cs" />
+    <Compile Include="Delivery\PoisonMessageException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Service.cs" />
     <Compile Include="ServiceBusRuntime.cs" />
@@ -132,10 +132,10 @@
     <Compile Include="SubscriptionNotFoundException.cs" />
     <Compile Include="SubscriptionPersistenceService.cs" />
     <Compile Include="TypedMessageFilter.cs" />
-    <Compile Include="WcfDispatcher.cs" />
-    <Compile Include="WcfListener.cs" />
-    <Compile Include="WcfServiceHostFactory.cs" />
-    <Compile Include="WcfManagementService.cs" />
+    <Compile Include="Dispatchers\WcfDispatcher.cs" />
+    <Compile Include="Listeners\WcfListener.cs" />
+    <Compile Include="Listeners\WcfServiceHostFactory.cs" />
+    <Compile Include="Services\WcfManagementService.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />

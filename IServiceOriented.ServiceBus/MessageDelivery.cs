@@ -9,6 +9,7 @@ using IServiceOriented.ServiceBus.Threading;
 using IServiceOriented.ServiceBus.Collections;
 using System.Collections.ObjectModel;
 using System.ServiceModel.Channels;
+using IServiceOriented.ServiceBus.Dispatchers;
 
 
 namespace IServiceOriented.ServiceBus
@@ -56,7 +57,7 @@ namespace IServiceOriented.ServiceBus
             }
         }
 
-        static List<Type> _knownTypes = new List<Type>(new Type[] { typeof(UnhandledMessageFilter), typeof(WcfListener), typeof(WcfDispatcher), typeof(TypedMessageFilter), typeof(ReadOnlyCollection<string>), typeof(ReadOnlyCollection<short>), typeof(ReadOnlyCollection<int>), typeof(ReadOnlyCollection<bool>), typeof(ReadOnlyCollection<decimal>), typeof(ReadOnlyCollection<float>), typeof(ReadOnlyCollection<double>), typeof(ReadOnlyCollection<long>), typeof(ReadOnlyCollection<Guid>), typeof(MessageDeliveryContext) });
+        static List<Type> _knownTypes = new List<Type>(new Type[] { typeof(UnhandledMessageFilter), typeof(Listeners.WcfListener), typeof(WcfDispatcher), typeof(TypedMessageFilter), typeof(ReadOnlyCollection<string>), typeof(ReadOnlyCollection<short>), typeof(ReadOnlyCollection<int>), typeof(ReadOnlyCollection<bool>), typeof(ReadOnlyCollection<decimal>), typeof(ReadOnlyCollection<float>), typeof(ReadOnlyCollection<double>), typeof(ReadOnlyCollection<long>), typeof(ReadOnlyCollection<Guid>), typeof(MessageDeliveryContext) });
         /// <summary>
         /// Clears the list of types registered for message delivery.
         /// </summary>

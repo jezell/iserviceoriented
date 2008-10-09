@@ -6,7 +6,7 @@ using Microsoft.Practices.ServiceLocation;
 
 namespace IServiceOriented.ServiceBus
 {
-    public class SimpleServiceLocator : IServiceLocator
+    internal class SimpleServiceLocator : IServiceLocator
     {
         public SimpleServiceLocator()
         {
