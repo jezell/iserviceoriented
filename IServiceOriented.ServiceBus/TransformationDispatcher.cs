@@ -44,7 +44,7 @@ namespace IServiceOriented.ServiceBus
             }
         }
 
-        protected override sealed void DispatchCore(SubscriptionEndpoint endpoint, MessageDelivery messageDelivery)
+        public override void Dispatch(SubscriptionEndpoint endpoint, MessageDelivery messageDelivery)
         {
             MessageDeliveryContext context = messageDelivery.Context;
 
@@ -83,7 +83,7 @@ namespace IServiceOriented.ServiceBus
             }
             else
             {
-                System.Diagnostics.Trace.TraceInformation("Skipping already transformed message (" + DispatchContext.MessageDelivery.MessageId +")"); 
+                System.Diagnostics.Trace.TraceInformation("Skipping already transformed message (" + messageDelivery.MessageId +")"); 
             }
         }
 

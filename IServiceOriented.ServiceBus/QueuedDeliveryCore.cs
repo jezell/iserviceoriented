@@ -289,7 +289,7 @@ namespace IServiceOriented.ServiceBus
 
                                 if (dispatcher != null)
                                 {
-                                    dispatcher.Dispatch(delivery);
+                                    dispatcher.Dispatch(endpoint, delivery);
                                 }
                                 else
                                 {

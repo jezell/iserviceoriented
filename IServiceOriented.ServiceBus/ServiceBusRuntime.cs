@@ -29,7 +29,8 @@ namespace IServiceOriented.ServiceBus
 
             if (serviceLocator == null)
             {                
-                serviceLocator = new SimpleServiceLocator(); // default to simple service locator
+                serviceLocator = SimpleServiceLocator.With(new DirectDeliveryCore()); // default to simple service locator with direct message delivery
+                
             }
 
             _serviceLocator = serviceLocator;

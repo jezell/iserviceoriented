@@ -17,6 +17,7 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
             if(args.Length == 0)
             {
                 Console.WriteLine("usage: Chat.exe [server | client]");
+                return;
             }
 
             if (args[0] == "server")

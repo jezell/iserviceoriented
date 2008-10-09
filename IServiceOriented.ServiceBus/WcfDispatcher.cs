@@ -23,54 +23,66 @@ namespace IServiceOriented.ServiceBus
             
         }
         
-        // TODO: if the same dispatcher instance is reused with another type this will be invalid
-        void initActionLookup()
+        ActionLookup initActionLookup(SubscriptionEndpoint endpoint)
         {
-            Dictionary<string, MethodInfo> actionLookup = new Dictionary<string, MethodInfo>();
-            Dictionary<string, string> replyActionLookup = new Dictionary<string, string>();
-            foreach (MethodInfo method in Endpoint.ContractType.GetMethods())
+            lock (_endpointLookups)
             {
-                object[] attributes = method.GetCustomAttributes(typeof(OperationContractAttribute), false);
-                if (attributes.Length > 0)
+                ActionLookup lookup = null;
+                _endpointLookups.TryGetValue(endpoint, out lookup);
+
+                if (lookup != null) return lookup;
+
+                lookup = new ActionLookup();
+
+                Dictionary<string, MethodInfo> actionLookup = new Dictionary<string, MethodInfo>();
+                Dictionary<string, string> replyActionLookup = new Dictionary<string, string>();
+                foreach (MethodInfo method in endpoint.ContractType.GetMethods())
                 {
-                    OperationContractAttribute oca = (OperationContractAttribute)attributes[0];
-                    string action = oca.Action;
-                    if (action == null)
+                    object[] attributes = method.GetCustomAttributes(typeof(OperationContractAttribute), false);
+                    if (attributes.Length > 0)
                     {
-                        action = method.Name;
-                    }
-                    actionLookup.Add(action, method);
-
-                    if(!oca.IsOneWay)
-                    {
-                        string replyAction = oca.ReplyAction;
-                        if(replyAction == null)
+                        OperationContractAttribute oca = (OperationContractAttribute)attributes[0];
+                        string action = oca.Action;
+                        if (action == null)
                         {
-                            replyAction = action+"Reply";
+                            action = method.Name;
                         }
+                        actionLookup.Add(action, method);
 
-                        replyActionLookup.Add(action, replyAction);
+                        if (!oca.IsOneWay)
+                        {
+                            string replyAction = oca.ReplyAction;
+                            if (replyAction == null)
+                            {
+                                replyAction = action + "Reply";
+                            }
+
+                            replyActionLookup.Add(action, replyAction);
+                        }
                     }
                 }
+                lookup.MethodLookup = actionLookup;
+                lookup.ReplyActionLookup = replyActionLookup;
+                _endpointLookups.Add(endpoint, lookup);
+
+                return lookup;
             }
-            _actionLookup = actionLookup;
-            _replyActionLookup = replyActionLookup;
             
         }
        
 
-        protected virtual void ApplySecurityContext(ChannelFactory factory)
+        protected virtual void ApplySecurityContext(MessageDelivery delivery, ChannelFactory factory)
         {         
         }
         
-        protected override void DispatchCore(SubscriptionEndpoint endpoint, MessageDelivery messageDelivery)
+        public override void Dispatch(SubscriptionEndpoint endpoint, MessageDelivery messageDelivery)
         {
             // TODO: Clean this up. Creating channel factory for each call is expensive
             Type channelType = typeof(ChannelFactory<>).MakeGenericType(endpoint.ContractType);
             object factory = Activator.CreateInstance(channelType, endpoint.ConfigurationName);
             ((ChannelFactory)factory).Endpoint.Address = new EndpointAddress(endpoint.Address);
 
-            ApplySecurityContext((ChannelFactory)factory);
+            ApplySecurityContext(messageDelivery, (ChannelFactory)factory);
 
             IClientChannel proxy = (IClientChannel)channelType.GetMethod("CreateChannel", new Type[] { }).Invoke(factory, new object[] { });
             bool success = false;
@@ -78,18 +90,21 @@ namespace IServiceOriented.ServiceBus
             {
                 MethodInfo methodInfo;
 
-                if (_actionLookup == null)
+                ActionLookup lookup = null;
+                _endpointLookups.TryGetValue(endpoint, out lookup);
+
+                if (lookup == null)
                 {
-                    initActionLookup();
+                    lookup = initActionLookup(endpoint);
                 }
 
-                if (!_actionLookup.TryGetValue(messageDelivery.Action, out methodInfo))
+                if (!lookup.MethodLookup.TryGetValue(messageDelivery.Action, out methodInfo))
                 {
-                    foreach (string a in _actionLookup.Keys)
+                    foreach (string a in lookup.MethodLookup.Keys)
                     {
                         if (a == "*")
                         {
-                            methodInfo = _actionLookup[a];
+                            methodInfo = lookup.MethodLookup[a];
                             break;
                         }
                     }
@@ -101,23 +116,23 @@ namespace IServiceOriented.ServiceBus
                     {
                         object result = methodInfo.Invoke(proxy, new object[] { messageDelivery.Message });
 
-                        if (_replyActionLookup.ContainsKey(messageDelivery.Action)) // if two way message, publish reply
+                        if (lookup.ReplyActionLookup.ContainsKey(messageDelivery.Action)) // if two way message, publish reply
                         {
                             KeyValuePair<string, object>[] replyData = new KeyValuePair<string, object>[1];
                             replyData[0] = new KeyValuePair<string, object>(MessageDelivery.CorrelationId, messageDelivery.MessageId);
-                            Runtime.Publish(new PublishRequest(endpoint.ContractType, _replyActionLookup[messageDelivery.Action], result, new MessageDeliveryContext( replyData ))); 
+                            Runtime.Publish(new PublishRequest(endpoint.ContractType, lookup.ReplyActionLookup[messageDelivery.Action], result, new MessageDeliveryContext(replyData))); 
                         }
                     }
                     catch(System.Reflection.TargetInvocationException ex)
                     {
-                        if (_replyActionLookup.ContainsKey(messageDelivery.Action)) // if two way message, publish reply
+                        if (lookup.ReplyActionLookup.ContainsKey(messageDelivery.Action)) // if two way message, publish reply
                         {
                             KeyValuePair<string, object>[] replyData = new KeyValuePair<string, object>[1];
                             replyData[0] = new KeyValuePair<string, object>(MessageDelivery.CorrelationId, messageDelivery.MessageId);
                         
                             if (ex.InnerException is FaultException)
                             {
-                                Runtime.Publish(new PublishRequest(endpoint.ContractType, _replyActionLookup[messageDelivery.Action], ex.InnerException, new MessageDeliveryContext(replyData)));
+                                Runtime.Publish(new PublishRequest(endpoint.ContractType, lookup.ReplyActionLookup[messageDelivery.Action], ex.InnerException, new MessageDeliveryContext(replyData)));
                             }
                             else
                             {
@@ -146,13 +161,15 @@ namespace IServiceOriented.ServiceBus
             }
         }
 
+        class ActionLookup
+        {
+            public Dictionary<string, string> ReplyActionLookup;            
+            public Dictionary<string, MethodInfo> MethodLookup;
+        }
+
         [NonSerialized]
-        Dictionary<string, string> _replyActionLookup;
-
-
-        [NonSerialized]
-        Dictionary<string, MethodInfo> _actionLookup;
-
+        Dictionary<SubscriptionEndpoint, ActionLookup> _endpointLookups = new Dictionary<SubscriptionEndpoint, ActionLookup>();
+        
 
         public static MessageFilter CreateMessageFilter(Type interfaceType)
         {               

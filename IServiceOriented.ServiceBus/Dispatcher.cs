@@ -35,23 +35,6 @@ namespace IServiceOriented.ServiceBus
             }
         }
 
-        [NonSerialized]
-        SubscriptionEndpoint _endpoint;        
-        /// <summary>
-        /// Gets the subscription endpoint associated with this dispatcher.
-        /// </summary>
-        public SubscriptionEndpoint Endpoint
-        {
-            get
-            {
-                return _endpoint;
-            }
-            internal set
-            {
-                _endpoint = value;
-            }
-        }
-
         internal void StartInternal()
         {
             OnStart();
@@ -79,42 +62,10 @@ namespace IServiceOriented.ServiceBus
             private set;
         }
 
-        [ThreadStatic, NonSerialized]
-        static DispatchContext _dispatchContext;
-        /// <summary>
-        /// Contains information about the message that is currently being dispatched.
-        /// </summary>
-        public static DispatchContext DispatchContext
-        {
-            get
-            {
-                return _dispatchContext;
-            }
-        }
-        
-
-        /// <summary>
-        /// Called by ServiceBusRuntime to dispatch a message. Ensures that context is set up and torn down.
-        /// </summary>        
-        public void Dispatch(MessageDelivery delivery)
-        {
-            SubscriptionEndpoint endpoint = Runtime.GetSubscription(delivery.SubscriptionEndpointId);
-            _dispatchContext = new DispatchContext(Runtime, endpoint, delivery);
-            try
-            {
-                DispatchCore(endpoint, delivery);
-            }
-            finally
-            {
-                _dispatchContext = null;
-            }
-
-        }
-
         /// <summary>
         /// Handles sending a message to a subscriber endpoint.
         /// </summary>
-        protected abstract void DispatchCore(SubscriptionEndpoint endpoint, MessageDelivery messageDelivery);
+        public abstract void Dispatch(SubscriptionEndpoint endpoint, MessageDelivery messageDelivery);
 
         /// <summary>
         /// Dispose any resources held by this dispatcher.

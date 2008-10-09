@@ -65,17 +65,8 @@ namespace IServiceOriented.ServiceBus
                 return _dispatcher;
             }
             private set
-            {
-                if (value != null && value.Endpoint != null)
-                {
-                    throw new InvalidOperationException("Endpoint is attached to another dispatcher");
-                }
-                if (_dispatcher != null)
-                {
-                    _dispatcher.Endpoint = null;
-                }
-                _dispatcher = value;
-                if (value != null) value.Endpoint = this;
+            {                
+                _dispatcher = value;                
             }
         }
     }	

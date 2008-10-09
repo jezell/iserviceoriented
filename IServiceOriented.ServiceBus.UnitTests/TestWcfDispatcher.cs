@@ -17,25 +17,22 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
         [Test]
         public void Dispatch()
-        {
-            /*
+        {            
             ContractImplementation ci = new ContractImplementation();
             ServiceHost host = new ServiceHost(ci);
             host.Open();
 
-            ServiceBusRuntime runtime = new ServiceBusRuntime(NullMessageDeliveryQueue.Instance, NullMessageDeliveryQueue.Instance, NullMessageDeliveryQueue.Instance);
-            SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "test", "NamedPipeClient", "net.tcp://localhost/remotehello", typeof(IContract), typeof(WcfDispatcher<IContract>), null);
-            runtime.Subscribe(endpoint);
-
+            SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "test", "NamedPipeClient", "net.pipe://localhost/remotehello", typeof(IContract), new WcfDispatcher(), null);
+            
             string message = "blah blah test test";
 
-            WcfDispatcher<IContract> contractDispatcher = new WcfDispatcher<IContract>();
-            contractDispatcher.DispatchInternal(runtime, new MessageDelivery(endpoint.Id, "PublishThis", message));
+            WcfDispatcher contractDispatcher = new WcfDispatcher();
+            contractDispatcher.Dispatch(endpoint, new MessageDelivery(endpoint.Id, typeof(IContract), "PublishThis", message, 3, new MessageDeliveryContext()));
 
-            Assert.AreEqual(1, ci.PublishedMessages.Count, "One message should be published");
-            Assert.AreEqual(message, ci.PublishedMessages.Dequeue(), "Messages should match");
+            Assert.AreEqual(1, ci.PublishedCount);
+            Assert.AreEqual(message, ci.PublishedMessages[0]);
 
-            host.Close();*/
+            host.Close();
         }
     }
 }
