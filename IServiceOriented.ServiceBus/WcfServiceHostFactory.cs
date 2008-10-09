@@ -137,32 +137,37 @@ namespace IServiceOriented.ServiceBus
                         continue; // skip methods that don't accept a single parameter
                     }
 
-                    Type[] parameters = methodInfo.GetParameters().Select(p => p.ParameterType).ToArray();
-                    MethodBuilder methodBuilder = typeBuilder.DefineMethod(methodInfo.Name, MethodAttributes.Public | MethodAttributes.Virtual, methodInfo.ReturnType, parameters);
-
-                    ILGenerator generator = methodBuilder.GetILGenerator();
-
-                    MethodInfo publishMethodInfo = typeof(WcfListenerServiceImplementationBase).GetMethod("Publish", BindingFlags.NonPublic | BindingFlags.Instance, null, new Type[] { typeof(Type), typeof(string), typeof(object) }, null);
-                    
-                    generator.Emit(OpCodes.Ldarg_0);
-                    generator.Emit(OpCodes.Ldtoken, interfaceType);
-                    generator.EmitCall(OpCodes.Call, typeof(Type).GetMethod("GetTypeFromHandle", BindingFlags.Public | BindingFlags.Static), null);
-                    generator.Emit(OpCodes.Ldstr, action);
-                    for (int i = 0; i < parameters.Length; i++)
-                    {
-                        generator.Emit(OpCodes.Ldarg, i + 1);
-                    }
-
-                    generator.EmitCall(OpCodes.Callvirt, publishMethodInfo, null);
-
-                    generator.Emit(OpCodes.Nop);
-                    generator.Emit(OpCodes.Ret);
-
-                    typeBuilder.DefineMethodOverride(methodBuilder, methodInfo);
+                    definePublishOverride(interfaceType, typeBuilder, methodInfo, action);
                 }
             }
             Type impType = typeBuilder.CreateType();
             return impType;        
+        }
+
+        private static void definePublishOverride(Type interfaceType, TypeBuilder typeBuilder, MethodInfo methodInfo, string action)
+        {
+            Type[] parameters = methodInfo.GetParameters().Select(p => p.ParameterType).ToArray();
+            MethodBuilder methodBuilder = typeBuilder.DefineMethod(methodInfo.Name, MethodAttributes.Public | MethodAttributes.Virtual, methodInfo.ReturnType, parameters);
+
+            ILGenerator generator = methodBuilder.GetILGenerator();
+
+            MethodInfo publishMethodInfo = typeof(WcfListenerServiceImplementationBase).GetMethod("Publish", BindingFlags.NonPublic | BindingFlags.Instance, null, new Type[] { typeof(Type), typeof(string), typeof(object) }, null);
+
+            generator.Emit(OpCodes.Ldarg_0);
+            generator.Emit(OpCodes.Ldtoken, interfaceType);
+            generator.EmitCall(OpCodes.Call, typeof(Type).GetMethod("GetTypeFromHandle", BindingFlags.Public | BindingFlags.Static), null);
+            generator.Emit(OpCodes.Ldstr, action);
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                generator.Emit(OpCodes.Ldarg, i + 1);
+            }
+
+            generator.EmitCall(OpCodes.Callvirt, publishMethodInfo, null);
+
+            generator.Emit(OpCodes.Nop);
+            generator.Emit(OpCodes.Ret);
+
+            typeBuilder.DefineMethodOverride(methodBuilder, methodInfo);
         }
 
         /// <summary>
@@ -232,6 +237,11 @@ namespace IServiceOriented.ServiceBus
         {
             ConfigurationName = configurationName;
 
+            LoadConfigurationSection(GetConfiguration(configurationName, contract, address));
+        }
+
+        protected ServiceElement FindServiceElementInConfig(string name)
+        {
             Configuration appConfig = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
             ServiceModelSectionGroup serviceModel = ServiceModelSectionGroup.GetSectionGroup(appConfig);
 
@@ -243,7 +253,15 @@ namespace IServiceOriented.ServiceBus
                     serviceElement = e;
                     break;
                 }
-            }
+            }            
+            return serviceElement;
+        }
+
+        protected virtual ServiceElement GetConfiguration(string configurationName, string contract, string address)
+        {
+            // Use standard WCF configuration elements as a template, find the <service> element with a matching name and replace the contract and address with actual values
+
+            ServiceElement serviceElement = FindServiceElementInConfig(configurationName);
             if (serviceElement == null)
             {
                 throw new InvalidOperationException("Invalid endpoint configuration name specified");
@@ -252,10 +270,10 @@ namespace IServiceOriented.ServiceBus
             if (serviceElement.Endpoints.Count != 1)
             {
                 throw new InvalidOperationException("Configuration must contain exactly one endpoint");
-            }
+            }            
             serviceElement.Endpoints[0].Contract = contract;
             serviceElement.Endpoints[0].Address = new Uri(address);
-            LoadConfigurationSection(serviceElement);
+            return serviceElement;
         }
 
         public string ConfigurationName

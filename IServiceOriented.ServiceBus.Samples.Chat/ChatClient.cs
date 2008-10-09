@@ -12,18 +12,12 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
         public ChatClient(string name)
         {
             _from = name;
-            _host = new ServiceHost(new IncomingHandler(), new Uri("http://localhost/chat/" + _from));            
+            _host = new ServiceHost(new ChatClientService(), new Uri("http://localhost/chat/" + _from));            
         }
 
         public void Start()
         {
-            _host.Open();
-
-            // This should happen automatically now
-            /*Service.Use<IServiceBusManagementService>(serviceBus =>
-            {
-                    serviceBus.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), _from, "ChatClientOut", "http://localhost/chat/" + _from + "/send", typeof(IChatService), new WcfDispatcher() { ApplyCredentials = true }, new ChatFilter(_from)));                    
-            });*/
+            _host.Open();         
         }
 
         string _from;   
@@ -43,22 +37,22 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
         public void Stop()
         {
             _host.Close();
-        }
-
-        [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConfigurationName = "ChatServerOut")]
-        [AutoSubscribe("Autosubscribed", "ChatClientOut", typeof(IChatService), DispatcherType=typeof(WcfDispatcherWithUsernameCredentials))] 
-        public class IncomingHandler : IChatService
-        {
-            #region IChatService Members
-            [OperationBehavior]
-            public void SendMessage(SendMessageRequest request)
-            {
-                if (ServiceSecurityContext.Current != null && ServiceSecurityContext.Current.PrimaryIdentity != null) Console.WriteLine("Identity: " + ServiceSecurityContext.Current.PrimaryIdentity.Name);
-                Console.WriteLine(request.From + ": " + request.Message);
-            }
-            #endregion
         }        
     }
+
+    [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConfigurationName = "ChatServerOut")]
+    [AutoSubscribe("Autosubscribed", "ChatClientOut", typeof(IChatService), DispatcherType = typeof(WcfDispatcherWithUsernameCredentials))]
+    public class ChatClientService : IChatService
+    {
+        #region IChatService Members
+        [OperationBehavior]
+        public void SendMessage(SendMessageRequest request)
+        {
+            if (ServiceSecurityContext.Current != null && ServiceSecurityContext.Current.PrimaryIdentity != null) Console.WriteLine("Identity: " + ServiceSecurityContext.Current.PrimaryIdentity.Name);
+            Console.WriteLine(request.From + ": " + request.Message);
+        }
+        #endregion
+    }        
 
     
     [DataContract]

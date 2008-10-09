@@ -187,8 +187,11 @@ namespace IServiceOriented.ServiceBus
 		public IEnumerable<Endpoint> ListeningEndpoints
 		{
 			get
-			{
-				return _listenerEndpoints.ToArray();
+            {
+                lock (_listenerEndpointsLock)
+                {
+                    return _listenerEndpoints.ToArray();
+                }
 			}
 		}
 
@@ -456,7 +459,7 @@ namespace IServiceOriented.ServiceBus
 
                     foreach (MessageDelivery md in messageDeliveries)
                     {
-                        deliveryCore.QueueDelivery(md);
+                        deliveryCore.Deliver(md);
                     }
 
                     ts.Complete();

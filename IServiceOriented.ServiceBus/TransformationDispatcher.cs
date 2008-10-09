@@ -44,7 +44,7 @@ namespace IServiceOriented.ServiceBus
             }
         }
 
-        protected override sealed void Dispatch(SubscriptionEndpoint endpoint, MessageDelivery messageDelivery)
+        protected override sealed void DispatchCore(SubscriptionEndpoint endpoint, MessageDelivery messageDelivery)
         {
             MessageDeliveryContext context = messageDelivery.Context;
 

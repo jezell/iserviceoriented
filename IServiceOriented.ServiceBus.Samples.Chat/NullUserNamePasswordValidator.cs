@@ -7,7 +7,7 @@ using System.IdentityModel.Tokens;
 using System.ServiceModel;
 
 
-namespace IServiceOriented.ServiceBus
+namespace IServiceOriented.ServiceBus.Samples.Chat
 {
     public class NullUserNamePasswordValidator : UserNamePasswordValidator
     {

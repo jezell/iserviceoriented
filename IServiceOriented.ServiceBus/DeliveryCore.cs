@@ -25,6 +25,6 @@ namespace IServiceOriented.ServiceBus
             Runtime.NotifyFailure(delivery, permanent);
         }
 
-        public abstract void QueueDelivery(MessageDelivery delivery);
+        public abstract void Deliver(MessageDelivery delivery);
     }       
 }

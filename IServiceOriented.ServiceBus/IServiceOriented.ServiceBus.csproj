@@ -14,7 +14,7 @@
     <FileAlignment>512</FileAlignment>
     <StartupObject>
     </StartupObject>
-    <SignAssembly>false</SignAssembly>
+    <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>iServiceOriented.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -86,6 +86,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ActionDispatcher.cs" />
+    <Compile Include="DirectDeliveryCore.cs" />
     <Compile Include="Formatters\MessageDeliveryConverter.cs" />
     <Compile Include="Formatters\MessageDeliveryMessageContractFormatter.cs" />
     <Compile Include="MessageDeliveryContext.cs" />
@@ -103,7 +104,6 @@
     <Compile Include="ListenerEndpoint.cs" />
     <Compile Include="IMessageDeliveryQueue.cs" />
     <Compile Include="ListenerEndpointCollection.cs" />
-    <Compile Include="NullUserNamePasswordValidator.cs" />
     <Compile Include="PublishRequest.cs" />
     <Compile Include="QueuedDeliveryCore.cs" />
     <Compile Include="Collections\ReadOnlyDictionary.cs" />

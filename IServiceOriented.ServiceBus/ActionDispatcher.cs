@@ -24,7 +24,7 @@ namespace IServiceOriented.ServiceBus
             private set;
         }
 
-        protected override void Dispatch(SubscriptionEndpoint endpoint, MessageDelivery messageDelivery)
+        protected override void DispatchCore(SubscriptionEndpoint endpoint, MessageDelivery messageDelivery)
         {
             DispatchAction(endpoint, messageDelivery);
         }

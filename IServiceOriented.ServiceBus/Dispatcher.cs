@@ -96,13 +96,13 @@ namespace IServiceOriented.ServiceBus
         /// <summary>
         /// Called by ServiceBusRuntime to dispatch a message. Ensures that context is set up and torn down.
         /// </summary>        
-        internal void DispatchInternal(MessageDelivery delivery)
+        public void Dispatch(MessageDelivery delivery)
         {
             SubscriptionEndpoint endpoint = Runtime.GetSubscription(delivery.SubscriptionEndpointId);
             _dispatchContext = new DispatchContext(Runtime, endpoint, delivery);
             try
             {
-                Dispatch(endpoint, delivery);
+                DispatchCore(endpoint, delivery);
             }
             finally
             {
@@ -114,7 +114,7 @@ namespace IServiceOriented.ServiceBus
         /// <summary>
         /// Handles sending a message to a subscriber endpoint.
         /// </summary>
-        protected abstract void Dispatch(SubscriptionEndpoint endpoint, MessageDelivery messageDelivery);
+        protected abstract void DispatchCore(SubscriptionEndpoint endpoint, MessageDelivery messageDelivery);
 
         /// <summary>
         /// Dispose any resources held by this dispatcher.

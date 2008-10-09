@@ -9,7 +9,9 @@ using System.Messaging;
 
 namespace IServiceOriented.ServiceBus
 {
-
+    /// <summary>
+    /// Uses message queues to deliver messages
+    /// </summary>
     public class QueuedDeliveryCore : DeliveryCore
     {
         public QueuedDeliveryCore(IMessageDeliveryQueue deliveryQueue, IMessageDeliveryQueue retryQueue, IMessageDeliveryQueue failureQueue)
@@ -287,7 +289,7 @@ namespace IServiceOriented.ServiceBus
 
                                 if (dispatcher != null)
                                 {
-                                    dispatcher.DispatchInternal(delivery);
+                                    dispatcher.Dispatch(delivery);
                                 }
                                 else
                                 {
@@ -330,7 +332,7 @@ namespace IServiceOriented.ServiceBus
             }
         }
 
-        public override void QueueDelivery(MessageDelivery delivery)
+        public override void Deliver(MessageDelivery delivery)
         {
             _messageDeliveryQueue.Enqueue(delivery);
         }

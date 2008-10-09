@@ -63,7 +63,7 @@ namespace IServiceOriented.ServiceBus
         {         
         }
         
-        protected override void Dispatch(SubscriptionEndpoint endpoint, MessageDelivery messageDelivery)
+        protected override void DispatchCore(SubscriptionEndpoint endpoint, MessageDelivery messageDelivery)
         {
             // TODO: Clean this up. Creating channel factory for each call is expensive
             Type channelType = typeof(ChannelFactory<>).MakeGenericType(endpoint.ContractType);
