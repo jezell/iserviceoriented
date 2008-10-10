@@ -82,8 +82,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
             
         }
 
-        const string _testQueuePath = ".\\private$\\esb_test_queue";
-
+        
         [TestFixtureSetUp]
         public void Initialize()
         {
@@ -92,22 +91,22 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
             // Delete test queues if they already exist
             try
-            {                
-                MsmqMessageDeliveryQueue.Delete(_testQueuePath);
+            {
+                MsmqMessageDeliveryQueue.Delete(Config.TestQueuePath);
             }
             catch
             {
             }        
 
             // Create test queue
-            MsmqMessageDeliveryQueue.Create(_testQueuePath);
+            MsmqMessageDeliveryQueue.Create(Config.TestQueuePath);
             
         }
 
         [Test]
         public void TestTransactionSupport()
         {
-            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(_testQueuePath);
+            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath);
 
             SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "SubscriptionName", "http://localhost/test", "SubscriptionConfigName", typeof(IContract), new WcfDispatcher(), new PassThroughMessageFilter());
 
@@ -159,7 +158,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
         public void TestMessageContractFormatterWithDataContract()
         {
             MessageDeliveryFormatter formatter = new MessageDeliveryFormatter();
-            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(_testQueuePath);
+            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath);
             queue.Formatter = formatter;
             string action = "http://test";
             DataContractMessage outgoing = new DataContractMessage() { Data = "This is a test" };
@@ -197,7 +196,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
         public void TestMessageContractFormatterWithMessageContract()
         {
             MessageDeliveryFormatter formatter = new MessageDeliveryFormatter();
-            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(_testQueuePath);
+            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath);
             queue.Formatter = formatter;
             string action = "http://test";
             MessageContractMessage outgoing = new MessageContractMessage() { Data = "This is a test" };
@@ -244,7 +243,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
         
         void testMessageDelivery(string messageAction, object messageData)
         {
-            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(_testQueuePath);
+            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath);
 
             SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "SubscriptionName", "http://localhost/test", "SubscriptionConfigName", typeof(IContract), new WcfDispatcher(), new PassThroughMessageFilter());
 

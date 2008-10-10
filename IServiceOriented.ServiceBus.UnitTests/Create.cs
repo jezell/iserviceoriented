@@ -42,9 +42,9 @@ namespace IServiceOriented.ServiceBus.UnitTests
             return new ServiceBusRuntime(new QueuedDeliveryCore(testQueue, retryQueue, failQueue));
         }
 
-        const string _testQueuePath = ".\\private$\\esb_test_queue";
-        const string _retryQueuePath = ".\\private$\\esb_retry_queue";
-        const string _failQueuePath = ".\\private$\\esb_fail_queue";
+        static string _testQueuePath = Config.TestQueuePath;
+        static string _retryQueuePath = Config.RetryQueuePath;
+        static string _failQueuePath = Config.FailQueuePath;
         
     }
 }

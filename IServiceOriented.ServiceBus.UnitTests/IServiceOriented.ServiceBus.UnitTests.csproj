@@ -73,6 +73,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BooleanMessageFilter.cs" />
+    <Compile Include="Config.cs" />
     <Compile Include="IContract.cs" />
     <Compile Include="TestMessageFilters.cs" />
     <Compile Include="TestMsmqMessageDeliveryQueue.cs" />
@@ -95,6 +96,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Readme.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -20,17 +20,19 @@ namespace IServiceOriented.ServiceBus.UnitTests
         [TestFixtureSetUp]
         public void Initialize()
         {            
-            SqlSubscriptionDB.CreateDB(@"(local)", "ServiceBus", true);
+
+            _connectionString = String.Format(@"Data Source={0}; Initial Catalog={1}; Integrated Security=SSPI;", Config.SqlServer, Config.PersistenceDb);
+            SqlSubscriptionDB.CreateDB(Config.SqlServer, Config.PersistenceDb, true);
         }
 
         [TestFixtureTearDown]
         public void Cleanup()
         {
-            SqlSubscriptionDB.DropConnectionsToDB("(local)", "ServiceBus");
-            SqlSubscriptionDB.DropDB(@"(local)", "ServiceBus");               
+            SqlSubscriptionDB.DropConnectionsToDB(Config.SqlServer,  Config.PersistenceDb);
+            SqlSubscriptionDB.DropDB(Config.SqlServer, Config.PersistenceDb);               
         }
 
-        string _connectionString = @"Data Source=(local); Initial Catalog=ServiceBus; Integrated Security=SSPI;";
+        string _connectionString;
 
         [Test]
         public void TestCrud()

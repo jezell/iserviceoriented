@@ -106,8 +106,6 @@ namespace IServiceOriented.ServiceBus
 
         public void AddBindingParameters(ServiceDescription serviceDescription, ServiceHostBase serviceHostBase, System.Collections.ObjectModel.Collection<ServiceEndpoint> endpoints, System.ServiceModel.Channels.BindingParameterCollection bindingParameters)
         {
-            // Todo: Add configuration support  
-            // Todo: Do custom message filters need to be supported?
 
             Dispatcher dispatcher;
 
