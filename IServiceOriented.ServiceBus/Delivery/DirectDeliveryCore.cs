@@ -15,10 +15,17 @@ namespace IServiceOriented.ServiceBus.Delivery
     {
         public override void Deliver(MessageDelivery delivery)
         {
-            SubscriptionEndpoint endpoint = Runtime.GetSubscription(delivery.SubscriptionEndpointId);
-            if (endpoint != null) // subscription may be removed
+            try
             {
-                endpoint.Dispatcher.Dispatch(delivery);
+                SubscriptionEndpoint endpoint = Runtime.GetSubscription(delivery.SubscriptionEndpointId);
+                if (endpoint != null) // subscription may be removed
+                {
+                    endpoint.Dispatcher.Dispatch(delivery);
+                }
+            }
+            catch(Exception ex)
+            {
+                throw new DeliveryException("Unhandled exception while attempting to deliver the message", ex);
             }
         }
     }

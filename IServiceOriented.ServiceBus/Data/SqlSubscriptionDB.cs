@@ -91,7 +91,7 @@ namespace IServiceOriented.ServiceBus.Data
                 string line = null;
                 while ((line = scriptReader.ReadLine()) != null)
                 {
-                    if (String.Compare(line.Trim(), "go", StringComparison.InvariantCultureIgnoreCase) == 0)
+                    if (String.Compare(line.Trim(), "go", StringComparison.OrdinalIgnoreCase) == 0)
                     {
                         create.CommandText = commandBuilder.ToString();
                         create.ExecuteNonQuery();

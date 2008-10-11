@@ -28,7 +28,7 @@ namespace IServiceOriented.ServiceBus.Delivery
         }
 
 
-        public class DeliveryWork
+        protected class DeliveryWork
         {
             public DeliveryWork(CommittableTransaction transaction, MessageDelivery delivery, Semaphore deliverySemaphore)
             {
@@ -175,7 +175,7 @@ namespace IServiceOriented.ServiceBus.Delivery
                         {
                             try
                             {
-                                DoSafely(() => DeliverOne((DeliveryWork)deliverWork, _retryQueue ?? _messageDeliveryQueue, _failureQueue));
+                                DoSafely(() => DeliverOne((DeliveryWork)deliverWork));
                             }
                             finally
                             {
@@ -258,7 +258,7 @@ namespace IServiceOriented.ServiceBus.Delivery
             }
         }
 
-        protected void DeliverOne(DeliveryWork work, IMessageDeliveryQueue retryQueue, IMessageDeliveryQueue failQueue)
+        protected void DeliverOne(DeliveryWork work)
         {
             System.Transactions.Transaction.Current = work.Transaction;
             try
@@ -277,7 +277,7 @@ namespace IServiceOriented.ServiceBus.Delivery
                                 {
                                     System.Diagnostics.Debug.WriteLine("Time to process is " + mDelay + " milliseconds away. Requeuing in " + FUTURE_SLEEP_MS);
                                     Thread.Sleep(FUTURE_SLEEP_MS); // Sleep briefly in case we are in a loop of future messages, should be a little smarter
-                                    Requeue(delivery);
+                                    QueueRetry(delivery);
                                     return;
                                 }
                             }
@@ -298,7 +298,7 @@ namespace IServiceOriented.ServiceBus.Delivery
                             }
                             else
                             {
-                                System.Diagnostics.Debug.WriteLine(String.Format("Subscription {0} no longer exists. Skipping delivery.", delivery.SubscriptionEndpointId));
+                                System.Diagnostics.Debug.WriteLine(String.Format(CultureInfo.InvariantCulture, "Subscription {0} no longer exists. Skipping delivery.", delivery.SubscriptionEndpointId));
                             }
                         }
 
@@ -322,6 +322,8 @@ namespace IServiceOriented.ServiceBus.Delivery
                         NotifyFailure(work.Delivery, !retry);
                         
                         work.Transaction.Commit();
+
+                        throw new DeliveryException("Unhandled exception while attempting to deliver a message.", ex);
                     }
                 }
             }
@@ -337,7 +339,7 @@ namespace IServiceOriented.ServiceBus.Delivery
             _messageDeliveryQueue.Enqueue(delivery);
         }
 
-        protected void Requeue(MessageDelivery delivery)
+        protected void QueueRetry(MessageDelivery delivery)
         {
             MessageDelivery retryDelivery = delivery.CreateRetry(false, DateTime.Now.AddMilliseconds((_exponentialBackOff ? (_retryDelayMS * delivery.RetryCount * delivery.RetryCount) : _retryDelayMS)));
             (_retryQueue ?? _messageDeliveryQueue).Enqueue(retryDelivery);
@@ -362,7 +364,7 @@ namespace IServiceOriented.ServiceBus.Delivery
             {
                 action();
             }
-            catch (Exception ex)
+            catch (DeliveryException ex)
             {
                 System.Diagnostics.Trace.TraceError("UNHANDLED EXCEPTION: " + ex);
                 NotifyUnhandledException(ex, false);
@@ -377,7 +379,7 @@ namespace IServiceOriented.ServiceBus.Delivery
                 action(value);
                 clean = true;
             }
-            catch (Exception ex)
+            catch (DeliveryException ex)
             {
                 System.Diagnostics.Trace.TraceError("UNHANDLED EXCEPTION: " + ex);
                 NotifyUnhandledException(ex, false);

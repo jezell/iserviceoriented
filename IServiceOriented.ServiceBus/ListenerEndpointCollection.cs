@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using System.Globalization;
 
 namespace IServiceOriented.ServiceBus
 {
@@ -26,7 +27,7 @@ namespace IServiceOriented.ServiceBus
                 }
                 if (item.Id == endpoint.Id)
                 {
-                    throw new DuplicateIdentifierException(String.Format("The id {0} is associated with another endpoint.", endpoint.Id));
+                    throw new DuplicateIdentifierException(String.Format(CultureInfo.InvariantCulture, "The id {0} is associated with another endpoint.", endpoint.Id));
                 }
             }
         }   
@@ -60,12 +61,13 @@ namespace IServiceOriented.ServiceBus
         /// Gets the listener with the specified ID.
         /// </summary>
         /// <param name="value">ID of the listener to get</param>
-        public ListenerEndpoint this[Guid value]
+        public ListenerEndpoint Find(Guid value)
         {
-            get
-            {
-                return _fastLookup[value];
-            }
+            ListenerEndpoint endpoint;
+
+            _fastLookup.TryGetValue(value, out endpoint);
+
+            return endpoint;
         }
     }
 }

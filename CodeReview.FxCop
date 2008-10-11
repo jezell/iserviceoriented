@@ -4,8 +4,8 @@
   <SharedProject>True</SharedProject>
   <Stylesheet Apply="False">c:\program files\microsoft fxcop 1.36\Xml\FxCopReport.xsl</Stylesheet>
   <SaveMessages>
-   <Project Status="Active, Excluded" NewOnly="False" />
-   <Report Status="Active" NewOnly="False" />
+   <Project Status="None" NewOnly="False" />
+   <Report Status="None" NewOnly="False" />
   </SaveMessages>
   <ProjectFile Compress="True" DefaultTargetCheck="True" DefaultRuleCheck="True" SaveByRuleGroup="" Deterministic="True" />
   <EnableMultithreadedLoad>True</EnableMultithreadedLoad>
@@ -16,7 +16,7 @@
   <Spelling Locale="en-US" />
   <OverrideRuleVisibilities>False</OverrideRuleVisibilities>
   <CustomDictionaries SearchFxCopDir="True" SearchUserProfile="True" SearchProjectDir="True" />
-  <SearchGlobalAssemblyCache>False</SearchGlobalAssemblyCache>
+  <SearchGlobalAssemblyCache>True</SearchGlobalAssemblyCache>
   <DeadlockDetectionTimeout>120</DeadlockDetectionTimeout>
   <IgnoreGeneratedCode>False</IgnoreGeneratedCode>
  </ProjectOptions>
@@ -38,82 +38,5 @@
   <Groups />
   <Settings />
  </Rules>
- <FxCopReport Version="1.36">
-  <Targets>
-   <Target Name="$(ProjectDir)/IServiceOriented.ServiceBus/bin/Debug/IServiceOriented.ServiceBus.dll">
-    <Modules>
-     <Module Name="iserviceoriented.servicebus.dll">
-      <Namespaces>
-       <Namespace Name="IServiceOriented.ServiceBus">
-        <Types>
-         <Type Name="IMessageDeliveryQueue">
-          <Messages>
-           <Message TypeName="IdentifiersShouldNotHaveIncorrectSuffix" Category="Microsoft.Naming" CheckId="CA1711" Created="2008-08-29 02:32:26Z">
-            <Issue Name="TypeNoAlternate">
-             <Item>'IMessageDeliveryQueue'</Item>
-             <Item>Queue</Item>
-            </Issue>
-           </Message>
-          </Messages>
-         </Type>
-         <Type Name="MsmqMessageDeliveryQueue">
-          <Messages>
-           <Message TypeName="IdentifiersShouldNotHaveIncorrectSuffix" Category="Microsoft.Naming" CheckId="CA1711" Created="2008-08-29 02:32:26Z">
-            <Issue Name="TypeNoAlternate">
-             <Item>'MsmqMessageDeliveryQueue'</Item>
-             <Item>Queue</Item>
-            </Issue>
-           </Message>
-          </Messages>
-         </Type>
-         <Type Name="ServiceBusRuntime">
-          <Members>
-           <Member Name="#DeliverOne(IServiceOriented.ServiceBus.ServiceBusRuntime+DeliveryWork,IServiceOriented.ServiceBus.IMessageDeliveryQueue)">
-            <Messages>
-             <Message TypeName="DoNotCatchGeneralExceptionTypes" Category="Microsoft.Design" CheckId="CA1031" Created="2008-08-29 02:32:26Z">
-              <Issue>
-               <Item>'ServiceBusRuntime.DeliverOne(ServiceBusRuntime.DeliveryWork, IMessageDeliveryQueue)'</Item>
-               <Item>'Exception'</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="#DoSafely(System.Action)">
-            <Messages>
-             <Message TypeName="DoNotCatchGeneralExceptionTypes" Category="Microsoft.Design" CheckId="CA1031" Created="2008-08-29 02:32:26Z">
-              <Issue>
-               <Item>'ServiceBusRuntime.DoSafely(Action)'</Item>
-               <Item>'Exception'</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="#DoSafely`1(System.Action`1&lt;!!0&gt;,!!0)">
-            <Messages>
-             <Message TypeName="DoNotCatchGeneralExceptionTypes" Category="Microsoft.Design" CheckId="CA1031" Created="2008-08-29 02:32:26Z">
-              <Issue>
-               <Item>'ServiceBusRuntime.DoSafely&lt;T&gt;(Action&lt;T&gt;, T)'</Item>
-               <Item>'Exception'</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-          </Members>
-         </Type>
-        </Types>
-       </Namespace>
-      </Namespaces>
-     </Module>
-    </Modules>
-   </Target>
-  </Targets>
-  <Rules>
-   <Rule TypeName="DoNotCatchGeneralExceptionTypes" Category="Microsoft.Design" CheckId="CA1031">
-    <Resolution Name="Default">Modify {0} to catch a more specific exception than {1} or rethrow the exception.</Resolution>
-   </Rule>
-   <Rule TypeName="IdentifiersShouldNotHaveIncorrectSuffix" Category="Microsoft.Naming" CheckId="CA1711">
-    <Resolution Name="TypeNoAlternate">Rename type name {0} so that it does not end in '{1}'.</Resolution>
-   </Rule>
-  </Rules>
- </FxCopReport>
+ <FxCopReport Version="1.36" />
 </FxCopProject>

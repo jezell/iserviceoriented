@@ -11,12 +11,13 @@ namespace IServiceOriented.ServiceBus.Collections
     /// </summary>
     /// <typeparam name="K">Key type</typeparam>
     /// <typeparam name="V">Value type</typeparam>
-    public interface IReadOnlyDictionary<K,V> : IEnumerable<KeyValuePair<K,V>>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1711:IdentifiersShouldNotHaveIncorrectSuffix"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1710:IdentifiersShouldHaveCorrectSuffix")]
+    public interface IReadOnlyDictionary<TKey,TValue> : IEnumerable<KeyValuePair<TKey,TValue>>
     {
         /// <summary>
         /// Get the keys associated with this dictionary instance.
         /// </summary>
-        IEnumerable<K> Keys
+        IEnumerable<TKey> Keys
         {
             get;
         }
@@ -24,7 +25,7 @@ namespace IServiceOriented.ServiceBus.Collections
         /// <summary>
         /// Get the values contained by this dictionary instance.
         /// </summary>
-        IEnumerable<V> Values
+        IEnumerable<TValue> Values
         {
             get;
         }
@@ -32,7 +33,7 @@ namespace IServiceOriented.ServiceBus.Collections
         /// <summary>
         /// Get the value associated with a specific key.
         /// </summary>
-        V this[K key]
+        TValue this[TKey key]
         {
             get;
         }
@@ -48,11 +49,11 @@ namespace IServiceOriented.ServiceBus.Collections
         /// <summary>
         /// Check to see if the dictionary contains a specific key.
         /// </summary>
-        bool ContainsKey(K key);
+        bool ContainsKey(TKey key);
         /// <summary>
         /// Check to see if the dictionary contains a specific key value pair.
         /// </summary>
-        bool Contains(KeyValuePair<K, V> value);
+        bool Contains(KeyValuePair<TKey, TValue> value);
 
     }
 
@@ -64,9 +65,9 @@ namespace IServiceOriented.ServiceBus.Collections
         /// <summary>
         /// Convert a read only dictionary to a writeable dictionary.
         /// </summary>
-        public static Dictionary<K, V> ToDictionary<K,V>(this IReadOnlyDictionary<K, V> readOnlyDictionary)
+        public static Dictionary<TKey, TValue> ToDictionary<TKey,TValue>(this IReadOnlyDictionary<TKey, TValue> readOnlyDictionary)
         {
-            Dictionary<K, V> dict = new Dictionary<K, V>();
+            Dictionary<TKey, TValue> dict = new Dictionary<TKey, TValue>();
             foreach (var kv in readOnlyDictionary)
             {
                 dict.Add(kv.Key, kv.Value);
@@ -77,7 +78,7 @@ namespace IServiceOriented.ServiceBus.Collections
         /// <summary>
         /// Convert a dictionary to a read only dictionary.
         /// </summary>
-        public static ReadOnlyDictionary<K, V> MakeReadOnly<K, V>(this IDictionary<K, V> dictionary)
+        public static ReadOnlyDictionary<TKey, TValue> MakeReadOnly<TKey, TValue>(this IDictionary<TKey, TValue> dictionary)
         {
             return dictionary.MakeReadOnly(false);
         }
@@ -86,9 +87,9 @@ namespace IServiceOriented.ServiceBus.Collections
         /// Convert a dictionary to a read only dictionary.
         /// </summary>
         /// <param name="copy">Specifies if the dictionary should be copied (true) or wrapped (false).</param>
-        public static ReadOnlyDictionary<K, V> MakeReadOnly<K, V>(this IDictionary<K, V> dictionary, bool copy)
+        public static ReadOnlyDictionary<TKey, TValue> MakeReadOnly<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, bool copy)
         {
-            return new ReadOnlyDictionary<K, V>(dictionary, copy);
+            return new ReadOnlyDictionary<TKey, TValue>(dictionary, copy);
         }
     }
     

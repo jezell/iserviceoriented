@@ -80,10 +80,10 @@ namespace IServiceOriented.ServiceBus.Dispatchers
         {
             // TODO: Clean this up. Creating channel factory for each call is expensive
             Type channelType = typeof(ChannelFactory<>).MakeGenericType(Endpoint.ContractType);
-            object factory = Activator.CreateInstance(channelType, Endpoint.ConfigurationName);
-            ((ChannelFactory)factory).Endpoint.Address = new EndpointAddress(Endpoint.Address);
+            ChannelFactory factory = (ChannelFactory)Activator.CreateInstance(channelType, Endpoint.ConfigurationName);
+            factory.Endpoint.Address = new EndpointAddress(Endpoint.Address);
 
-            ApplySecurityContext(messageDelivery, (ChannelFactory)factory);
+            ApplySecurityContext(messageDelivery, factory);
 
             IClientChannel proxy = (IClientChannel)channelType.GetMethod("CreateChannel", new Type[] { }).Invoke(factory, new object[] { });
             bool success = false;
@@ -150,6 +150,7 @@ namespace IServiceOriented.ServiceBus.Dispatchers
             public Dictionary<string, MethodInfo> MethodLookup;
         }
 
+        [NonSerialized]
         ActionLookup _lookup;
 
         public static MessageFilter CreateMessageFilter(Type interfaceType)

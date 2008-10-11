@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Collections.ObjectModel;
 
 namespace IServiceOriented.ServiceBus.Delivery
 {
@@ -12,13 +13,13 @@ namespace IServiceOriented.ServiceBus.Delivery
             
         }
 
-        public CorrelationMessageFilter(string[] correlationIds)
+        public CorrelationMessageFilter(IEnumerable<string> correlationIds)
         {
-            CorrelationIds = correlationIds;
+            CorrelationIds = new ReadOnlyCollection<string>(correlationIds.ToList());
         }
 
 
-        public string[] CorrelationIds
+        public ReadOnlyCollection<string> CorrelationIds
         {
             get;
             private set;

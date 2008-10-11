@@ -24,25 +24,25 @@ namespace IServiceOriented.ServiceBus
     {
         public MessageDelivery(Guid subscriptionEndpointId, Type contractType, string action, object message, int maxRetries, MessageDeliveryContext context)
         {
-            _messageId = Guid.NewGuid().ToString();
-            _subscriptionEndpointId = subscriptionEndpointId;
-            _action = action;
-            _message = message;
-            _maxRetries = maxRetries;
-            _context = context;
+            MessageId = Guid.NewGuid().ToString();
+            SubscriptionEndpointId = subscriptionEndpointId;
+            Action = action;
+            Message = message;
+            MaxRetries = maxRetries;
+            Context = context;
             ContractType = contractType;
         }
 
         public MessageDelivery(string messageId, Guid subscriptionEndpointId, Type contractType, string action, object message, int maxRetries, int retryCount, DateTime? timeToProcess, MessageDeliveryContext context)
         {
-            _messageId = messageId;
-            _subscriptionEndpointId = subscriptionEndpointId;
-            _action = action;
-            _message = message;
-            _retryCount = retryCount;
-            _timeToProcess = timeToProcess;
-            _maxRetries = maxRetries;
-            _context = context;
+            MessageId = messageId;
+            SubscriptionEndpointId = subscriptionEndpointId;
+            Action = action;
+            Message = message;
+            RetryCount = retryCount;
+            TimeToProcess = timeToProcess;
+            MaxRetries = maxRetries;
+            Context = context;
             ContractType = contractType;
         }
 

@@ -66,7 +66,7 @@ namespace IServiceOriented.ServiceBus
             set;
         }
 
-        ServiceHostBase ServiceHost
+        public ServiceHostBase ServiceHost
         {
             get;
             set;
@@ -76,30 +76,13 @@ namespace IServiceOriented.ServiceBus
         #endregion
     }
 
-    public class AutoSubscribe : Attribute,  IServiceBehavior
+    [AttributeUsage(AttributeTargets.Class)]
+    public sealed class AutoSubscribeAttribute : Attribute,  IServiceBehavior
     {
-        public AutoSubscribe()
+        public AutoSubscribeAttribute()
         {
             UnsubscribeOnClosing = true;
         }
-
-        public AutoSubscribe(string name, string configurationName, Type contractType) 
-            : this()
-        {
-            Name = name;
-            ConfigurationName = configurationName;
-            ContractType = contractType;           
-        }
-
-        public AutoSubscribe(Guid subscriptionId, string name, string configurationName, Type contractType)
-            : this()
-        {
-            SubscriptionId = subscriptionId;
-            Name = name;
-            ConfigurationName = configurationName;
-            ContractType = contractType;
-        }
-
 
         #region IServiceBehavior Members
         

@@ -16,6 +16,7 @@ namespace IServiceOriented.ServiceBus.Delivery
     /// <summary>
     /// Provides support for queuing messages using MSMQ
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1711:IdentifiersShouldNotHaveIncorrectSuffix"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Msmq")]
     public class MsmqMessageDeliveryQueue : IMessageDeliveryQueue, IDisposable
     {
         public MsmqMessageDeliveryQueue(string path)

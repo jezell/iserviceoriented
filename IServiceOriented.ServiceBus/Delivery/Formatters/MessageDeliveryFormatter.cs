@@ -12,6 +12,7 @@ using IServiceOriented.ServiceBus.Collections;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.ServiceModel;
 using IServiceOriented.ServiceBus.Delivery.Formatters;
+using System.Globalization;
 
 namespace IServiceOriented.ServiceBus.Delivery.Formatters
 {    
@@ -47,7 +48,7 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
         {
             MessageDelivery delivery = obj as MessageDelivery;
                         
-            using (StringWriter writer = new StringWriter())
+            using (StringWriter writer = new StringWriter(CultureInfo.InvariantCulture))
             {
                 System.ServiceModel.Channels.Message msg = MessageDeliveryConverter.ToMessage(delivery);
 

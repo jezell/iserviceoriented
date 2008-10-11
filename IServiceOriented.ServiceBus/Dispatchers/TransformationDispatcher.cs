@@ -21,7 +21,7 @@ namespace IServiceOriented.ServiceBus.Dispatchers
             
         }
 
-        public TransformationDispatcher(SubscriptionEndpoint endpoint) : base(endpoint)
+        protected TransformationDispatcher(SubscriptionEndpoint endpoint) : base(endpoint)
         {
 
         }
@@ -38,7 +38,7 @@ namespace IServiceOriented.ServiceBus.Dispatchers
         /// </summary>
         public const string TransformedByKeyName = "TransformedBy";
 
-        public class TransformationList : ReadOnlyCollection<string>
+        private class TransformationList : ReadOnlyCollection<string>
         {
             public TransformationList() : base (new string[0] )
             {

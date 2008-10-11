@@ -361,20 +361,17 @@ namespace IServiceOriented.ServiceBus
             }            
         }
 
-        public void Publish(Type contractType, string action, object message)
+        public MessageDelivery[] Publish(Type contractType, string action, object message)
         {
-            MessageDelivery[] results;
-            Publish(new PublishRequest(contractType, action, message, new MessageDeliveryContext()), PublishWait.None, TimeSpan.MinValue, out results);
+            return Publish(new PublishRequest(contractType, action, message, new MessageDeliveryContext()), PublishWait.None, TimeSpan.MinValue);
         }
 
-        public void Publish(PublishRequest publishRequest)
+        public MessageDelivery[] Publish(PublishRequest publishRequest)
         {
-            MessageDelivery[] results;
-            Publish(publishRequest, PublishWait.None, TimeSpan.MinValue, out results);
+            return Publish(publishRequest, PublishWait.None, TimeSpan.MinValue);
         }
-
         
-		public void Publish(PublishRequest publishRequest, PublishWait wait, TimeSpan timeout, out MessageDelivery[] res)
+		public MessageDelivery[] Publish(PublishRequest publishRequest, PublishWait wait, TimeSpan timeout)
 		{
             DeliveryCore deliveryCore = ServiceLocator.GetInstance<DeliveryCore>();
 
@@ -386,11 +383,7 @@ namespace IServiceOriented.ServiceBus
 
             bool waitForReply = wait != PublishWait.None;
 
-            res = null;
-
             MessageDelivery[] results = null;
-
-            int subscriptionCount = subscriptions.Count();
 
             List<MessageDelivery> messageDeliveries = new List<MessageDelivery>();
             CorrelationMessageFilter filter;
@@ -466,7 +459,7 @@ namespace IServiceOriented.ServiceBus
 
                     foreach (MessageDelivery md in messageDeliveries)
                     {
-                        deliveryCore.Deliver(md);
+                        deliveryCore.Deliver(md);                        
                     }
 
                     ts.Complete();
@@ -489,8 +482,7 @@ namespace IServiceOriented.ServiceBus
                 }
             }
 
-
-            res = results;
+            return results;
 		}
 
         public Collection<ListenerEndpoint> ListListeners()
@@ -674,7 +666,7 @@ namespace IServiceOriented.ServiceBus
             }
 
             var failed = _messageDeliveryFailed;
-            if (failed != null) failed(this, new MessageDeliveryFailedEventArgs() { MessageDelivery = delivery, Permanent = false });
+            if (failed != null) failed(this, new MessageDeliveryFailedEventArgs() { MessageDelivery = delivery, Permanent = permanent });
         }
 
         object _eventLock = new Object();

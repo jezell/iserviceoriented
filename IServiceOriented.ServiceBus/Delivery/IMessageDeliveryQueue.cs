@@ -5,6 +5,7 @@ using System.Text;
 
 namespace IServiceOriented.ServiceBus.Delivery
 {
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1711:IdentifiersShouldNotHaveIncorrectSuffix")]
     public interface IMessageDeliveryQueue 
     {
         void Enqueue(MessageDelivery value);

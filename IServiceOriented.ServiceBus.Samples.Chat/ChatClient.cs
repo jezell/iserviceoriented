@@ -41,7 +41,7 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
     }
 
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConfigurationName = "ChatServerOut")]
-    [AutoSubscribe("Autosubscribed", "ChatClientOut", typeof(IChatService), DispatcherType = typeof(WcfDispatcherWithUsernameCredentials))]
+    [AutoSubscribe(Name = "Autosubscribed", ConfigurationName = "ChatClientOut", ContractType = typeof(IChatService), DispatcherType = typeof(WcfDispatcherWithUsernameCredentials))]
     public class ChatClientService : IChatService
     {
         #region IChatService Members

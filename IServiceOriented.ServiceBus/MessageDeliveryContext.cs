@@ -8,8 +8,9 @@ using System.Runtime.Serialization;
 
 namespace IServiceOriented.ServiceBus
 {
-    [CollectionDataContract]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1710:IdentifiersShouldHaveCorrectSuffix"), CollectionDataContract]
     [KnownType("GetKnownTypes")]
+    [Serializable]
     public class MessageDeliveryContext : IReadOnlyDictionary<string,object>
     {
         public MessageDeliveryContext()
@@ -32,7 +33,7 @@ namespace IServiceOriented.ServiceBus
             }
         }
 
-        public MessageDeliveryContext(IEnumerable<KeyValuePair<string, object>> pairs)            
+        public MessageDeliveryContext(KeyValuePair<string, object>[] pairs)            
         {
             foreach (KeyValuePair<string, object> pair in pairs)
             {

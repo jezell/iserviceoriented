@@ -30,8 +30,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
                 {
                     string message = "echo this";
 
-                    MessageDelivery[] output = null;
-                    runtime.Publish(new PublishRequest(typeof(void), "Echo", message), PublishWait.Timeout, TimeSpan.FromSeconds(10), out output);
+                    MessageDelivery[] output = runtime.Publish(new PublishRequest(typeof(void), "Echo", message), PublishWait.Timeout, TimeSpan.FromSeconds(10));
 
                     Assert.IsNotNull(output);
                     Assert.AreEqual(1, output.Length);

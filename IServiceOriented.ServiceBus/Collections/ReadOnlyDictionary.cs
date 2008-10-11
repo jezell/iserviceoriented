@@ -13,42 +13,44 @@ namespace IServiceOriented.ServiceBus.Collections
     /// </summary>
     /// <typeparam name="K">Key type</typeparam>
     /// <typeparam name="V">Value type</typeparam>
-    [Serializable]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1711:IdentifiersShouldNotHaveIncorrectSuffix"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1710:IdentifiersShouldHaveCorrectSuffix"), Serializable]
     [CollectionDataContract]
-    public class ReadOnlyDictionary<K, V> : IReadOnlyDictionary<K, V>
+    public class ReadOnlyDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TValue>
     {
-        IDictionary<K, V> _dictionary;
+        IDictionary<TKey, TValue> _dictionary;
 
         public ReadOnlyDictionary()
-            : this(new Dictionary<K,V>(), false)
+            : this(new Dictionary<TKey,TValue>(), false)
         {
             
         }
 
-        public ReadOnlyDictionary(IEnumerable<KeyValuePair<K, V>> pairs)
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures")]
+        public ReadOnlyDictionary(IEnumerable<KeyValuePair<TKey, TValue>> pairs)
         {
-            _dictionary = new Dictionary<K, V>();
-            foreach (KeyValuePair<K, V> p in pairs)
+            _dictionary = new Dictionary<TKey, TValue>();
+            foreach (KeyValuePair<TKey, TValue> p in pairs)
             {
                 _dictionary.Add(p);
             }
         }
 
-        public ReadOnlyDictionary(IDictionary<K, V> from)
+        public ReadOnlyDictionary(IDictionary<TKey, TValue> from)
             : this(from, false)
         {
         }
 
-        private void Add(KeyValuePair<K,V> pair)
+
+        private void Add(KeyValuePair<TKey,TValue> pair)
         {
             _dictionary.Add(pair.Key, pair.Value);
         }
 
-        public ReadOnlyDictionary(IDictionary<K, V> from, bool copy)
+        public ReadOnlyDictionary(IDictionary<TKey, TValue> from, bool copy)
         {
             if (copy)
             {
-                _dictionary = new Dictionary<K, V>(from);
+                _dictionary = new Dictionary<TKey, TValue>(from);
             }
             else
             {
@@ -58,17 +60,17 @@ namespace IServiceOriented.ServiceBus.Collections
 
         #region IReadOnlyDictionary<K,V> Members
 
-        public IEnumerable<K> Keys
+        public IEnumerable<TKey> Keys
         {
             get { return _dictionary.Keys; }
         }
 
-        public IEnumerable<V> Values
+        public IEnumerable<TValue> Values
         {
             get { return _dictionary.Values; }
         }
 
-        public V this[K key]
+        public TValue this[TKey key]
         {
             get { return _dictionary[key]; }
         }
@@ -78,17 +80,17 @@ namespace IServiceOriented.ServiceBus.Collections
             get { return _dictionary.Count; }
         }
 
-        public bool ContainsKey(K key)
+        public bool ContainsKey(TKey key)
         {
             return _dictionary.ContainsKey(key);
         }
 
-        public bool Contains(KeyValuePair<K, V> value)
+        public bool Contains(KeyValuePair<TKey, TValue> value)
         {
             return _dictionary.Contains(value);
         }
 
-        public IEnumerator<KeyValuePair<K, V>> GetEnumerator()
+        public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         {
             return _dictionary.GetEnumerator();
         }

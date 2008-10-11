@@ -32,7 +32,7 @@ namespace IServiceOriented.ServiceBus.Listeners
         /// Gets the type that should be hosted by the ServiceHost
         /// </summary>
         /// <returns></returns>
-        protected virtual Type GetServiceImplementationType()
+        protected virtual Type CreateServiceImplementationType()
         {
             Type hostType = WcfServiceHostFactory.CreateImplementationType(Endpoint.ContractType);
             return hostType;
@@ -44,7 +44,7 @@ namespace IServiceOriented.ServiceBus.Listeners
         /// <returns></returns>
         protected virtual ServiceHost CreateServiceHost()
         {
-            return WcfServiceHostFactory.CreateHost(Runtime, Endpoint.ContractType, GetServiceImplementationType(), Endpoint.ConfigurationName, Endpoint.Address);
+            return WcfServiceHostFactory.CreateHost(Runtime, Endpoint.ContractType, CreateServiceImplementationType(), Endpoint.ConfigurationName, Endpoint.Address);
         }
 
 

@@ -232,15 +232,16 @@ namespace IServiceOriented.ServiceBus.Listeners
     /// </summary>
     public class WcfListenerServiceHost : ServiceHost
     {
-        public WcfListenerServiceHost(object host, string contract, string configurationName, string address)
-            : base(host)
+        public WcfListenerServiceHost(object host, string contract, string configurationName, string address) : base(host)
         {
             ConfigurationName = configurationName;
+            ContractName = contract;
+            Address = address;
 
-            LoadConfigurationSection(GetConfiguration(configurationName, contract, address));
+            LoadConfigurationSection(GetConfiguration(ConfigurationName, ContractName, Address));
         }
 
-        protected ServiceElement FindServiceElementInConfig(string name)
+        protected static ServiceElement FindServiceElementInConfig(string name)
         {
             Configuration appConfig = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
             ServiceModelSectionGroup serviceModel = ServiceModelSectionGroup.GetSectionGroup(appConfig);
@@ -248,7 +249,7 @@ namespace IServiceOriented.ServiceBus.Listeners
             ServiceElement serviceElement = null;
             foreach (ServiceElement e in serviceModel.Services.Services)
             {
-                if (e.Name == ConfigurationName)
+                if (e.Name == name)
                 {
                     serviceElement = e;
                     break;
@@ -257,7 +258,7 @@ namespace IServiceOriented.ServiceBus.Listeners
             return serviceElement;
         }
 
-        protected virtual ServiceElement GetConfiguration(string configurationName, string contract, string address)
+        protected static ServiceElement GetConfiguration(string configurationName, string contract, string address)
         {
             // Use standard WCF configuration elements as a template, find the <service> element with a matching name and replace the contract and address with actual values
 
@@ -282,9 +283,21 @@ namespace IServiceOriented.ServiceBus.Listeners
             private set;
         }
 
+        public string ContractName
+        {
+            get;
+            private set;
+        }
+
+        public string Address
+        {
+            get;
+            private set;
+        }
+
         protected override void ApplyConfiguration()
         {
-
+            
         }
     }    
 }
