@@ -29,6 +29,8 @@ namespace IServiceOriented.ServiceBus.Dispatchers
 
         }
 
+        bool _passThrough = false;
+
         ActionLookup initActionLookup(SubscriptionEndpoint endpoint)
         {
             ActionLookup lookup = null;
@@ -44,6 +46,10 @@ namespace IServiceOriented.ServiceBus.Dispatchers
                 if (WcfUtils.IsServiceMethod(method))
                 {
                     string action = WcfUtils.GetAction(endpoint.ContractType, method);
+                    if (action == "*")
+                    {
+                        _passThrough = true;
+                    }
                     actionLookup.Add(action, method);
                     
                     string replyAction = WcfUtils.GetReplyAction(endpoint.ContractType, method);
@@ -81,7 +87,7 @@ namespace IServiceOriented.ServiceBus.Dispatchers
             {
                 var lookup = initActionLookup(Endpoint);
 
-                MethodInfo methodInfo = lookup.MethodLookup[messageDelivery.Action];
+                MethodInfo methodInfo = lookup.MethodLookup[_passThrough ? "*" : messageDelivery.Action];
                 
                 if (methodInfo != null)
                 {

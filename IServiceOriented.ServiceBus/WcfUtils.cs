@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.ServiceModel;
 using System.Reflection;
+using System.ServiceModel.Channels;
 
 namespace IServiceOriented.ServiceBus
 {
@@ -22,7 +23,18 @@ namespace IServiceOriented.ServiceBus
                 return types;
             }
             return new Type[0];
+        }
 
+        public static bool UsesMessages(Type interfaceType)
+        {
+            var infos = GetMessageInformation(interfaceType);
+
+            var info = infos.FirstOrDefault();
+            if (info != null)
+            {
+                return info.MessageType == typeof(Message);
+            }
+            return false;
         }
         public static bool UsesMessageContracts(Type interfaceType)
         {
@@ -121,6 +133,10 @@ namespace IServiceOriented.ServiceBus
                 OperationContractAttribute attrib = (OperationContractAttribute)attributes[0];
                 if (attrib.Action == null)
                 {
+                    if (attrib.Action == "*")
+                    {
+                        return "*";
+                    }
                     return GetContractNamespace(contractType) + info.Name;
                 }
                 else

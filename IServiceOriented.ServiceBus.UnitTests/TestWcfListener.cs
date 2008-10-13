@@ -6,6 +6,7 @@ using NUnit.Framework;
 using IServiceOriented.ServiceBus.Delivery;
 using IServiceOriented.ServiceBus.Listeners;
 using IServiceOriented.ServiceBus.Dispatchers;
+using System.ServiceModel.Channels;
 
 namespace IServiceOriented.ServiceBus.UnitTests
 {
@@ -30,7 +31,29 @@ namespace IServiceOriented.ServiceBus.UnitTests
                     contract.PublishThis(message);
                 });
             });
-
         }
+
+        [Test]
+        public void WcfListener_Can_Listen_For_Raw_Messages()
+        {
+            ServiceBusRuntime runtime = new ServiceBusRuntime(new DirectDeliveryCore());
+            runtime.AddListener(new ListenerEndpoint("test", "PassThroughListener", "net.pipe://localhost/passthrough", typeof(IPassThroughServiceContract), new WcfListener()));
+
+            string action = "http://someaction";
+            string body = "some body";
+
+            runtime.Subscribe(new SubscriptionEndpoint("test subscription", null, null, typeof(IContract), new ActionDispatcher((se, md) => { Assert.AreEqual(action, ((Message)md.Message).Headers.Action); Assert.AreEqual(body, ((Message)md.Message).GetBody<string>()); }), new PassThroughMessageFilter()));
+
+            ServiceBusTest tester = new ServiceBusTest(runtime);
+            tester.WaitForDeliveries(1, TimeSpan.FromSeconds(5), () =>
+            {                
+                Service.Use<IPassThroughServiceContract>("PassThroughClient", contract =>
+                {
+                    Message message = Message.CreateMessage(MessageVersion.Default, action, body);
+                    contract.Send(message);
+                });
+            });
+        }
+
     }
 }

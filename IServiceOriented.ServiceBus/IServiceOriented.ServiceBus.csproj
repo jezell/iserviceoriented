@@ -93,6 +93,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DeliveryException.cs" />
+    <Compile Include="Delivery\Formatters\DataContractMessageDeliveryConverter.cs" />
+    <Compile Include="Delivery\Formatters\MessageContractMessageDeliveryConverter.cs" />
+    <Compile Include="Delivery\Formatters\RawMessageMessageDeliveryConverter.cs" />
     <Compile Include="Dispatchers\ActionDispatcher.cs" />
     <Compile Include="Delivery\DirectDeliveryCore.cs" />
     <Compile Include="Delivery\Formatters\MessageDeliveryConverter.cs" />
@@ -100,6 +103,7 @@
     <Compile Include="Dispatchers\FileSystemDispatcher.cs" />
     <Compile Include="Dispatchers\SmtpDispatcher.cs" />
     <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="IPassThroughServiceContract.cs" />
     <Compile Include="Listeners\FileSystemListener.cs" />
     <Compile Include="MessageDeliveryContext.cs" />
     <Compile Include="AutoSubscribeBehavior.cs" />

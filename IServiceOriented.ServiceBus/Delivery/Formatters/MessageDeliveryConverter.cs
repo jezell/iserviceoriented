@@ -55,9 +55,7 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
         }
 
         public MessageDelivery CreateMessageDelivery(Message msg)
-        {
-            string messageTypeName = msg.Headers.GetHeader<string>(MessageTypeHeader, MessagingNamespace);
-                
+        {                
             MessageDeliveryContext context = msg.Headers.GetHeader<MessageDeliveryContext>(ContextHeader, MessagingNamespace);
             object value = GetMessageObject(msg);            
 
@@ -78,7 +76,11 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
 
         public static MessageDeliveryConverter CreateConverter(Type interfaceType)
         {
-            if (WcfUtils.UsesMessageContracts(interfaceType))
+            if (WcfUtils.UsesMessages(interfaceType))
+            {
+                return new RawMessageMessageDeliveryConverter(interfaceType);
+            }
+            else if (WcfUtils.UsesMessageContracts(interfaceType))
             {
                 return new MessageContractMessageDeliveryConverter(interfaceType);
             }
@@ -89,96 +91,5 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
         }
     }
 
-    public class MessageContractMessageDeliveryConverter : MessageDeliveryConverter
-    {
-        public MessageContractMessageDeliveryConverter(Type contractType)
-        {
-            foreach (WcfMessageInformation information in WcfUtils.GetMessageInformation(contractType))
-            {
-                cacheConverter(information.MessageType, information.Action);
-            }
-        }
-        
-        Dictionary<string, TypedMessageConverter> _converterHash = new Dictionary<string,TypedMessageConverter>();
-
-        void cacheConverter(Type objType, string action)
-        {
-            string key = objType + ":" + action;
-            if (!_converterHash.ContainsKey(key))
-            {
-                _converterHash.Add(key, (TypedMessageConverter)TypedMessageConverter.Create(objType, action));
-            }
-        }
-
-        TypedMessageConverter getCachedConverter(Type objType, string action)
-        {
-            string key = objType + ":" + action;
-            try
-            {
-                return (TypedMessageConverter)_converterHash[key];
-            }
-            catch (KeyNotFoundException)
-            {
-                throw new InvalidOperationException("Unsupported interface or action");
-            }
-        }
-        
-        protected override object GetMessageObject(Message message)
-        {
-            TypedMessageConverter converter = getCachedConverter(Type.GetType(message.Headers.GetHeader<string>(MessageTypeHeader, MessagingNamespace)), message.Headers.Action);
-            return converter.FromMessage(message);            
-        }
-
-        protected override Message ToMessageCore(MessageDelivery delivery)
-        {
-            Type objType = delivery.Message.GetType();
-
-            TypedMessageConverter converter = getCachedConverter(objType, delivery.Action);            
-            return converter.ToMessage(delivery.Message);
-        }
-    }
-
-    public class DataContractMessageDeliveryConverter : MessageDeliveryConverter
-    {
-        public DataContractMessageDeliveryConverter(Type interfaceType)
-        {
-            foreach (WcfMessageInformation information in WcfUtils.GetMessageInformation(interfaceType))
-            {
-                cacheSerializer(interfaceType, information.MessageType);
-            }
-        }
-
-        Dictionary<Type, DataContractSerializer> _serializers = new Dictionary<Type, DataContractSerializer>();
-
-        void cacheSerializer(Type interfaceType, Type messageType)
-        {
-            if (!_serializers.ContainsKey(messageType))
-            {
-                _serializers.Add(messageType, new DataContractSerializer(messageType, WcfUtils.GetServiceKnownTypes(interfaceType)));
-            }
-        }
-
-        DataContractSerializer getSerializer(Type interfaceType)
-        {
-            try
-            {
-                return _serializers[interfaceType];
-            }
-            catch (KeyNotFoundException)
-            {
-                throw new InvalidOperationException("Unsupported interface or action");
-            }
-        }
-
-        protected override Message ToMessageCore(MessageDelivery delivery)
-        {
-            return System.ServiceModel.Channels.Message.CreateMessage(MessageVersion.Default, delivery.Action, delivery.Message);
-        }
-
-        protected override object GetMessageObject(Message message)
-        {
-            var serializer = getSerializer(Type.GetType(message.Headers.GetHeader<string>(MessageTypeHeader, MessagingNamespace)));
-            return serializer.ReadObject(message.GetReaderAtBodyContents());            
-        }
-    }
+    
 }
