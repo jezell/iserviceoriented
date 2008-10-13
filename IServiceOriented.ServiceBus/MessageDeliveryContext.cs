@@ -5,12 +5,28 @@ using System.Text;
 using IServiceOriented.ServiceBus.Collections;
 
 using System.Runtime.Serialization;
+using System.Collections.ObjectModel;
 
 namespace IServiceOriented.ServiceBus
 {
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1710:IdentifiersShouldHaveCorrectSuffix"), CollectionDataContract]
-    [KnownType("GetKnownTypes")]
     [Serializable]
+    [KnownType(typeof(int))]
+    [KnownType(typeof(string))] 
+    [KnownType(typeof(Int64))] 
+    [KnownType(typeof(Int16))]
+    [KnownType(typeof(Guid))]
+    [KnownType(typeof(decimal))] 
+    [KnownType(typeof(float))]
+    [KnownType(typeof(double))]
+    [KnownType(typeof(ReadOnlyCollection<int>))] 
+    [KnownType(typeof(ReadOnlyCollection<string>))] 
+    [KnownType(typeof(ReadOnlyCollection<Int64>))] 
+    [KnownType(typeof(ReadOnlyCollection<Int16>))]
+    [KnownType(typeof(ReadOnlyCollection<Guid>))]
+    [KnownType(typeof(ReadOnlyCollection<decimal>))]
+    [KnownType(typeof(ReadOnlyCollection<float>))]
+    [KnownType(typeof(ReadOnlyCollection<double>))]
     public class MessageDeliveryContext : IReadOnlyDictionary<string,object>
     {
         public MessageDeliveryContext()
@@ -99,10 +115,5 @@ namespace IServiceOriented.ServiceBus
         }
 
         #endregion
-
-        public static Type[] GetKnownTypes()
-        {
-            return MessageDelivery.GetKnownTypes();
-        }
     }
 }

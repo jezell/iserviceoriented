@@ -20,8 +20,20 @@ namespace IServiceOriented.ServiceBus.UnitTests
         {
         }
 
+        [TestFixtureSetUp]
+        public void Init()
+        {
+            ServiceBusManagementServiceTypeProvider.KnownTypes.Add(typeof(PassThroughMessageFilter));
+        }
+
+        [TestFixtureTearDown]
+        public void Uninit()
+        {
+            ServiceBusManagementServiceTypeProvider.KnownTypes.Remove(typeof(PassThroughMessageFilter));
+        }
+
         [Test]
-        public void CanAddAndRemoveSubscription()
+        public void Can_Add_And_Remove_Subscriptions()
         {
             using(ServiceBusRuntime runtime = new ServiceBusRuntime(new DirectDeliveryCore(), new WcfManagementService()))
             {
@@ -44,12 +56,10 @@ namespace IServiceOriented.ServiceBus.UnitTests
         }
 
         [Test]
-        public void CanAddAndRemoveListener()
+        public void Can_Add_And_Remove_Listeners()
         {
             using (ServiceBusRuntime runtime = new ServiceBusRuntime(new DirectDeliveryCore(), new WcfManagementService()))
-            {
-                MessageDelivery.RegisterKnownType(typeof(PassThroughMessageFilter));
-
+            {                
                 ServiceBusTest tester = new ServiceBusTest(runtime);
                 tester.StartAndStop(() =>
                 {

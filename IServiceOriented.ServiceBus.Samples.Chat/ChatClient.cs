@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Runtime.Serialization;
 using System.ServiceModel;
+using IServiceOriented.ServiceBus.Dispatchers;
 
 namespace IServiceOriented.ServiceBus.Samples.Chat
 {

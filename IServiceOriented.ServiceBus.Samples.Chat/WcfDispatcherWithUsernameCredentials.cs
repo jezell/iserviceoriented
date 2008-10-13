@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using IServiceOriented.ServiceBus.Dispatchers;
+using System.Runtime.Serialization;
 
 namespace IServiceOriented.ServiceBus.Samples.Chat
 {
+    [DataContract]
     public class WcfDispatcherWithUsernameCredentials : WcfDispatcher
     {
         protected override void ApplySecurityContext(MessageDelivery delivery, System.ServiceModel.ChannelFactory factory)

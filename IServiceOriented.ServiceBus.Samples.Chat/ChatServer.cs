@@ -8,16 +8,18 @@ using IServiceOriented.ServiceBus.Delivery;
 using IServiceOriented.ServiceBus.Services;
 using IServiceOriented.ServiceBus.Listeners;
 using IServiceOriented.ServiceBus.Dispatchers;
+using IServiceOriented.ServiceBus.Delivery.Formatters;
 
 namespace IServiceOriented.ServiceBus.Samples.Chat
 {
     public class ChatServer
     {
         public ChatServer()
-        {            
-            _serviceBus = new ServiceBusRuntime(new QueuedDeliveryCore(new MsmqMessageDeliveryQueue(".\\private$\\chat_deliver", true), new MsmqMessageDeliveryQueue(".\\private$\\chat_retry", true), new MsmqMessageDeliveryQueue(".\\private$\\chat_fail", true)), new WcfManagementService());
+        {
+            MessageDeliveryFormatter formatter = new MessageDeliveryFormatter(typeof(IChatService));            
+            _serviceBus = new ServiceBusRuntime(new QueuedDeliveryCore(new MsmqMessageDeliveryQueue(".\\private$\\chat_deliver", true, formatter), new MsmqMessageDeliveryQueue(".\\private$\\chat_retry", true, formatter), new MsmqMessageDeliveryQueue(".\\private$\\chat_fail", true, formatter)), new WcfManagementService());
             _serviceBus.AddListener(new ListenerEndpoint(Guid.NewGuid(), "Chat Service", "ChatServer", "http://localhost/chatServer", typeof(IChatService), new WcfListener()));
-            _serviceBus.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "No subscribers", "ChatClient", "", typeof(IChatService), new MethodDispatcher(new UnhandledReplyHandler(_serviceBus)), new UnhandledMessageFilter(typeof(SendMessageRequest))));
+            _serviceBus.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "No subscribers", "ChatClient", "", typeof(IChatService), new MethodDispatcher(new UnhandledReplyHandler(_serviceBus)), new UnhandledMessageFilter(typeof(SendMessageRequest)), true));
             _serviceBus.UnhandledException+= (o, ex) =>
                 {
                     Console.WriteLine("Unhandled Exception: "+ex.ExceptionObject);

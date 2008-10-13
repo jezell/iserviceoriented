@@ -8,6 +8,8 @@ using System.Text;
 
 using System.ServiceModel;
 using System.Reflection;
+using IServiceOriented.ServiceBus.Dispatchers;
+using IServiceOriented.ServiceBus.Listeners;
 
 namespace IServiceOriented.ServiceBus.Services
 {
@@ -46,7 +48,7 @@ namespace IServiceOriented.ServiceBus.Services
         }
     }
 
-    static class ServiceBusManagementServiceTypeProvider
+    public static class ServiceBusManagementServiceTypeProvider
     {
         public static IEnumerable<Type> GetKnownTypes(ICustomAttributeProvider provider)
         {
@@ -58,8 +60,25 @@ namespace IServiceOriented.ServiceBus.Services
                     knownTypes.Add(a.Type);
                 }
             }
-            knownTypes.AddRange(MessageDelivery.GetKnownTypes());
+
+
+            foreach (Type t in KnownTypes)
+            {
+                knownTypes.Add(t);
+            }
+
             return knownTypes.ToArray();
+        }
+
+
+        static Collection<Type> _knownMessageFilterTypes = new Collection<Type>() { typeof(WcfDispatcher), typeof(WcfListener), typeof(UnhandledMessageFilter), typeof(TypedMessageFilter) };
+        public static Collection<Type> KnownTypes
+        {
+            get
+            {
+                return _knownMessageFilterTypes;
+            }
+
         }
     }
 
@@ -141,13 +160,13 @@ namespace IServiceOriented.ServiceBus.Services
         [OperationBehavior]
         public Collection<SubscriptionEndpoint> ListSubscribers()
         {
-            return Runtime.ListSubscribers();
+            return Runtime.ListSubscribers(false);
         }
 
         [OperationBehavior]
         public Collection<ListenerEndpoint> ListListeners()
         {
-            return Runtime.ListListeners();
+            return Runtime.ListListeners(false);
         }
 
         #endregion

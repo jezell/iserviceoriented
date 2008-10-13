@@ -75,18 +75,22 @@
     <Compile Include="BooleanMessageFilter.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="IContract.cs" />
+    <Compile Include="TestFileSystemDispatchersAndListeners.cs" />
     <Compile Include="TestMessageFilters.cs" />
     <Compile Include="TestMsmqMessageDeliveryQueue.cs" />
     <Compile Include="NonTransactionalMemoryQueue.cs" />
     <Compile Include="NullMessageDeliveryQueue.cs" />
     <Compile Include="PassThroughMessageFilter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestMsmqMessageDeliveryQueueStatics.cs" />
     <Compile Include="TestRequestResponse.cs" />
     <Compile Include="TestServiceBusManagement.cs" />
     <Compile Include="TestServiceBusRuntime.cs" />
+    <Compile Include="TestSmtpDispatcher.cs" />
     <Compile Include="TestSqlSubscriptionDb.cs" />
     <Compile Include="Create.cs" />
     <Compile Include="TestWcfDispatcher.cs" />
+    <Compile Include="TestWcfListener.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\IServiceOriented.ServiceBus\IServiceOriented.ServiceBus.csproj">

@@ -45,58 +45,7 @@ namespace IServiceOriented.ServiceBus
             Context = context;
             ContractType = contractType;
         }
-
-        /// <summary>
-        /// Gets a list of types that have been registered for message delivery.
-        /// </summary>        
-        public static Type[] GetKnownTypes()
-        {
-            lock (_knownTypes)
-            {
-                return _knownTypes.ToArray();
-            }
-        }
-
-        static List<Type> _knownTypes = new List<Type>(new Type[] { typeof(UnhandledMessageFilter), typeof(Listeners.WcfListener), typeof(WcfDispatcher), typeof(TypedMessageFilter), typeof(ReadOnlyCollection<string>), typeof(ReadOnlyCollection<short>), typeof(ReadOnlyCollection<int>), typeof(ReadOnlyCollection<bool>), typeof(ReadOnlyCollection<decimal>), typeof(ReadOnlyCollection<float>), typeof(ReadOnlyCollection<double>), typeof(ReadOnlyCollection<long>), typeof(ReadOnlyCollection<Guid>), typeof(MessageDeliveryContext) });
-        /// <summary>
-        /// Clears the list of types registered for message delivery.
-        /// </summary>
-        public static void ClearKnownTypes()
-        {
-            lock (_knownTypes)
-            {
-                _knownTypes.Clear();
-            }
-        }
-
-        /// <summary>
-        /// Register a type for message delivery.
-        /// </summary>
-        public static void RegisterKnownType(Type type)
-        {
-            lock (_knownTypes)
-            {
-                if (!_knownTypes.Contains(type))
-                {                    
-                    _knownTypes.Add(type);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Unregister a type for message delivery.
-        /// </summary>
-        public static void UnregisterKnownType(Type type)
-        {
-            lock (_knownTypes)
-            {
-                if (_knownTypes.Contains(type))
-                {
-                    _knownTypes.Remove(type);
-                }
-            }
-        }
-
+        
         
         private string _messageId;
         /// <summary>

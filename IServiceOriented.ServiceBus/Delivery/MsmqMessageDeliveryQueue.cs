@@ -10,6 +10,7 @@ using System.ServiceModel.Description;
 using System.Xml;
 using IServiceOriented.ServiceBus.Collections;
 using System.Runtime.Serialization.Formatters.Binary;
+using IServiceOriented.ServiceBus.Delivery.Formatters;
 
 namespace IServiceOriented.ServiceBus.Delivery
 {    
@@ -19,21 +20,22 @@ namespace IServiceOriented.ServiceBus.Delivery
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1711:IdentifiersShouldNotHaveIncorrectSuffix"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Msmq")]
     public class MsmqMessageDeliveryQueue : IMessageDeliveryQueue, IDisposable
     {
-        public MsmqMessageDeliveryQueue(string path)
+        public MsmqMessageDeliveryQueue(string path, IMessageFormatter formatter)
         {
             _queue = new MessageQueue(path);
-            _formatter = new Formatters.MessageDeliveryFormatter();
+            _formatter = formatter;
         }
-        
-        public MsmqMessageDeliveryQueue(string path, MessageQueueTransactionType transactionType)
+
+        public MsmqMessageDeliveryQueue(string path, MessageQueueTransactionType transactionType, IMessageFormatter formatter)
         {
             _queue = new MessageQueue(path);
-            _formatter = new Formatters.MessageDeliveryFormatter();
+            _formatter = new MessageDeliveryFormatter();
             _transactionType = transactionType;
+            _formatter = formatter;
         }
 
 
-        public MsmqMessageDeliveryQueue(string path, bool createIfNotExists)
+        public MsmqMessageDeliveryQueue(string path, bool createIfNotExists, IMessageFormatter formatter)
         {
             if (createIfNotExists)
             {
@@ -43,14 +45,14 @@ namespace IServiceOriented.ServiceBus.Delivery
                 }
             }
             _queue = new MessageQueue(path);
-            _formatter = new Formatters.MessageDeliveryFormatter();
+            _formatter = formatter;
         }
 
-        
-        public MsmqMessageDeliveryQueue(MessageQueue queue)
+
+        public MsmqMessageDeliveryQueue(MessageQueue queue, IMessageFormatter formatter)
         {
             _queue = queue;
-            _formatter = new Formatters.MessageDeliveryFormatter();
+            _formatter = formatter;
         }
 
         /// <summary>

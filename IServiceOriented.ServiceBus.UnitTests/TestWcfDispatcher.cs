@@ -17,7 +17,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
        
 
         [Test]
-        public void Dispatch()
+        public void Can_Dispatch_To_ServiceHost()
         {            
             ContractImplementation ci = new ContractImplementation();
             ServiceHost host = new ServiceHost(ci);

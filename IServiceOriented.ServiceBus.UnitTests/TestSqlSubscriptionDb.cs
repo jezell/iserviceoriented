@@ -35,7 +35,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
         string _connectionString;
 
         [Test]
-        public void TestCrud()
+        public void Can_Create_Remove_Update_And_Delete_Endpoints()
         {
             SqlSubscriptionDB db = new SqlSubscriptionDB(_connectionString, new Type[] { typeof(WcfDispatcher) }, new Type[] { typeof(WcfListener)  }, new Type[] { typeof(PassThroughMessageFilter) });
 

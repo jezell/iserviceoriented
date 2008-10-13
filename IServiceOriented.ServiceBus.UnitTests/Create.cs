@@ -14,7 +14,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
             return runtime;
         }
 
-        public static ServiceBusRuntime MsmqRuntime()
+        public static ServiceBusRuntime MsmqRuntime(Type interfaceType)
         {
             // Drop test queues if they already exist
             if(MsmqMessageDeliveryQueue.Exists(_testQueuePath))
@@ -35,9 +35,9 @@ namespace IServiceOriented.ServiceBus.UnitTests
             MsmqMessageDeliveryQueue.Create(_retryQueuePath);
             MsmqMessageDeliveryQueue.Create(_failQueuePath);
 
-            MsmqMessageDeliveryQueue testQueue = new MsmqMessageDeliveryQueue(_testQueuePath);
-            MsmqMessageDeliveryQueue retryQueue = new MsmqMessageDeliveryQueue(_retryQueuePath);
-            MsmqMessageDeliveryQueue failQueue = new MsmqMessageDeliveryQueue(_failQueuePath);
+            MsmqMessageDeliveryQueue testQueue = new MsmqMessageDeliveryQueue(_testQueuePath, new Delivery.Formatters.MessageDeliveryFormatter(interfaceType));
+            MsmqMessageDeliveryQueue retryQueue = new MsmqMessageDeliveryQueue(_retryQueuePath, new Delivery.Formatters.MessageDeliveryFormatter(interfaceType));
+            MsmqMessageDeliveryQueue failQueue = new MsmqMessageDeliveryQueue(_failQueuePath, new Delivery.Formatters.MessageDeliveryFormatter(interfaceType));
 
             return new ServiceBusRuntime(new QueuedDeliveryCore(testQueue, retryQueue, failQueue));
         }

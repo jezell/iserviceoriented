@@ -18,6 +18,16 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
 {    
     public class MessageDeliveryFormatter : IMessageFormatter
     {
+        public MessageDeliveryFormatter(params Type[] interfaceType)
+        {
+            foreach (Type t in interfaceType)
+            {
+                _converters.Add(t, MessageDeliveryConverter.CreateConverter(t));
+            }
+        }
+
+        Dictionary<Type, MessageDeliveryConverter> _converters = new Dictionary<Type, MessageDeliveryConverter>();
+
         #region IMessageFormatter Members
 
         public bool CanRead(Message message)
@@ -26,7 +36,7 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
         }
 
         const int MAX_HEADER_SIZE = 1024 * 1024;
-
+ 
         public object Read(Message message)
         {
             XmlDictionaryReaderQuotas quotas = new XmlDictionaryReaderQuotas();
@@ -39,7 +49,8 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
             using (XmlDictionaryReader xmlReader = XmlDictionaryReader.CreateBinaryReader(message.BodyStream, quotas))
             {
                 var msg = System.ServiceModel.Channels.Message.CreateMessage(xmlReader, MAX_HEADER_SIZE, System.ServiceModel.Channels.MessageVersion.Default);
-                return MessageDeliveryConverter.CreateMessageDelivery(msg);
+                Type contractType = Type.GetType(msg.Headers.GetHeader<string>(MessageDeliveryConverter.ContractTypeNameHeader, MessageDeliveryConverter.MessagingNamespace));
+                return _converters[contractType].CreateMessageDelivery(msg);
             }
         }
        
@@ -50,19 +61,24 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
                         
             using (StringWriter writer = new StringWriter(CultureInfo.InvariantCulture))
             {
-                System.ServiceModel.Channels.Message msg = MessageDeliveryConverter.ToMessage(delivery);
-
                 MemoryStream stream = new MemoryStream();
-                XmlDictionaryWriter xmlWriter = XmlDictionaryWriter.CreateBinaryWriter(stream);
-                msg.WriteMessage(xmlWriter);
-                xmlWriter.Flush();
-                stream.Position = 0;
-                message.BodyStream = stream;
+
+                try
+                {
+                    System.ServiceModel.Channels.Message msg = _converters[delivery.ContractType].ToMessage(delivery);
+                    XmlDictionaryWriter xmlWriter = XmlDictionaryWriter.CreateBinaryWriter(stream);
+                    msg.WriteMessage(xmlWriter);
+                    xmlWriter.Flush();
+                    stream.Position = 0;
+                    message.BodyStream = stream;
+                }
+                catch (KeyNotFoundException)
+                {
+                    throw new InvalidOperationException("Unregistered contract type");
+                }
             }
 
         }
-
-
 
         #endregion
 
@@ -70,7 +86,7 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
 
         public object Clone()
         {
-            return new MessageDeliveryFormatter();
+            return new MessageDeliveryFormatter(_converters.Keys.ToArray());
         }
 
         #endregion

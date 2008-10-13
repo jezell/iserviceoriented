@@ -24,7 +24,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
         }
         
         [Test]
-        public void TypedMessageFilterIncludeWithoutInherit()
+        public void TypedMessageFilter_Includes_Proper_Types_Without_Inheritance()
         {
             TypedMessageFilter tmf = new TypedMessageFilter(false, typeof(int), typeof(string), typeof(C1));
             Assert.IsTrue(tmf.Include(new PublishRequest(null, null, 1)));
@@ -35,7 +35,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
         }
 
         [Test]
-        public void TypedMessageFilterIncludeWithInherit()
+        public void TypedMessageFilter_Includes_Proper_Types_With_Inheritance()
         {
             TypedMessageFilter tmf = new TypedMessageFilter(true, typeof(int), typeof(string), typeof(C1));
             Assert.IsTrue(tmf.Include(new PublishRequest(null, null, 1)));
@@ -46,7 +46,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
         }
 
         [Test]
-        public void TestUnhandledMessageFilter()
+        public void UnhandledMessageFilter_Receives_Unhandled_Messages()
         {
             using (var runtime = Create.MemoryQueueRuntime())
             {

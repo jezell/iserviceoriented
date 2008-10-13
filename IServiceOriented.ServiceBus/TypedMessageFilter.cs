@@ -63,7 +63,7 @@ namespace IServiceOriented.ServiceBus
         {
             get
             {
-                return _messageTypes.Select(s => s.AssemblyQualifiedName);
+                return _messageTypes.Select(s => s.AssemblyQualifiedName).ToArray();
             }
             set
             {

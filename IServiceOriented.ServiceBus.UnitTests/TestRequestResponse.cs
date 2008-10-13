@@ -17,7 +17,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
 
         [Test]
-        public void Echo()
+        public void QueuedDeliveryCore_Publishes_Response_Messages_For_TwoWay_Operation()
         {
             using (ServiceBusRuntime runtime = new ServiceBusRuntime(new QueuedDeliveryCore(new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue())))
             {

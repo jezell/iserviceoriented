@@ -4,6 +4,9 @@ using System.Linq;
 using System.Text;
 
 using System.Runtime.Serialization;
+using IServiceOriented.ServiceBus.Services;
+using IServiceOriented.ServiceBus.Listeners;
+using IServiceOriented.ServiceBus.Dispatchers;
 
 namespace IServiceOriented.ServiceBus.Samples.Chat
 {    
@@ -11,9 +14,9 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
     {
         static void Main(string[] args)
         {
-            MessageDelivery.RegisterKnownType(typeof(ChatFilter));
-            MessageDelivery.RegisterKnownType(typeof(SendMessageRequest));
-            
+            ServiceBusManagementServiceTypeProvider.KnownTypes.Add(typeof(ChatFilter));
+            ServiceBusManagementServiceTypeProvider.KnownTypes.Add(typeof(WcfDispatcherWithUsernameCredentials));
+
             if(args.Length == 0)
             {
                 Console.WriteLine("usage: Chat.exe [server | client]");

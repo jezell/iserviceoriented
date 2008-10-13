@@ -86,14 +86,6 @@ namespace IServiceOriented.ServiceBus
                     }
                 });                   
 
-                lock (_listenerEndpointsLock)
-                {
-                    foreach(ListenerEndpoint le in _listenerEndpoints)
-                    {
-                        le.Listener.StartInternal();
-                    }
-                }
-
                 IEnumerable<RuntimeService> runtimeServices = ServiceLocator.GetAllInstances<RuntimeService>();
                 foreach (RuntimeService rs in runtimeServices)
                 {
@@ -108,7 +100,15 @@ namespace IServiceOriented.ServiceBus
                 {
                     core.StartInternal(this);
                 }
-                
+
+
+                lock (_listenerEndpointsLock)
+                {
+                    foreach (ListenerEndpoint le in _listenerEndpoints)
+                    {
+                        le.Listener.StartInternal();
+                    }
+                }
 
                 EventHandler started = Started;
                 if (started != null)
@@ -142,6 +142,7 @@ namespace IServiceOriented.ServiceBus
                     }                
                 }
 
+
                 _subscriptions.Read(subscriptions =>
                 {
                     foreach (SubscriptionEndpoint se in subscriptions)
@@ -163,7 +164,7 @@ namespace IServiceOriented.ServiceBus
                         service.StopInternal();
                     }
                 }
-        
+
 			
                 _started = false;
 			}
@@ -370,11 +371,16 @@ namespace IServiceOriented.ServiceBus
         {
             return Publish(publishRequest, PublishWait.None, TimeSpan.MinValue);
         }
+
+        public virtual DeliveryCore SelectDeliveryCore(MessageDelivery delivery)
+        {
+            DeliveryCore deliveryCore = ServiceLocator.GetInstance<DeliveryCore>();
+            return deliveryCore;
+        }
         
 		public MessageDelivery[] Publish(PublishRequest publishRequest, PublishWait wait, TimeSpan timeout)
 		{
-            DeliveryCore deliveryCore = ServiceLocator.GetInstance<DeliveryCore>();
-
+         
             SubscriptionEndpoint[] subscriptions = null;
             _subscriptions.Read(endpoints =>
             {
@@ -399,7 +405,7 @@ namespace IServiceOriented.ServiceBus
 
                     bool handled = false;
                     foreach (SubscriptionEndpoint subscription in subscriptions)
-                    {
+                    {                        
                         bool include;
 
                         if (subscription.Filter is UnhandledMessageFilter)
@@ -459,6 +465,7 @@ namespace IServiceOriented.ServiceBus
 
                     foreach (MessageDelivery md in messageDeliveries)
                     {
+                        DeliveryCore deliveryCore = SelectDeliveryCore(md);
                         deliveryCore.Deliver(md);                        
                     }
 
@@ -487,6 +494,11 @@ namespace IServiceOriented.ServiceBus
 
         public Collection<ListenerEndpoint> ListListeners()
         {
+            return ListListeners(true);
+        }
+
+        public Collection<ListenerEndpoint> ListListeners(bool includeTransient)
+        {
             if (_disposed) throw new ObjectDisposedException("ServiceBusRuntime");
 
             Collection<ListenerEndpoint> endpoints = new Collection<ListenerEndpoint>();
@@ -495,13 +507,17 @@ namespace IServiceOriented.ServiceBus
             {
                 foreach (ListenerEndpoint endpoint in _listenerEndpoints)
                 {
-                    endpoints.Add(endpoint);
+                    if(includeTransient || !endpoint.Transient) endpoints.Add(endpoint);
                 }            
             }
             return endpoints;
         }
 
         public Collection<SubscriptionEndpoint> ListSubscribers()
+        {
+            return ListSubscribers(true);
+        }
+        public Collection<SubscriptionEndpoint> ListSubscribers(bool includeTransient)
         {
             if (_disposed) throw new ObjectDisposedException("ServiceBusRuntime");
 
@@ -511,7 +527,7 @@ namespace IServiceOriented.ServiceBus
             {
                 foreach (SubscriptionEndpoint endpoint in subscriptions)
                 {
-                    endpoints.Add(endpoint);
+                    if (includeTransient || !endpoint.Transient)  endpoints.Add(endpoint);
                 }
             });
 

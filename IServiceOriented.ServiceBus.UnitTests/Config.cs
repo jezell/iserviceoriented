@@ -47,5 +47,38 @@ namespace IServiceOriented.ServiceBus.UnitTests
                 return ConfigurationSettings.AppSettings["failQueuePath"];
             }
         }
+
+        public static string ToMailAddress
+        {
+            get
+            {
+                return ConfigurationSettings.AppSettings["toMailAddress"];
+            }
+        }
+
+        public static string FromMailAddress
+        {
+            get
+            {
+                return ConfigurationSettings.AppSettings["fromMailAddress"];
+            }
+        }
+
+        public static string IncomingFilePath
+        {
+            get
+            {
+                return ConfigurationSettings.AppSettings["incomingFilePath"];
+            }
+
+        }
+
+        public static string ProcessedFilePath
+        {
+            get
+            {
+                return ConfigurationSettings.AppSettings["processedFilePath"];
+            }
+        }
     }
 }

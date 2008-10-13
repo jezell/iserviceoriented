@@ -6,7 +6,7 @@ using System.Text;
 namespace IServiceOriented.ServiceBus.Delivery
 {
     [global::System.Serializable]
-    public class PoisonMessageException : Exception
+    public class PoisonMessageException : DeliveryException
     {
         //
         // For guidelines regarding the creation of new exception types, see

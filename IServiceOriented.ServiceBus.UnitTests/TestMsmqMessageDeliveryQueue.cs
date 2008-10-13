@@ -59,6 +59,21 @@ namespace IServiceOriented.ServiceBus.UnitTests
         }
     }
 
+    [ServiceContract]
+    public interface ISendComplexData
+    {
+        [OperationContract]
+        void Send(ComplexData data);
+    }
+
+
+    [ServiceContract]
+    public interface ISendMessageContract
+    {
+        [OperationContract]
+        void Send(MessageContractMessage message);
+    }
+
     [MessageContract]
     public class MessageContractMessage
     {
@@ -66,6 +81,12 @@ namespace IServiceOriented.ServiceBus.UnitTests
         public string Data;
     }
 
+    [ServiceContract]
+    public interface ISendDataContract
+    {
+        [OperationContract]
+        void Send(DataContractMessage message);
+    }
 
     [DataContract]
     public class DataContractMessage
@@ -85,33 +106,40 @@ namespace IServiceOriented.ServiceBus.UnitTests
         
         [TestFixtureSetUp]
         public void Initialize()
-        {
-            MessageDelivery.RegisterKnownType(typeof(ComplexData));
+        {         
+            if (Config.TestQueuePath == null || Config.RetryQueuePath == null || Config.FailQueuePath == null)
+            {
+                Assert.Ignore("Test msmq queues not configured, skipping msmq tests");
+            }
+            else
+            {
+                recreateQueue();
+            }
             
-
+        }
+        void recreateQueue()
+        {
             // Delete test queues if they already exist
-            try
+
+            if (MsmqMessageDeliveryQueue.Exists(Config.TestQueuePath))
             {
                 MsmqMessageDeliveryQueue.Delete(Config.TestQueuePath);
-            }
-            catch
-            {
-            }        
-
+            }            
             // Create test queue
             MsmqMessageDeliveryQueue.Create(Config.TestQueuePath);
-            
         }
 
         [Test]
-        public void TestTransactionSupport()
+        public void Enqueue_Transactions_Abort_Properly()
         {
-            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath);
+            recreateQueue();
+
+            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath, new MessageDeliveryFormatter(typeof(IContract)));
 
             SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "SubscriptionName", "http://localhost/test", "SubscriptionConfigName", typeof(IContract), new WcfDispatcher(), new PassThroughMessageFilter());
 
-            MessageDelivery enqueued = new MessageDelivery(endpoint.Id, typeof(MessageDelivery), "randomAction","randomMessageData", 3, new MessageDeliveryContext());
-            Assert.IsNull(queue.Peek(TimeSpan.FromSeconds(1)));
+            MessageDelivery enqueued = new MessageDelivery(endpoint.Id, typeof(IContract), "PublishThis", "randomMessageData", 3, new MessageDeliveryContext());
+            Assert.IsNull(queue.Peek(TimeSpan.FromSeconds(1))); // make sure queue is null before starting
 
             // Enqueue, but abort transaction
             using (TransactionScope ts = new TransactionScope())
@@ -124,6 +152,92 @@ namespace IServiceOriented.ServiceBus.UnitTests
                 MessageDelivery dequeued = queue.Dequeue(TimeSpan.FromSeconds(5));
                 Assert.IsNull(dequeued);
             }
+        }
+
+
+        [Test]
+        public void Enqueue_Transactions_Commit_Properly()
+        {
+            recreateQueue();
+
+            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath, new MessageDeliveryFormatter(typeof(IContract)));
+            SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "SubscriptionName", "http://localhost/test", "SubscriptionConfigName", typeof(IContract), new WcfDispatcher(), new PassThroughMessageFilter());
+
+            MessageDelivery enqueued = new MessageDelivery(endpoint.Id, typeof(IContract), "PublishThis", "randomMessageData", 3, new MessageDeliveryContext());
+            Assert.IsNull(queue.Peek(TimeSpan.FromSeconds(1))); // Make sure queue is null
+
+            // Enqueue and commit transaction
+            using (TransactionScope ts = new TransactionScope())
+            {
+                queue.Enqueue(enqueued);
+                ts.Complete();
+            }
+
+            using (TransactionScope ts = new TransactionScope())
+            {
+                MessageDelivery dequeued = queue.Dequeue(TimeSpan.FromSeconds(10));
+                Assert.IsNotNull(dequeued);
+                Assert.AreEqual(dequeued.MessageId, enqueued.MessageId);
+            }
+
+            using (TransactionScope ts = new TransactionScope())
+            {
+                MessageDelivery dequeued = queue.Dequeue(TimeSpan.FromSeconds(10));
+                Assert.IsNotNull(dequeued);
+                Assert.AreEqual(dequeued.MessageId, enqueued.MessageId);
+                ts.Complete();
+            }            
+        }
+
+        [Test]
+        public void Dequeue_Transactions_Abort_Properly()
+        {
+            recreateQueue();
+
+            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath, new MessageDeliveryFormatter(typeof(IContract)));
+            SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "SubscriptionName", "http://localhost/test", "SubscriptionConfigName", typeof(IContract), new WcfDispatcher(), new PassThroughMessageFilter());
+
+            MessageDelivery enqueued = new MessageDelivery(endpoint.Id, typeof(IContract), "PublishThis", "randomMessageData", 3, new MessageDeliveryContext());
+            Assert.IsNull(queue.Peek(TimeSpan.FromSeconds(1))); // Make sure queue is null
+
+            // Enqueue and commit transaction
+            using (TransactionScope ts = new TransactionScope())
+            {
+                queue.Enqueue(enqueued);
+                ts.Complete();
+            }
+
+            using (TransactionScope ts = new TransactionScope())
+            {
+                MessageDelivery dequeued = queue.Dequeue(TimeSpan.FromSeconds(10));
+                Assert.IsNotNull(dequeued);
+                Assert.AreEqual(dequeued.MessageId, enqueued.MessageId);
+            }
+
+            using (TransactionScope ts = new TransactionScope())
+            {
+                MessageDelivery dequeued = queue.Dequeue(TimeSpan.FromSeconds(10));
+                Assert.IsNotNull(dequeued);
+                Assert.AreEqual(dequeued.MessageId, enqueued.MessageId);
+            }
+
+            using (TransactionScope ts = new TransactionScope())
+            {
+                MessageDelivery dequeued = queue.Dequeue(TimeSpan.FromSeconds(5));
+                Assert.IsNotNull(dequeued);
+            }
+        }
+
+        [Test]
+        public void Dequeue_Transactions_Commit_Properly()
+        {
+            recreateQueue();
+
+            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath, new MessageDeliveryFormatter(typeof(IContract)));
+            SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "SubscriptionName", "http://localhost/test", "SubscriptionConfigName", typeof(IContract), new WcfDispatcher(), new PassThroughMessageFilter());
+
+            MessageDelivery enqueued = new MessageDelivery(endpoint.Id, typeof(IContract), "PublishThis", "randomMessageData", 3, new MessageDeliveryContext());
+            Assert.IsNull(queue.Peek(TimeSpan.FromSeconds(1))); // Make sure queue is null
 
             // Enqueue and commit transaction
             using (TransactionScope ts = new TransactionScope())
@@ -155,18 +269,18 @@ namespace IServiceOriented.ServiceBus.UnitTests
         }
 
         [Test]
-        public void TestMessageContractFormatterWithDataContract()
+        public void MessageContractFormatter_Can_Roundtrip_DataContract()
         {
-            MessageDeliveryFormatter formatter = new MessageDeliveryFormatter();
-            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath);
-            queue.Formatter = formatter;
-            string action = "http://test";
+            recreateQueue();
+
+            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath, new MessageDeliveryFormatter(typeof(ISendDataContract)));
+            string action = "http://tempuri.org/Send";
             DataContractMessage outgoing = new DataContractMessage() { Data = "This is a test" };
 
             Dictionary<string, object> context = new Dictionary<string, object>();
             context.Add("test", "value");
 
-            MessageDelivery outgoingDelivery = new MessageDelivery(Guid.NewGuid(), null, action, outgoing, 5, new MessageDeliveryContext(context));
+            MessageDelivery outgoingDelivery = new MessageDelivery(Guid.NewGuid(), typeof(ISendDataContract), action, outgoing, 5, new MessageDeliveryContext(context));
             using (TransactionScope ts = new TransactionScope())
             {
                 queue.Enqueue(outgoingDelivery);
@@ -193,18 +307,16 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
 
         [Test]
-        public void TestMessageContractFormatterWithMessageContract()
+        public void MessageContractFormatter_Can_Roundtrip_MessageContract()
         {
-            MessageDeliveryFormatter formatter = new MessageDeliveryFormatter();
-            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath);
-            queue.Formatter = formatter;
-            string action = "http://test";
+            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath, new MessageDeliveryFormatter(typeof(ISendMessageContract)));
+            string action = "http://tempuri.org/Send";
             MessageContractMessage outgoing = new MessageContractMessage() { Data = "This is a test" };
 
             Dictionary<string, object> context = new Dictionary<string, object>();
             context.Add("test", "value");
 
-            MessageDelivery outgoingDelivery = new MessageDelivery(Guid.NewGuid(), null, action, outgoing, 5, new MessageDeliveryContext(context));
+            MessageDelivery outgoingDelivery = new MessageDelivery(Guid.NewGuid(), typeof(ISendMessageContract), action, outgoing, 5, new MessageDeliveryContext(context));
             using (TransactionScope ts = new TransactionScope())
             {
                 queue.Enqueue(outgoingDelivery);
@@ -229,25 +341,25 @@ namespace IServiceOriented.ServiceBus.UnitTests
             }
         }
         [Test]
-        public void TestWithComplexData()
+        public void Can_Deliver_Complex_Message()
         {
-            testMessageDelivery("testAction", new ComplexData(91302,1120));
+            testMessageDelivery(typeof(ISendComplexData), "testAction", new ComplexData(91302,1120));
         }
 
         [Test]
-        public void TestWithSimpleData()
+        public void Can_Deliver_Simple_Message()
         {
-            testMessageDelivery("testAction", "testMessageData");
+            testMessageDelivery(typeof(IContract), "PublishThis", "testMessageData");
         }
         
         
-        void testMessageDelivery(string messageAction, object messageData)
+        void testMessageDelivery(Type interfaceType, string messageAction, object messageData)
         {
-            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath);
+            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath, new MessageDeliveryFormatter(interfaceType));
 
-            SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "SubscriptionName", "http://localhost/test", "SubscriptionConfigName", typeof(IContract), new WcfDispatcher(), new PassThroughMessageFilter());
+            SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "SubscriptionName", "http://localhost/test", "SubscriptionConfigName", interfaceType, new WcfDispatcher(), new PassThroughMessageFilter());
 
-            MessageDelivery enqueued = new MessageDelivery(endpoint.Id, typeof(MessageDelivery), messageAction, messageData, 3, new MessageDeliveryContext());
+            MessageDelivery enqueued = new MessageDelivery(endpoint.Id, interfaceType, messageAction, messageData, 3, new MessageDeliveryContext());
                 
             using (TransactionScope ts = new TransactionScope())
             {

@@ -70,6 +70,7 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.Drawing" />
     <Reference Include="System.IdentityModel">
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
     </Reference>
@@ -96,7 +97,10 @@
     <Compile Include="Delivery\DirectDeliveryCore.cs" />
     <Compile Include="Delivery\Formatters\MessageDeliveryConverter.cs" />
     <Compile Include="Delivery\Formatters\MessageDeliveryFormatter.cs" />
+    <Compile Include="Dispatchers\FileSystemDispatcher.cs" />
+    <Compile Include="Dispatchers\SmtpDispatcher.cs" />
     <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="Listeners\FileSystemListener.cs" />
     <Compile Include="MessageDeliveryContext.cs" />
     <Compile Include="AutoSubscribeBehavior.cs" />
     <Compile Include="Threading\CountdownLatch.cs" />
@@ -144,6 +148,7 @@
     <Compile Include="Listeners\WcfListener.cs" />
     <Compile Include="Listeners\WcfServiceHostFactory.cs" />
     <Compile Include="Services\WcfManagementService.cs" />
+    <Compile Include="WcfUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />

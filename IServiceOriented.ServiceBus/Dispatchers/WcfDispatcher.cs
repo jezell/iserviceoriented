@@ -41,27 +41,17 @@ namespace IServiceOriented.ServiceBus.Dispatchers
             Dictionary<string, string> replyActionLookup = new Dictionary<string, string>();
             foreach (MethodInfo method in endpoint.ContractType.GetMethods())
             {
-                object[] attributes = method.GetCustomAttributes(typeof(OperationContractAttribute), false);
-                if (attributes.Length > 0)
+                if (WcfUtils.IsServiceMethod(method))
                 {
-                    OperationContractAttribute oca = (OperationContractAttribute)attributes[0];
-                    string action = oca.Action;
-                    if (action == null)
-                    {
-                        action = method.Name;
-                    }
+                    string action = WcfUtils.GetAction(endpoint.ContractType, method);
                     actionLookup.Add(action, method);
-
-                    if (!oca.IsOneWay)
+                    
+                    string replyAction = WcfUtils.GetReplyAction(endpoint.ContractType, method);
+                    
+                    if(replyAction != null)
                     {
-                        string replyAction = oca.ReplyAction;
-                        if (replyAction == null)
-                        {
-                            replyAction = action + "Reply";
-                        }
-
                         replyActionLookup.Add(action, replyAction);
-                    }
+                    }                 
                 }
             }
             lookup.MethodLookup = actionLookup;
@@ -155,7 +145,7 @@ namespace IServiceOriented.ServiceBus.Dispatchers
 
         public static MessageFilter CreateMessageFilter(Type interfaceType)
         {               
-            return new TypedMessageFilter(WcfServiceHostFactory.GetMessageTypes(interfaceType));
+            return new TypedMessageFilter(WcfUtils.GetMessageInformation(interfaceType).Select(mi => mi.MessageType).ToArray());
         }
     }
 

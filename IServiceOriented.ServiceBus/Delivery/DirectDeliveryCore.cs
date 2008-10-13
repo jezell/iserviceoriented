@@ -15,6 +15,10 @@ namespace IServiceOriented.ServiceBus.Delivery
     {
         public override void Deliver(MessageDelivery delivery)
         {
+            if (!Started)
+            {
+                throw new InvalidOperationException("Cannot deliver messages before the bus is started");
+            }
             try
             {
                 SubscriptionEndpoint endpoint = Runtime.GetSubscription(delivery.SubscriptionEndpointId);
@@ -22,6 +26,7 @@ namespace IServiceOriented.ServiceBus.Delivery
                 {
                     endpoint.Dispatcher.Dispatch(delivery);
                 }
+                NotifyDelivery(delivery);
             }
             catch(Exception ex)
             {

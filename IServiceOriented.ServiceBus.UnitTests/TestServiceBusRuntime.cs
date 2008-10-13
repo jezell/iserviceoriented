@@ -105,7 +105,10 @@ namespace IServiceOriented.ServiceBus.UnitTests
                     {
                         inner();
 
-                        latch.Handle.WaitOne(timeout);
+                        if (!latch.Handle.WaitOne(timeout))
+                        {
+                            throw new TimeoutException("timeout expired");
+                        }
                     });
                 }
                 finally
@@ -132,9 +135,9 @@ namespace IServiceOriented.ServiceBus.UnitTests
         
         
         [Test]
-        public void TestFilterExcludedMessageDispatch()
-        {            
-            using (var serviceBusRuntime = Create.MsmqRuntime())
+        public void MessageFilter_Properly_Excludes_Messages()
+        {
+            using (var serviceBusRuntime = Create.MsmqRuntime(typeof(IContract)))
             {
                 ServiceBusTest tester = new ServiceBusTest(serviceBusRuntime);
    
@@ -148,11 +151,17 @@ namespace IServiceOriented.ServiceBus.UnitTests
                 tester.AddTestListener();
                 tester.AddTestSubscription(ci, new BooleanMessageFilter(false));
 
-                
-                tester.WaitForDeliveriesOrFailures(1, TimeSpan.FromSeconds(5), () =>
+
+                try
                 {
-                    serviceBusRuntime.Publish(new PublishRequest(typeof(IContract), "PublishThis", message));
-                });
+                    tester.WaitForDeliveriesOrFailures(1, TimeSpan.FromSeconds(5), () =>
+                    {
+                        serviceBusRuntime.Publish(new PublishRequest(typeof(IContract), "PublishThis", message));
+                    });
+                }
+                catch (TimeoutException) // should timeout while waiting
+                {
+                }
             
                 Assert.AreEqual(0, ci.PublishedCount);
 
@@ -161,9 +170,9 @@ namespace IServiceOriented.ServiceBus.UnitTests
         }
 
         [Test]
-        public void TestFilterIncludedMessageDispatch()
-        {         
-            using (var serviceBusRuntime = Create.MsmqRuntime())
+        public void MessageFilter_Properly_Includes_Messages()
+        {
+            using (var serviceBusRuntime = Create.MsmqRuntime(typeof(IContract)))
             {
                 ServiceBusTest tester = new ServiceBusTest(serviceBusRuntime);
                 tester.OnlyRetryOnce();
@@ -189,9 +198,9 @@ namespace IServiceOriented.ServiceBus.UnitTests
         }
 
         [Test]
-        public void TestSimpleMethodDispatch()
+        public void Dispatcher_Receives_Messages()
         {
-            using (var serviceBusRuntime = Create.MsmqRuntime())
+            using (var serviceBusRuntime = Create.MsmqRuntime(typeof(IContract)))
             {
                 ServiceBusTest tester = new ServiceBusTest(serviceBusRuntime);
                 
@@ -215,9 +224,9 @@ namespace IServiceOriented.ServiceBus.UnitTests
         }
 
         [Test]
-        public void DeliverABunchOfMessages()
+        public void Can_Deliver_Many_Messages()
         {
-            using (var serviceBusRuntime = Create.MsmqRuntime())
+            using (var serviceBusRuntime = Create.MsmqRuntime(typeof(IContract)))
             {
                 ServiceBusTest tester = new ServiceBusTest(serviceBusRuntime);
                 
@@ -227,18 +236,20 @@ namespace IServiceOriented.ServiceBus.UnitTests
                 tester.AddTestListener();
                 tester.AddTestSubscription(ci, new PassThroughMessageFilter());                
 
-                int messageCount = 10000;
+                int messageCount = 1000;
                 
-                DateTime start = DateTime.Now;
+                
+                for (int i = 0; i < messageCount; i++)
+                {
+                    string message = i.ToString();
+                    serviceBusRuntime.Publish(new PublishRequest(typeof(IContract), "PublishThis", message));
+                }
 
+                DateTime start = DateTime.Now;
 
                 tester.WaitForDeliveriesOrFailures(messageCount, TimeSpan.FromMinutes(1), () =>
                 {
-                    for (int i = 0; i < messageCount; i++)
-                    {
-                        string message = i.ToString();
-                        serviceBusRuntime.Publish(new PublishRequest(typeof(IContract), "PublishThis", message));
-                    }                    
+                                     
                 });
             
                 
@@ -266,9 +277,9 @@ namespace IServiceOriented.ServiceBus.UnitTests
         }
 
         [Test]
-        public void DeliverABunchOfMessagesWithFailures()
+        public void Can_Deliver_Many_Messages_With_Failures()
         {
-            using (var serviceBusRuntime = Create.MsmqRuntime())
+            using (var serviceBusRuntime = Create.MsmqRuntime(typeof(IContract)))
             {
                 ServiceBusTest tester = new ServiceBusTest(serviceBusRuntime);                
                 tester.OnlyRetryOnce();
@@ -320,9 +331,9 @@ namespace IServiceOriented.ServiceBus.UnitTests
         }
 
         [Test]
-        public void TestRetryQueue()
+        public void Retry_Queue_Receives_Initial_Failures()
         {
-            using (var serviceBusRuntime = Create.MsmqRuntime())
+            using (var serviceBusRuntime = Create.MsmqRuntime(typeof(IContract)))
             {
                 ServiceBusTest tester = new ServiceBusTest(serviceBusRuntime);
 
@@ -370,9 +381,9 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
 
         [Test]
-        public void TestFailQueue()
+        public void Failure_Queue_Receives_Messages_When_Retries_Maxed()
         {
-            using (var serviceBusRuntime = Create.MsmqRuntime())
+            using (var serviceBusRuntime = Create.MsmqRuntime(typeof(IContract)))
             {
                 ServiceBusTest tester = new ServiceBusTest(serviceBusRuntime);                
                 tester.OnlyRetryOnce();

@@ -19,52 +19,7 @@ namespace IServiceOriented.ServiceBus.Listeners
     /// Creates WCF service hosts. Used by WcfListener.
     /// </summary>
     internal static class WcfServiceHostFactory
-    {
-        /// <summary>
-        /// Determines whether the specified method is marked as OperationContract and supported.
-        /// </summary>
-        /// <param name="info"></param>
-        /// <returns></returns>
-        public static bool IsServiceMethod(MethodInfo info)
-        {
-            // Only single parameter calls are supported currently
-            if (info.GetParameters().Length != 1)
-            {
-                return false;
-            }
-            // Only one way methods are supported
-            if (info.ReturnType != typeof(void))
-            {
-                return false; 
-            }
-            object[] attributes = info.GetCustomAttributes(typeof(OperationContractAttribute), false);
-            if (attributes.Length > 0)
-            {
-                return true;
-            }
-            return false;                        
-        }
-
-        /// <summary>
-        /// Gets a list of the message types that a service contract exposes.
-        /// </summary>
-        /// <param name="contractType"></param>
-        /// <returns></returns>
-        public static Type[] GetMessageTypes(Type contractType)
-        {
-            List<Type> list = new List<Type>();
-
-            foreach (MethodInfo info in contractType.GetMethods())
-            {
-                if (IsServiceMethod(info))
-                {
-                    list.Add(info.GetParameters()[0].ParameterType);
-                }
-            }
-
-            return list.ToArray();
-        }
-
+    {        
         public static void VerifyContract(Type contractType)
         {
             if (contractType == null) throw new ArgumentNullException("contractType");
@@ -116,22 +71,9 @@ namespace IServiceOriented.ServiceBus.Listeners
             foreach (MethodInfo methodInfo in interfaceType.GetMethods())
             {
                 // Only add methods with OperationContractAttribute
-                string action = methodInfo.Name;
-                object[] attributes = methodInfo.GetCustomAttributes(typeof(OperationContractAttribute), false);
-                if (attributes.Length > 0 )
+                if(WcfUtils.IsServiceMethod(methodInfo))
                 {
-                    OperationContractAttribute oca = (OperationContractAttribute)attributes[0];
-                    string ocAction = oca.Action;
-                    if (ocAction != null)
-                    {
-                        action = ocAction;
-                    }
-
-                    if (!oca.IsOneWay)
-                    {
-                        throw new InvalidOperationException("Only one way operations are supported for WCF contracts");
-                    }
-
+                    string action = WcfUtils.GetAction(interfaceType, methodInfo);                    
                     if (methodInfo.GetParameters().Length != 1)
                     {
                         continue; // skip methods that don't accept a single parameter
