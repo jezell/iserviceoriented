@@ -28,7 +28,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
             string message = "blah blah test test";
 
             WcfDispatcher contractDispatcher = new WcfDispatcher(endpoint);
-            contractDispatcher.Dispatch(new MessageDelivery(endpoint.Id, typeof(IContract), "PublishThis", message, 3, new MessageDeliveryContext()));
+            contractDispatcher.Dispatch(new MessageDelivery(endpoint.Id, typeof(IContract), "http://tempuri.org/PublishThis", message, 3, new MessageDeliveryContext()));
 
             Assert.AreEqual(1, ci.PublishedCount);
             Assert.AreEqual(message, ci.PublishedMessages[0]);

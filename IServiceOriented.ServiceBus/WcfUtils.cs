@@ -97,6 +97,7 @@ namespace IServiceOriented.ServiceBus
             if (attributes.Length > 0)
             {
                 OperationContractAttribute attrib = (OperationContractAttribute)attributes[0];
+                if (attrib.IsOneWay) return null;
                 if (attrib.ReplyAction == null)
                 {
                     return GetContractNamespace(contractType) + info.Name + "Response";
