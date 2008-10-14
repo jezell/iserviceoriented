@@ -101,7 +101,6 @@ namespace IServiceOriented.ServiceBus
                     core.StartInternal(this);
                 }
 
-
                 lock (_listenerEndpointsLock)
                 {
                     foreach (ListenerEndpoint le in _listenerEndpoints)
@@ -379,8 +378,7 @@ namespace IServiceOriented.ServiceBus
         }
         
 		public MessageDelivery[] Publish(PublishRequest publishRequest, PublishWait wait, TimeSpan timeout)
-		{
-         
+		{         
             SubscriptionEndpoint[] subscriptions = null;
             _subscriptions.Read(endpoints =>
             {
@@ -443,13 +441,13 @@ namespace IServiceOriented.ServiceBus
                     if (waitForReply)
                     {
                         latch = new CountdownLatch(messageDeliveries.Count);
-                        filter = new CorrelationMessageFilter(messageDeliveries.Select(md => md.MessageId).ToArray());
+                        filter = new CorrelationMessageFilter(messageDeliveries.Select(md => md.MessageDeliveryId).ToArray());
                         results = new MessageDelivery[messageDeliveries.Count];
                         dispatcher = new ActionDispatcher((se, md) =>
                         {
                             for (int j = 0; j < messageDeliveries.Count; j++)
                             {
-                                if (messageDeliveries[j].MessageId == (string)md.Context[MessageDelivery.CorrelationId]) // is reply
+                                if (messageDeliveries[j].MessageDeliveryId == (string)md.Context[MessageDelivery.CorrelationId]) // is reply
                                 {
                                     results[j] = md;
                                     latch.Tick();

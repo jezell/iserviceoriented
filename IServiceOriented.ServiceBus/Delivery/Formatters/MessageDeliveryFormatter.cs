@@ -18,7 +18,11 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
 {    
     public class MessageDeliveryFormatter : IMessageFormatter
     {
-        public MessageDeliveryFormatter(params Type[] interfaceType)
+        public MessageDeliveryFormatter()
+        {
+            
+        }
+        public MessageDeliveryFormatter(params Type[] interfaceType) 
         {
             foreach (Type t in interfaceType)
             {
@@ -36,7 +40,7 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
         }
 
         const int MAX_HEADER_SIZE = 1024 * 1024;
- 
+
         public object Read(Message message)
         {
             XmlDictionaryReaderQuotas quotas = new XmlDictionaryReaderQuotas();
@@ -45,7 +49,7 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
             quotas.MaxDepth = Int32.MaxValue;
             quotas.MaxNameTableCharCount = Int32.MaxValue;
             quotas.MaxStringContentLength = Int32.MaxValue;
-    
+
             using (XmlDictionaryReader xmlReader = XmlDictionaryReader.CreateBinaryReader(message.BodyStream, quotas))
             {
                 var msg = System.ServiceModel.Channels.Message.CreateMessage(xmlReader, MAX_HEADER_SIZE, System.ServiceModel.Channels.MessageVersion.Default);

@@ -17,7 +17,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
         public void WcfListener_Publishes_Incoming_Messages_Properly()
         {
             ServiceBusRuntime runtime = new ServiceBusRuntime(new DirectDeliveryCore());
-            runtime.AddListener(new ListenerEndpoint("test", "NamedPipeListener", "net.pipe://localhost/remotehello", typeof(IContract), new WcfListener()));
+            runtime.AddListener(new ListenerEndpoint("test", "NamedPipeListener", "net.pipe://localhost/remotehello", typeof(IContract), new WcfServiceHostListener()));
            
             string message = "This is a test";
 
@@ -37,7 +37,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
         public void WcfListener_Can_Listen_For_Raw_Messages()
         {
             ServiceBusRuntime runtime = new ServiceBusRuntime(new DirectDeliveryCore());
-            runtime.AddListener(new ListenerEndpoint("test", "PassThroughListener", "net.pipe://localhost/passthrough", typeof(IPassThroughServiceContract), new WcfListener()));
+            runtime.AddListener(new ListenerEndpoint("test", "PassThroughListener", "net.pipe://localhost/passthrough", typeof(IPassThroughServiceContract), new WcfServiceHostListener()));
 
             string action = "http://someaction";
             string body = "some body";
@@ -54,6 +54,8 @@ namespace IServiceOriented.ServiceBus.UnitTests
                 });
             });
         }
+
+       
 
     }
 }

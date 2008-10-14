@@ -24,7 +24,7 @@ namespace IServiceOriented.ServiceBus
     {
         public MessageDelivery(Guid subscriptionEndpointId, Type contractType, string action, object message, int maxRetries, MessageDeliveryContext context)
         {
-            MessageId = Guid.NewGuid().ToString();
+            MessageDeliveryId = Guid.NewGuid().ToString();
             SubscriptionEndpointId = subscriptionEndpointId;
             Action = action;
             Message = message;
@@ -35,7 +35,7 @@ namespace IServiceOriented.ServiceBus
 
         public MessageDelivery(string messageId, Guid subscriptionEndpointId, Type contractType, string action, object message, int maxRetries, int retryCount, DateTime? timeToProcess, MessageDeliveryContext context)
         {
-            MessageId = messageId;
+            MessageDeliveryId = messageId;
             SubscriptionEndpointId = subscriptionEndpointId;
             Action = action;
             Message = message;
@@ -52,7 +52,7 @@ namespace IServiceOriented.ServiceBus
         /// Gets the unique identifier of this message
         /// </summary>
         [DataMember]
-        public string MessageId
+        public string MessageDeliveryId
         {
             get { return _messageId; }
             private set { _messageId = value; }
@@ -240,16 +240,16 @@ namespace IServiceOriented.ServiceBus
                 exceptions.Add(exception.ToString());
                 context[Exceptions] = new ReadOnlyCollection<string>(exceptions);
             }            
-                        
+                                    
             return new MessageDelivery(_messageId, _subscriptionEndpointId, _contractType, _action, _message, _maxRetries, retryCount, timeToDeliver, new MessageDeliveryContext(context));
         }
 
-        public const string PrimaryIdentityNameKey = "PrimaryIdentityName";        
-        public const string WindowsIdentityNameKey = "WindowsIdentityName";
-        public const string WindowsIdentityImpersonationLevelKey = "WindowsImpersonationLevel";
-        public const string CorrelationId = "CorrelationId";
-        public const string Exceptions = "Exceptions";
+        public const string MessagingNamespace = "http://iserviceoriented.com/servicebus/messaging/";
 
-        
+        public static readonly MessageDeliveryContextKey PrimaryIdentityNameKey =  new MessageDeliveryContextKey("PrimaryIdentityName", MessagingNamespace);
+        public static readonly MessageDeliveryContextKey WindowsIdentityNameKey = new MessageDeliveryContextKey("WindowsIdentityName", MessagingNamespace);
+        public static readonly MessageDeliveryContextKey WindowsIdentityImpersonationLevelKey = new MessageDeliveryContextKey("WindowsImpersonationLevel", MessagingNamespace);
+        public static readonly MessageDeliveryContextKey CorrelationId = new MessageDeliveryContextKey("CorrelationId", MessagingNamespace);
+        public static readonly MessageDeliveryContextKey Exceptions = new MessageDeliveryContextKey("Exceptions", MessagingNamespace);
     }
 }

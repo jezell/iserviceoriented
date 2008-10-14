@@ -88,8 +88,8 @@ namespace IServiceOriented.ServiceBus.Dispatchers
 
                 if (!IsOneWay)
                 {
-                    KeyValuePair<string, object>[] replyData = new KeyValuePair<string, object>[1];
-                    replyData[0] = new KeyValuePair<string, object>(MessageDelivery.CorrelationId, messageDelivery.MessageId);                         
+                    KeyValuePair<MessageDeliveryContextKey, object>[] replyData = new KeyValuePair<MessageDeliveryContextKey, object>[1];
+                    replyData[0] = new KeyValuePair<MessageDeliveryContextKey, object>(MessageDelivery.CorrelationId, messageDelivery.MessageDeliveryId);                         
                     Runtime.Publish(new PublishRequest(Endpoint.ContractType, replyAction, result, new MessageDeliveryContext(replyData)));
                 }
             }

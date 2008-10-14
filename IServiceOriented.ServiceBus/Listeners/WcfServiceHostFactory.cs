@@ -142,8 +142,7 @@ namespace IServiceOriented.ServiceBus.Listeners
         
         protected void Publish(Type contractType, string action, object message)
         {
-
-            Dictionary<string, object> context = new Dictionary<string, object>();
+            Dictionary<MessageDeliveryContextKey, object> context = new Dictionary<MessageDeliveryContextKey, object>();
 
             // Add security context to the message if it is available
             if (System.ServiceModel.OperationContext.Current.ServiceSecurityContext != null)

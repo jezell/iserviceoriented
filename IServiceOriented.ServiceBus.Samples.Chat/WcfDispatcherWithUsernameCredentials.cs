@@ -8,7 +8,7 @@ using System.Runtime.Serialization;
 namespace IServiceOriented.ServiceBus.Samples.Chat
 {
     [DataContract]
-    public class WcfDispatcherWithUsernameCredentials : WcfDispatcher
+    public class WcfDispatcherWithUsernameCredentials : WcfProxyDispatcher
     {
         protected override void ApplySecurityContext(MessageDelivery delivery, System.ServiceModel.ChannelFactory factory)
         {

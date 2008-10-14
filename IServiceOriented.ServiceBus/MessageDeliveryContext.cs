@@ -27,46 +27,46 @@ namespace IServiceOriented.ServiceBus
     [KnownType(typeof(ReadOnlyCollection<decimal>))]
     [KnownType(typeof(ReadOnlyCollection<float>))]
     [KnownType(typeof(ReadOnlyCollection<double>))]
-    public class MessageDeliveryContext : IReadOnlyDictionary<string,object>
+    public class MessageDeliveryContext : IReadOnlyDictionary<MessageDeliveryContextKey, object>
     {
         public MessageDeliveryContext()
         {
         }
 
-        public MessageDeliveryContext(IDictionary<string, object> dictionary)
+        public MessageDeliveryContext(IDictionary<MessageDeliveryContextKey, object> dictionary)
         {
-            foreach (KeyValuePair<string, object> pair in dictionary)
+            foreach (KeyValuePair<MessageDeliveryContextKey, object> pair in dictionary)
             {
                 Add(pair);
             }
         }
 
-        public MessageDeliveryContext(IReadOnlyDictionary<string, object> dictionary)            
+        public MessageDeliveryContext(IReadOnlyDictionary<MessageDeliveryContextKey, object> dictionary)            
         {
-            foreach (KeyValuePair<string, object> pair in dictionary)
+            foreach (KeyValuePair<MessageDeliveryContextKey, object> pair in dictionary)
             {
                 Add(pair);
             }
         }
 
-        public MessageDeliveryContext(KeyValuePair<string, object>[] pairs)            
+        public MessageDeliveryContext(KeyValuePair<MessageDeliveryContextKey, object>[] pairs)            
         {
-            foreach (KeyValuePair<string, object> pair in pairs)
+            foreach (KeyValuePair<MessageDeliveryContextKey, object> pair in pairs)
             {
                 Add(pair);
             }
         }
 
-        private void Add(KeyValuePair<string, object> pair)
+        private void Add(KeyValuePair<MessageDeliveryContextKey, object> pair)
         {
             _dictionary.Add(pair);
         }
 
-        IDictionary<string, object> _dictionary = new Dictionary<string, object>();
+        IDictionary<MessageDeliveryContextKey, object> _dictionary = new Dictionary<MessageDeliveryContextKey, object>();
 
         #region IReadOnlyDictionary<string,object> Members
 
-        public IEnumerable<string> Keys
+        public IEnumerable<MessageDeliveryContextKey> Keys
         {
             get { return _dictionary.Keys; }
         }
@@ -76,7 +76,7 @@ namespace IServiceOriented.ServiceBus
             get { return _dictionary.Values; }
         }
 
-        public object this[string key]
+        public object this[MessageDeliveryContextKey key]
         {
             get { return _dictionary[key]; }
         }
@@ -86,21 +86,21 @@ namespace IServiceOriented.ServiceBus
             get { return _dictionary.Count; }
         }
 
-        public bool ContainsKey(string key)
+        public bool ContainsKey(MessageDeliveryContextKey key)
         {
             return _dictionary.ContainsKey(key);
         }
 
-        public bool Contains(KeyValuePair<string, object> value)
+        public bool Contains(KeyValuePair<MessageDeliveryContextKey, object> value)
         {
             return _dictionary.Contains(value);
         }
 
         #endregion
 
-        #region IEnumerable<KeyValuePair<string,object>> Members
+        #region IEnumerable<KeyValuePair<MessageDeliveryContextKey,object>> Members
 
-        public IEnumerator<KeyValuePair<string, object>> GetEnumerator()
+        public IEnumerator<KeyValuePair<MessageDeliveryContextKey, object>> GetEnumerator()
         {
             return _dictionary.GetEnumerator();
         }
@@ -115,5 +115,92 @@ namespace IServiceOriented.ServiceBus
         }
 
         #endregion
+    }
+
+    [Serializable]
+    [DataContract]
+    public struct MessageDeliveryContextKey
+    {        
+        public MessageDeliveryContextKey(string name)
+        {
+            if (String.IsNullOrEmpty(name)) throw new ArgumentException("Name cannot be null or empty");            
+              
+            _name = name;
+            _namespace = String.Empty;
+        }
+
+        public MessageDeliveryContextKey(string name, string ns)
+        {
+            if (String.IsNullOrEmpty(name)) throw new ArgumentException("Name cannot be null or empty");
+            if (ns == null) throw new ArgumentException("Namespace cannot be null");
+
+            _name = name;
+            _namespace = ns ?? String.Empty;
+        }
+
+
+        string _name;        
+        [DataMember]
+        public string Name
+        {
+            get
+            {
+                return _name;
+            }
+        }
+
+        string _namespace;
+
+        [DataMember]
+        public string Namespace
+        {
+            get
+            {
+                return _namespace;
+            }
+        }
+
+        public string FullName
+        {
+            get
+            {
+                return Namespace + Name;
+            }
+        }
+
+        public override int GetHashCode()
+        {
+            return Name.GetHashCode() + Namespace.GetHashCode();
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Name.Equals(obj) && Namespace.Equals(obj);
+        }
+
+        public static bool operator==(MessageDeliveryContextKey key1, MessageDeliveryContextKey key2)
+        {
+            
+            if (Object.ReferenceEquals(key1, null))
+            {
+                return Object.ReferenceEquals(key2, null);
+            }
+            else
+            {
+                return key1.Equals(key2);
+            }
+        }
+
+        public static bool operator!=(MessageDeliveryContextKey key1, MessageDeliveryContextKey key2)
+        {
+            if (Object.ReferenceEquals(key1 , null))
+            {
+                return !Object.ReferenceEquals(key2, null);
+            }
+            else
+            {
+                return !key1.Equals(key2);
+            }
+        }
     }
 }

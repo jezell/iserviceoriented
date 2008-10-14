@@ -42,7 +42,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
                 {
                     Service.Use<IServiceBusManagementService>(managementService =>
                         {
-                            ListenerEndpoint endpoint = new ListenerEndpoint(Guid.NewGuid(), "name of endpoint", "NamedPipeListener", "net.pipe://test/someservice/", typeof(IContract), new WcfListener());
+                            ListenerEndpoint endpoint = new ListenerEndpoint(Guid.NewGuid(), "name of endpoint", "NamedPipeListener", "net.pipe://test/someservice/", typeof(IContract), new WcfServiceHostListener());
                             managementService.Listen(endpoint);
 
                             ListenerEndpoint added = managementService.ListListeners().First();
@@ -65,7 +65,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
                 {
                     Service.Use<IServiceBusManagementService>(managementService =>
                     {
-                        SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "name of endpoint", "NamedPipeClient", "net.pipe://test/someservice/", typeof(IContract), new WcfDispatcher(), new PassThroughMessageFilter());
+                        SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "name of endpoint", "NamedPipeClient", "net.pipe://test/someservice/", typeof(IContract), new WcfProxyDispatcher(), new PassThroughMessageFilter());
                         managementService.Subscribe(endpoint);
 
                         SubscriptionEndpoint added = managementService.ListSubscribers().First();

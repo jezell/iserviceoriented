@@ -117,7 +117,7 @@ namespace IServiceOriented.ServiceBus.Delivery
         private System.Messaging.Message createMessage(MessageDelivery value)
         {
             System.Messaging.Message message = new System.Messaging.Message();
-            message.Label = value.MessageId;
+            message.Label = value.MessageDeliveryId;
             message.Formatter = _formatter;
             message.Body = value;
             return message;

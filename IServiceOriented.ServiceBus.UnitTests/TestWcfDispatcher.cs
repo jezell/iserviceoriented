@@ -26,11 +26,11 @@ namespace IServiceOriented.ServiceBus.UnitTests
             ServiceHost host = new ServiceHost(ci);
             host.Open();
 
-            SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "test", "NamedPipeClient", "net.pipe://localhost/remotehello", typeof(IContract), new WcfDispatcher(), null);
+            SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "test", "NamedPipeClient", "net.pipe://localhost/remotehello", typeof(IContract), new WcfProxyDispatcher(), null);
             
             string message = "blah blah test test";
 
-            WcfDispatcher contractDispatcher = new WcfDispatcher(endpoint);
+            WcfProxyDispatcher contractDispatcher = new WcfProxyDispatcher(endpoint);
             contractDispatcher.Dispatch(new MessageDelivery(endpoint.Id, typeof(IContract), "http://tempuri.org/PublishThis", message, 3, new MessageDeliveryContext()));
 
             Assert.AreEqual(1, ci.PublishedCount);
@@ -46,7 +46,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
             ServiceHost host = new ServiceHost(pts);
             host.Open();
 
-            SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "test", "PassThroughClient", "net.pipe://localhost/passthrough", typeof(IPassThroughServiceContract), new WcfDispatcher(), null);
+            SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "test", "PassThroughClient", "net.pipe://localhost/passthrough", typeof(IPassThroughServiceContract), new WcfProxyDispatcher(), null);
 
             string action = "http://someaction";
             string body = "this is a test";
@@ -55,7 +55,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
             Message message = Message.CreateMessage(MessageVersion.Default, action, body);
 
-            WcfDispatcher contractDispatcher = new WcfDispatcher(endpoint);
+            WcfProxyDispatcher contractDispatcher = new WcfProxyDispatcher(endpoint);
             contractDispatcher.Dispatch(new MessageDelivery(endpoint.Id, typeof(IPassThroughServiceContract), action, message, 3, new MessageDeliveryContext()));
 
             Assert.AreEqual(1, pts.PublishedCount);
@@ -70,7 +70,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
             ServiceHost host = new ServiceHost(ci);
             host.Open();
 
-            SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "test", "PassThroughClient", "net.pipe://localhost/remotehello", typeof(IPassThroughServiceContract), new WcfDispatcher(), null);
+            SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "test", "PassThroughClient", "net.pipe://localhost/remotehello", typeof(IPassThroughServiceContract), new WcfProxyDispatcher(), null);
 
             string action = "http://tempuri.org/IContract/PublishThis";
             string body = "blah blah test test";
@@ -78,7 +78,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
             XmlDocument document = new XmlDocument();
             document.LoadXml("<PublishThis xmlns='http://tempuri.org/'><message>"+body+"</message></PublishThis>");
             Message message = Message.CreateMessage(MessageVersion.Default, action, new XmlNodeReader(document));
-            WcfDispatcher contractDispatcher = new WcfDispatcher(endpoint);
+            WcfProxyDispatcher contractDispatcher = new WcfProxyDispatcher(endpoint);
             contractDispatcher.Dispatch(new MessageDelivery(endpoint.Id, typeof(IPassThroughServiceContract), action, message, 3, new MessageDeliveryContext()));
 
             Assert.AreEqual(1, ci.PublishedCount);

@@ -98,10 +98,10 @@ namespace IServiceOriented.ServiceBus
             }
             else
             {
-                dispatcher = new WcfDispatcher();
+                dispatcher = new WcfProxyDispatcher();
             }
 
-            SubscriptionEndpoint subscription = new SubscriptionEndpoint(SubscriptionId ?? Guid.NewGuid(), Name, ConfigurationName, Address ?? serviceDescription.Endpoints[0].Address.Uri.ToString(), ContractType, dispatcher, WcfDispatcher.CreateMessageFilter(ContractType), Transient);
+            SubscriptionEndpoint subscription = new SubscriptionEndpoint(SubscriptionId ?? Guid.NewGuid(), Name, ConfigurationName, Address ?? serviceDescription.Endpoints[0].Address.Uri.ToString(), ContractType, dispatcher, WcfProxyDispatcher.CreateMessageFilter(ContractType), Transient);
             SubscriptionExtension extension = new SubscriptionExtension(subscription);
             extension.UnsubscribeOnClosing = UnsubscribeOnClosing;
             serviceHostBase.Extensions.Add(extension);

@@ -37,12 +37,12 @@ namespace IServiceOriented.ServiceBus.UnitTests
         [Test]
         public void Can_Create_Remove_Update_And_Delete_Endpoints()
         {
-            SqlSubscriptionDB db = new SqlSubscriptionDB(_connectionString, new Type[] { typeof(WcfDispatcher) }, new Type[] { typeof(WcfListener)  }, new Type[] { typeof(PassThroughMessageFilter) });
+            SqlSubscriptionDB db = new SqlSubscriptionDB(_connectionString, new Type[] { typeof(WcfProxyDispatcher) }, new Type[] { typeof(WcfListener)  }, new Type[] { typeof(PassThroughMessageFilter) });
 
             Assert.AreEqual(0, db.LoadListenerEndpoints().Count());
             Assert.AreEqual(0, db.LoadSubscriptionEndpoints().Count());
 
-            ListenerEndpoint listener = new ListenerEndpoint(Guid.NewGuid(), "listener", "ListenerConfig",  "http://localhost/test", typeof(IContract), new WcfListener());
+            ListenerEndpoint listener = new ListenerEndpoint(Guid.NewGuid(), "listener", "ListenerConfig", "http://localhost/test", typeof(IContract), new WcfServiceHostListener());
             db.CreateListener(listener);
 
             IEnumerable<ListenerEndpoint> listeners = db.LoadListenerEndpoints();
@@ -56,7 +56,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
             Assert.AreEqual(listener.ConfigurationName, savedListener.ConfigurationName);
             Assert.AreEqual(listener.Address, savedListener.Address);
 
-            SubscriptionEndpoint subscription = new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "SubscriptionConfig", "http://localhost/test/subscription", typeof(IContract), new WcfDispatcher(), new PassThroughMessageFilter());            
+            SubscriptionEndpoint subscription = new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "SubscriptionConfig", "http://localhost/test/subscription", typeof(IContract), new WcfProxyDispatcher(), new PassThroughMessageFilter());            
             db.CreateSubscription(subscription);
             
             IEnumerable<SubscriptionEndpoint> subscriptions = db.LoadSubscriptionEndpoints();

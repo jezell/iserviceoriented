@@ -102,9 +102,13 @@
     <Compile Include="Delivery\Formatters\MessageDeliveryFormatter.cs" />
     <Compile Include="Dispatchers\FileSystemDispatcher.cs" />
     <Compile Include="Dispatchers\SmtpDispatcher.cs" />
+    <Compile Include="Dispatchers\WcfChannelDispatcher.cs" />
+    <Compile Include="Dispatchers\WcfDispatcher.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="IPassThroughServiceContract.cs" />
     <Compile Include="Listeners\FileSystemListener.cs" />
+    <Compile Include="Listeners\WcfChannelListener.cs" />
+    <Compile Include="Listeners\WcfServiceHostListener.cs" />
     <Compile Include="MessageDeliveryContext.cs" />
     <Compile Include="AutoSubscribeBehavior.cs" />
     <Compile Include="Threading\CountdownLatch.cs" />
@@ -132,6 +136,7 @@
     <Compile Include="SubscriptionEndpointCollection.cs" />
     <Compile Include="Dispatchers\TransformationDispatcher.cs" />
     <Compile Include="Threading\ReaderWriterLockedObject.cs" />
+    <Compile Include="Threading\WorkerThreads.cs" />
     <Compile Include="UnhandledMessageFilter.cs" />
     <Compile Include="Services\PerformanceMonitorRuntimeService.cs" />
     <Compile Include="RuntimeService.cs" />
@@ -148,7 +153,7 @@
     <Compile Include="SubscriptionNotFoundException.cs" />
     <Compile Include="Services\SubscriptionPersistenceService.cs" />
     <Compile Include="TypedMessageFilter.cs" />
-    <Compile Include="Dispatchers\WcfDispatcher.cs" />
+    <Compile Include="Dispatchers\WcfProxyDispatcher.cs" />
     <Compile Include="Listeners\WcfListener.cs" />
     <Compile Include="Listeners\WcfServiceHostFactory.cs" />
     <Compile Include="Services\WcfManagementService.cs" />

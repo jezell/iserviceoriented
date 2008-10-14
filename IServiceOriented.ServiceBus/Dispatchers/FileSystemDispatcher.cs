@@ -46,7 +46,7 @@ namespace IServiceOriented.ServiceBus.Dispatchers
         {
             try
             {
-                FileStream fs = File.Open(Path.Combine(OutgoingFolder, messageDelivery.MessageId), FileMode.CreateNew, FileAccess.Write, FileShare.None);
+                FileStream fs = File.Open(Path.Combine(OutgoingFolder, messageDelivery.MessageDeliveryId), FileMode.CreateNew, FileAccess.Write, FileShare.None);
                 try
                 {
                     Message message = Converter.ToMessage(messageDelivery);

@@ -36,7 +36,7 @@ namespace IServiceOriented.ServiceBus.Dispatchers
         /// <summary>
         /// The name of the context key that stores a the IDs (ReadOnlyCollection of Guids) of the endpoints which have been involved in message transformation.
         /// </summary>
-        public const string TransformedByKeyName = "TransformedBy";
+        public static readonly MessageDeliveryContextKey TransformedByKeyName = new MessageDeliveryContextKey("TransformedBy", MessageDelivery.MessagingNamespace);
 
         private class TransformationList : ReadOnlyCollection<string>
         {
@@ -53,7 +53,7 @@ namespace IServiceOriented.ServiceBus.Dispatchers
         {
             MessageDeliveryContext context = messageDelivery.Context;
 
-            Dictionary<string, object> newContext = context.ToDictionary();
+            Dictionary<MessageDeliveryContextKey, object> newContext = context.ToDictionary();
 
             TransformationList oldTransformedByList = new TransformationList();
 
@@ -88,7 +88,7 @@ namespace IServiceOriented.ServiceBus.Dispatchers
             }
             else
             {
-                System.Diagnostics.Trace.TraceInformation("Skipping already transformed message (" + messageDelivery.MessageId +")"); 
+                System.Diagnostics.Trace.TraceInformation("Skipping already transformed message (" + messageDelivery.MessageDeliveryId +")"); 
             }
         }
 

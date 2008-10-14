@@ -54,7 +54,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
             {
                 foreach (MessageDelivery m in _queue)
                 {
-                    if (m.MessageId == id)
+                    if (m.MessageDeliveryId == id)
                     {
                         _queue = new Queue<MessageDelivery>( _queue.Except( new MessageDelivery[] { m }));
                         return m;

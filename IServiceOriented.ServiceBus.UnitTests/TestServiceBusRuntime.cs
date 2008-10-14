@@ -10,6 +10,8 @@ using System.Collections.ObjectModel;
 using IServiceOriented.ServiceBus.Delivery;
 using IServiceOriented.ServiceBus.Listeners;
 using IServiceOriented.ServiceBus.Dispatchers;
+using System.ServiceModel;
+using System.ServiceModel.Channels;
 
 namespace IServiceOriented.ServiceBus.UnitTests
 {
@@ -61,7 +63,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
         public void AddTestListener()
         {
-            serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/testlistener", typeof(IContract), new WcfListener()));
+            serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/testlistener", typeof(IContract), new WcfServiceHostListener()));
         }
 
         public void AddTestSubscription(ContractImplementation ci, MessageFilter messageFilter)
@@ -408,7 +410,6 @@ namespace IServiceOriented.ServiceBus.UnitTests
                 tester.VerifyQueuesEmpty(); 
                 Assert.AreEqual(3, ((IEnumerable<string>)delivery.Context[MessageDelivery.Exceptions]).Count());           
             }
-        }
-
+        }   
     }
 }

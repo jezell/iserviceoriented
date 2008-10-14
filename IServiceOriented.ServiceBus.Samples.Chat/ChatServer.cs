@@ -18,7 +18,7 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
         {
             MessageDeliveryFormatter formatter = new MessageDeliveryFormatter(typeof(IChatService));            
             _serviceBus = new ServiceBusRuntime(new QueuedDeliveryCore(new MsmqMessageDeliveryQueue(".\\private$\\chat_deliver", true, formatter), new MsmqMessageDeliveryQueue(".\\private$\\chat_retry", true, formatter), new MsmqMessageDeliveryQueue(".\\private$\\chat_fail", true, formatter)), new WcfManagementService());
-            _serviceBus.AddListener(new ListenerEndpoint(Guid.NewGuid(), "Chat Service", "ChatServer", "http://localhost/chatServer", typeof(IChatService), new WcfListener()));
+            _serviceBus.AddListener(new ListenerEndpoint(Guid.NewGuid(), "Chat Service", "ChatServer", "http://localhost/chatServer", typeof(IChatService), new WcfServiceHostListener()));
             _serviceBus.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "No subscribers", "ChatClient", "", typeof(IChatService), new MethodDispatcher(new UnhandledReplyHandler(_serviceBus)), new UnhandledMessageFilter(typeof(SendMessageRequest)), true));
             _serviceBus.UnhandledException+= (o, ex) =>
                 {
@@ -39,8 +39,8 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
             {
                 if (request.From != "System")
                 {
-                    _serviceBus.Publish(new PublishRequest(typeof(IChatService), "SendMessage", new SendMessageRequest("System", request.From, request.To + " is an invalid user"), 
-                        new MessageDeliveryContext(new KeyValuePair<string,object>[] { new KeyValuePair<string,object>(MessageDelivery.PrimaryIdentityNameKey, "SYSTEM" ) })));
+                    _serviceBus.Publish(new PublishRequest(typeof(IChatService), "SendMessage", new SendMessageRequest("System", request.From, request.To + " is an invalid user"),
+                        new MessageDeliveryContext(new KeyValuePair<MessageDeliveryContextKey, object>[] { new KeyValuePair<MessageDeliveryContextKey, object>(MessageDelivery.PrimaryIdentityNameKey, "SYSTEM") })));
                 }
             }
         }
