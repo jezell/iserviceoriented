@@ -93,6 +93,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DeliveryException.cs" />
+    <Compile Include="Delivery\Formatters\ConverterMessageDeliveryReader.cs" />
+    <Compile Include="Delivery\Formatters\ConverterMessageDeliveryReaderFactory.cs" />
+    <Compile Include="Delivery\Formatters\ConverterMessageDeliveryWriter.cs" />
+    <Compile Include="Delivery\Formatters\ConverterMessageDeliveryWriterFactory.cs" />
     <Compile Include="Delivery\Formatters\DataContractMessageDeliveryConverter.cs" />
     <Compile Include="Delivery\Formatters\MessageContractMessageDeliveryConverter.cs" />
     <Compile Include="Delivery\Formatters\RawMessageMessageDeliveryConverter.cs" />
@@ -105,6 +109,10 @@
     <Compile Include="Dispatchers\WcfChannelDispatcher.cs" />
     <Compile Include="Dispatchers\WcfDispatcher.cs" />
     <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="IO\MessageDeliveryReader.cs" />
+    <Compile Include="IO\MessageDeliveryReaderFactory.cs" />
+    <Compile Include="IO\MessageDeliveryWriter.cs" />
+    <Compile Include="IO\MessageDeliveryWriterFactory.cs" />
     <Compile Include="IPassThroughServiceContract.cs" />
     <Compile Include="Listeners\FileSystemListener.cs" />
     <Compile Include="Listeners\WcfChannelListener.cs" />

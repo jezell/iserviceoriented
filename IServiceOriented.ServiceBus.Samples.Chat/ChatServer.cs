@@ -9,6 +9,7 @@ using IServiceOriented.ServiceBus.Services;
 using IServiceOriented.ServiceBus.Listeners;
 using IServiceOriented.ServiceBus.Dispatchers;
 using IServiceOriented.ServiceBus.Delivery.Formatters;
+using System.ServiceModel.Channels;
 
 namespace IServiceOriented.ServiceBus.Samples.Chat
 {
@@ -16,7 +17,10 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
     {
         public ChatServer()
         {
-            MessageDeliveryFormatter formatter = new MessageDeliveryFormatter(typeof(IChatService));            
+            BinaryMessageEncodingBindingElement element = new BinaryMessageEncodingBindingElement();
+            MessageEncoder encoder = element.CreateMessageEncoderFactory().Encoder;
+
+            MessageDeliveryFormatter formatter = new MessageDeliveryFormatter(new ConverterMessageDeliveryReaderFactory<IChatService>(encoder), new ConverterMessageDeliveryWriterFactory<IChatService>(encoder));            
             _serviceBus = new ServiceBusRuntime(new QueuedDeliveryCore(new MsmqMessageDeliveryQueue(".\\private$\\chat_deliver", true, formatter), new MsmqMessageDeliveryQueue(".\\private$\\chat_retry", true, formatter), new MsmqMessageDeliveryQueue(".\\private$\\chat_fail", true, formatter)), new WcfManagementService());
             _serviceBus.AddListener(new ListenerEndpoint(Guid.NewGuid(), "Chat Service", "ChatServer", "http://localhost/chatServer", typeof(IChatService), new WcfServiceHostListener()));
             _serviceBus.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "No subscribers", "ChatClient", "", typeof(IChatService), new MethodDispatcher(new UnhandledReplyHandler(_serviceBus)), new UnhandledMessageFilter(typeof(SendMessageRequest)), true));

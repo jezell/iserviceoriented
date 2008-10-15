@@ -139,7 +139,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
         [Test]
         public void MessageFilter_Properly_Excludes_Messages()
         {
-            using (var serviceBusRuntime = Create.MsmqRuntime(typeof(IContract)))
+            using (var serviceBusRuntime = Create.MsmqRuntime<IContract>())
             {
                 ServiceBusTest tester = new ServiceBusTest(serviceBusRuntime);
    
@@ -174,7 +174,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
         [Test]
         public void MessageFilter_Properly_Includes_Messages()
         {
-            using (var serviceBusRuntime = Create.MsmqRuntime(typeof(IContract)))
+            using (var serviceBusRuntime = Create.MsmqRuntime<IContract>())
             {
                 ServiceBusTest tester = new ServiceBusTest(serviceBusRuntime);
                 tester.OnlyRetryOnce();
@@ -202,7 +202,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
         [Test]
         public void Dispatcher_Receives_Messages()
         {
-            using (var serviceBusRuntime = Create.MsmqRuntime(typeof(IContract)))
+            using (var serviceBusRuntime = Create.MsmqRuntime<IContract>())
             {
                 ServiceBusTest tester = new ServiceBusTest(serviceBusRuntime);
                 
@@ -228,7 +228,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
         [Test]
         public void Can_Deliver_Many_Messages()
         {
-            using (var serviceBusRuntime = Create.MsmqRuntime(typeof(IContract)))
+            using (var serviceBusRuntime = Create.MsmqRuntime<IContract>())
             {
                 ServiceBusTest tester = new ServiceBusTest(serviceBusRuntime);
                 
@@ -281,7 +281,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
         [Test]
         public void Can_Deliver_Many_Messages_With_Failures()
         {
-            using (var serviceBusRuntime = Create.MsmqRuntime(typeof(IContract)))
+            using (var serviceBusRuntime = Create.MsmqRuntime<IContract>())
             {
                 ServiceBusTest tester = new ServiceBusTest(serviceBusRuntime);                
                 tester.OnlyRetryOnce();
@@ -335,7 +335,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
         [Test]
         public void Retry_Queue_Receives_Initial_Failures()
         {
-            using (var serviceBusRuntime = Create.MsmqRuntime(typeof(IContract)))
+            using (var serviceBusRuntime = Create.MsmqRuntime<IContract>())
             {
                 ServiceBusTest tester = new ServiceBusTest(serviceBusRuntime);
 
@@ -385,7 +385,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
         [Test]
         public void Failure_Queue_Receives_Messages_When_Retries_Maxed()
         {
-            using (var serviceBusRuntime = Create.MsmqRuntime(typeof(IContract)))
+            using (var serviceBusRuntime = Create.MsmqRuntime<IContract>())
             {
                 ServiceBusTest tester = new ServiceBusTest(serviceBusRuntime);                
                 tester.OnlyRetryOnce();

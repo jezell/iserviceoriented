@@ -54,7 +54,7 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
             return msg;
         }
 
-        public MessageDelivery CreateMessageDelivery(Message msg)
+        public MessageDelivery ToMessageDelivery(Message msg)
         {                
             MessageDeliveryContext context = msg.Headers.GetHeader<MessageDeliveryContext>(ContextHeader, MessagingNamespace);
             object value = GetMessageObject(msg);            

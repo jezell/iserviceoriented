@@ -12,6 +12,7 @@ using System.ServiceModel;
 using IServiceOriented.ServiceBus.Delivery;
 using IServiceOriented.ServiceBus.Delivery.Formatters;
 using IServiceOriented.ServiceBus.Dispatchers;
+using System.ServiceModel.Channels;
 
 namespace IServiceOriented.ServiceBus.UnitTests
 {
@@ -62,7 +63,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
     [ServiceContract]
     public interface ISendComplexData
     {
-        [OperationContract]
+        [OperationContract(Action="send")]
         void Send(ComplexData data);
     }
 
@@ -70,7 +71,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
     [ServiceContract]
     public interface ISendMessageContract
     {
-        [OperationContract]
+        [OperationContract(Action="send")]
         void Send(MessageContractMessage message);
     }
 
@@ -84,7 +85,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
     [ServiceContract]
     public interface ISendDataContract
     {
-        [OperationContract]
+        [OperationContract(Action="send")]
         void Send(DataContractMessage message);
     }
 
@@ -134,7 +135,13 @@ namespace IServiceOriented.ServiceBus.UnitTests
         {
             recreateQueue();
 
-            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath, new MessageDeliveryFormatter(typeof(IContract)));
+
+            BinaryMessageEncodingBindingElement element = new BinaryMessageEncodingBindingElement();
+            MessageEncoder encoder = element.CreateMessageEncoderFactory().Encoder;
+
+            MessageDeliveryFormatter formatter = new MessageDeliveryFormatter(new ConverterMessageDeliveryReaderFactory<IContract>(encoder), new ConverterMessageDeliveryWriterFactory<IContract>(encoder));            
+
+            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath, formatter);
 
             SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "SubscriptionName", "http://localhost/test", "SubscriptionConfigName", typeof(IContract), new WcfProxyDispatcher(), new PassThroughMessageFilter());
 
@@ -160,7 +167,14 @@ namespace IServiceOriented.ServiceBus.UnitTests
         {
             recreateQueue();
 
-            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath, new MessageDeliveryFormatter(typeof(IContract)));
+
+            BinaryMessageEncodingBindingElement element = new BinaryMessageEncodingBindingElement();
+            MessageEncoder encoder = element.CreateMessageEncoderFactory().Encoder;
+
+            MessageDeliveryFormatter formatter = new MessageDeliveryFormatter(new ConverterMessageDeliveryReaderFactory<IContract>(encoder), new ConverterMessageDeliveryWriterFactory<IContract>(encoder));            
+
+
+            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath, formatter);
             SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "SubscriptionName", "http://localhost/test", "SubscriptionConfigName", typeof(IContract), new WcfProxyDispatcher(), new PassThroughMessageFilter());
 
             MessageDelivery enqueued = new MessageDelivery(endpoint.Id, typeof(IContract), "PublishThis", "randomMessageData", 3, new MessageDeliveryContext());
@@ -194,7 +208,13 @@ namespace IServiceOriented.ServiceBus.UnitTests
         {
             recreateQueue();
 
-            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath, new MessageDeliveryFormatter(typeof(IContract)));
+
+            BinaryMessageEncodingBindingElement element = new BinaryMessageEncodingBindingElement();
+            MessageEncoder encoder = element.CreateMessageEncoderFactory().Encoder;
+
+            MessageDeliveryFormatter formatter = new MessageDeliveryFormatter(new ConverterMessageDeliveryReaderFactory<IContract>(encoder), new ConverterMessageDeliveryWriterFactory<IContract>(encoder));            
+
+            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath, formatter);
             SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "SubscriptionName", "http://localhost/test", "SubscriptionConfigName", typeof(IContract), new WcfProxyDispatcher(), new PassThroughMessageFilter());
 
             MessageDelivery enqueued = new MessageDelivery(endpoint.Id, typeof(IContract), "PublishThis", "randomMessageData", 3, new MessageDeliveryContext());
@@ -233,7 +253,13 @@ namespace IServiceOriented.ServiceBus.UnitTests
         {
             recreateQueue();
 
-            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath, new MessageDeliveryFormatter(typeof(IContract)));
+
+            BinaryMessageEncodingBindingElement element = new BinaryMessageEncodingBindingElement();
+            MessageEncoder encoder = element.CreateMessageEncoderFactory().Encoder;
+
+            MessageDeliveryFormatter formatter = new MessageDeliveryFormatter(new ConverterMessageDeliveryReaderFactory<IContract>(encoder), new ConverterMessageDeliveryWriterFactory<IContract>(encoder));            
+
+            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath, formatter);
             SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "SubscriptionName", "http://localhost/test", "SubscriptionConfigName", typeof(IContract), new WcfProxyDispatcher(), new PassThroughMessageFilter());
 
             MessageDelivery enqueued = new MessageDelivery(endpoint.Id, typeof(IContract), "PublishThis", "randomMessageData", 3, new MessageDeliveryContext());
@@ -273,8 +299,14 @@ namespace IServiceOriented.ServiceBus.UnitTests
         {
             recreateQueue();
 
-            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath, new MessageDeliveryFormatter(typeof(ISendDataContract)));
-            string action = "http://tempuri.org/Send";
+
+            BinaryMessageEncodingBindingElement element = new BinaryMessageEncodingBindingElement();
+            MessageEncoder encoder = element.CreateMessageEncoderFactory().Encoder;
+
+            MessageDeliveryFormatter formatter = new MessageDeliveryFormatter(new ConverterMessageDeliveryReaderFactory<ISendDataContract>(encoder), new ConverterMessageDeliveryWriterFactory<ISendDataContract>(encoder));            
+
+            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath, formatter);
+            string action = "send";
             DataContractMessage outgoing = new DataContractMessage() { Data = "This is a test" };
 
             Dictionary<MessageDeliveryContextKey, object> context = new Dictionary<MessageDeliveryContextKey, object>();
@@ -309,8 +341,14 @@ namespace IServiceOriented.ServiceBus.UnitTests
         [Test]
         public void MessageContractFormatter_Can_Roundtrip_MessageContract()
         {
-            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath, new MessageDeliveryFormatter(typeof(ISendMessageContract)));
-            string action = "http://tempuri.org/Send";
+
+            BinaryMessageEncodingBindingElement element = new BinaryMessageEncodingBindingElement();
+            MessageEncoder encoder = element.CreateMessageEncoderFactory().Encoder;
+
+            MessageDeliveryFormatter formatter = new MessageDeliveryFormatter(new ConverterMessageDeliveryReaderFactory<ISendMessageContract>(encoder), new ConverterMessageDeliveryWriterFactory<ISendMessageContract>(encoder));            
+
+            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath, formatter);
+            string action = "send";
             MessageContractMessage outgoing = new MessageContractMessage() { Data = "This is a test" };
 
             Dictionary<MessageDeliveryContextKey, object> context = new Dictionary<MessageDeliveryContextKey, object>();
@@ -343,19 +381,26 @@ namespace IServiceOriented.ServiceBus.UnitTests
         [Test]
         public void Can_Deliver_Complex_Message()
         {
-            testMessageDelivery(typeof(ISendComplexData), "testAction", new ComplexData(91302,1120));
+            testMessageDelivery<ISendComplexData>("send", new ComplexData(91302,1120));
         }
 
         
         [Test]
         public void Can_Deliver_Simple_Message()
         {
-            testMessageDelivery(typeof(IContract), "PublishThis", "testMessageData");
+            testMessageDelivery<IContract>("PublishThis", "testMessageData");
         }   
         
-        void testMessageDelivery(Type interfaceType, string messageAction, object messageData)
+        void testMessageDelivery<T>(string messageAction, object messageData)
         {
-            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath, new MessageDeliveryFormatter(interfaceType));
+            Type interfaceType = typeof(T);
+
+            BinaryMessageEncodingBindingElement element = new BinaryMessageEncodingBindingElement();
+            MessageEncoder encoder = element.CreateMessageEncoderFactory().Encoder;
+            MessageDeliveryFormatter formatter = new MessageDeliveryFormatter(new ConverterMessageDeliveryReaderFactory<T>(encoder), new ConverterMessageDeliveryWriterFactory<T>(encoder));            
+
+
+            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath, formatter);
 
             SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "SubscriptionName", "http://localhost/test", "SubscriptionConfigName", interfaceType, new WcfProxyDispatcher(), new PassThroughMessageFilter());
 

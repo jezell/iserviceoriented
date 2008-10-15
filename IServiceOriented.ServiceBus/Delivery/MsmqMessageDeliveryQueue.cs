@@ -127,7 +127,7 @@ namespace IServiceOriented.ServiceBus.Delivery
         {
             message.Formatter = _formatter;
             try
-            {
+            {                
                 return (MessageDelivery)message.Body;
             }
             catch (Exception ex)

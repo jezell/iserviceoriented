@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using IServiceOriented.ServiceBus.Delivery;
+using System.ServiceModel.Channels;
+using IServiceOriented.ServiceBus.Delivery.Formatters;
 
 namespace IServiceOriented.ServiceBus.UnitTests
 {
@@ -13,8 +15,9 @@ namespace IServiceOriented.ServiceBus.UnitTests
             ServiceBusRuntime runtime = new ServiceBusRuntime(new QueuedDeliveryCore(new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue()));
             return runtime;
         }
+        
 
-        public static ServiceBusRuntime MsmqRuntime(Type interfaceType)
+        public static ServiceBusRuntime MsmqRuntime<T>()
         {
             // Drop test queues if they already exist
             if(MsmqMessageDeliveryQueue.Exists(_testQueuePath))
@@ -35,9 +38,15 @@ namespace IServiceOriented.ServiceBus.UnitTests
             MsmqMessageDeliveryQueue.Create(_retryQueuePath);
             MsmqMessageDeliveryQueue.Create(_failQueuePath);
 
-            MsmqMessageDeliveryQueue testQueue = new MsmqMessageDeliveryQueue(_testQueuePath, new Delivery.Formatters.MessageDeliveryFormatter(interfaceType));
-            MsmqMessageDeliveryQueue retryQueue = new MsmqMessageDeliveryQueue(_retryQueuePath, new Delivery.Formatters.MessageDeliveryFormatter(interfaceType));
-            MsmqMessageDeliveryQueue failQueue = new MsmqMessageDeliveryQueue(_failQueuePath, new Delivery.Formatters.MessageDeliveryFormatter(interfaceType));
+
+            BinaryMessageEncodingBindingElement element = new BinaryMessageEncodingBindingElement();
+            MessageEncoder encoder = element.CreateMessageEncoderFactory().Encoder;
+
+            MessageDeliveryFormatter formatter = new MessageDeliveryFormatter(new ConverterMessageDeliveryReaderFactory<T>(encoder), new ConverterMessageDeliveryWriterFactory<T>(encoder));            
+            
+            MsmqMessageDeliveryQueue testQueue = new MsmqMessageDeliveryQueue(_testQueuePath, formatter);
+            MsmqMessageDeliveryQueue retryQueue = new MsmqMessageDeliveryQueue(_retryQueuePath, formatter);
+            MsmqMessageDeliveryQueue failQueue = new MsmqMessageDeliveryQueue(_failQueuePath, formatter);
 
             return new ServiceBusRuntime(new QueuedDeliveryCore(testQueue, retryQueue, failQueue));
         }

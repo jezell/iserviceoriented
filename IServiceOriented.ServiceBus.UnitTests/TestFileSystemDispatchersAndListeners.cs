@@ -9,6 +9,7 @@ using IServiceOriented.ServiceBus.Dispatchers;
 using NUnit.Framework;
 using System.IO;
 using IServiceOriented.ServiceBus.Delivery.Formatters;
+using System.ServiceModel.Channels;
 
 namespace IServiceOriented.ServiceBus.UnitTests
 {
@@ -36,12 +37,15 @@ namespace IServiceOriented.ServiceBus.UnitTests
         [Test]
         public void FileSystemDispatcher_Can_Send_To_FileSystemListener()
         {
+            BinaryMessageEncodingBindingElement element = new BinaryMessageEncodingBindingElement();
+            MessageEncoder encoder = element.CreateMessageEncoderFactory().Encoder;
+
             ServiceBusRuntime dispatchRuntime = new ServiceBusRuntime(new DirectDeliveryCore());
-            var subscription = new SubscriptionEndpoint(Guid.NewGuid(), "File System Dispatcher", null, null, typeof(IContract), new FileSystemDispatcher(Config.IncomingFilePath), new PassThroughMessageFilter());
+            var subscription = new SubscriptionEndpoint(Guid.NewGuid(), "File System Dispatcher", null, null, typeof(IContract), new FileSystemDispatcher(new ConverterMessageDeliveryWriterFactory<IContract>(encoder), Config.IncomingFilePath), new PassThroughMessageFilter());
             dispatchRuntime.Subscribe(subscription);
 
             ServiceBusRuntime listenerRuntime = new ServiceBusRuntime(new DirectDeliveryCore());
-            var listener = new ListenerEndpoint(Guid.NewGuid(), "File System Listener", null, null, typeof(IContract), new FileSystemListener(Config.IncomingFilePath, Config.ProcessedFilePath));
+            var listener = new ListenerEndpoint(Guid.NewGuid(), "File System Listener", null, null, typeof(IContract), new FileSystemListener(new ConverterMessageDeliveryReaderFactory<IContract>(encoder), Config.IncomingFilePath, Config.ProcessedFilePath));
             listenerRuntime.AddListener(listener);
             listenerRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "Pass through", null, null, typeof(IContract), new ActionDispatcher((se, md) => { }), new PassThroughMessageFilter()));
             
@@ -65,13 +69,16 @@ namespace IServiceOriented.ServiceBus.UnitTests
         [Test]
         public void FileSystemDispatcher_Picks_Up_Existing_Messages()
         {
-            
+
+            BinaryMessageEncodingBindingElement element = new BinaryMessageEncodingBindingElement();
+            MessageEncoder encoder = element.CreateMessageEncoderFactory().Encoder;
+
             ServiceBusRuntime dispatchRuntime = new ServiceBusRuntime(new DirectDeliveryCore());
-            var subscription = new SubscriptionEndpoint(Guid.NewGuid(), "File System Dispatcher", null, null, typeof(IContract), new FileSystemDispatcher(Config.IncomingFilePath), new PassThroughMessageFilter());
+            var subscription = new SubscriptionEndpoint(Guid.NewGuid(), "File System Dispatcher", null, null, typeof(IContract), new FileSystemDispatcher(new ConverterMessageDeliveryWriterFactory<IContract>(encoder),Config.IncomingFilePath), new PassThroughMessageFilter());
             dispatchRuntime.Subscribe(subscription);
 
             ServiceBusRuntime listenerRuntime = new ServiceBusRuntime(new DirectDeliveryCore());
-            var listener = new ListenerEndpoint(Guid.NewGuid(), "File System Listener", null, null, typeof(IContract), new FileSystemListener(Config.IncomingFilePath, Config.ProcessedFilePath));
+            var listener = new ListenerEndpoint(Guid.NewGuid(), "File System Listener", null, null, typeof(IContract), new FileSystemListener(new ConverterMessageDeliveryReaderFactory<IContract>(encoder),Config.IncomingFilePath, Config.ProcessedFilePath));
             listenerRuntime.AddListener(listener);
             listenerRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "Pass through", null, null, typeof(IContract), new ActionDispatcher((se, md) => { }), new PassThroughMessageFilter()));
 

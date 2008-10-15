@@ -6,18 +6,21 @@ using System.IO;
 using System.ServiceModel.Channels;
 using IServiceOriented.ServiceBus.Delivery.Formatters;
 using System.Xml;
+using IServiceOriented.ServiceBus.IO;
 
 namespace IServiceOriented.ServiceBus.Dispatchers
 {
     public class FileSystemDispatcher : Dispatcher
     {
-        public FileSystemDispatcher()
+        public FileSystemDispatcher(MessageDeliveryWriterFactory writerFactory)
         {
+            WriterFactory = writerFactory;
         }
 
-        public FileSystemDispatcher(string outgoingFolder)
+        public FileSystemDispatcher(MessageDeliveryWriterFactory writerFactory, string outgoingFolder)
+            : this(writerFactory)
         {
-            OutgoingFolder = outgoingFolder;
+            OutgoingFolder = outgoingFolder;            
         }
 
         protected override void OnStart()
@@ -29,37 +32,22 @@ namespace IServiceOriented.ServiceBus.Dispatchers
             base.OnStart();
         }
 
-        MessageDeliveryConverter _converter;
-        public MessageDeliveryConverter Converter
+        public MessageDeliveryWriterFactory WriterFactory
         {
-            get
-            {
-                if (_converter == null)
-                {
-                    _converter = MessageDeliveryConverter.CreateConverter(Endpoint.ContractType);
-                }
-                return _converter;
-            }
+            get;
+            private set;
         }
-        
+
         public override void Dispatch(MessageDelivery messageDelivery)
         {
             try
             {
                 FileStream fs = File.Open(Path.Combine(OutgoingFolder, messageDelivery.MessageDeliveryId), FileMode.CreateNew, FileAccess.Write, FileShare.None);
-                try
+                using (var writer = WriterFactory.CreateWriter(fs))
                 {
-                    Message message = Converter.ToMessage(messageDelivery);
+                    writer.Write(messageDelivery);
+                }
 
-                    using (XmlDictionaryWriter writer = XmlDictionaryWriter.CreateTextWriter(fs))
-                    {
-                        message.WriteMessage(writer);
-                    }
-                }
-                finally
-                {
-                    fs.Close();
-                }
             }
             catch (IOException ex)
             {

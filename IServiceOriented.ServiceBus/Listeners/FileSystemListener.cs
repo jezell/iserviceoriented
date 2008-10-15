@@ -8,17 +8,19 @@ using System.Xml;
 using System.ServiceModel.Channels;
 using IServiceOriented.ServiceBus.Delivery.Formatters;
 using System.Threading;
+using IServiceOriented.ServiceBus.IO;
 
 namespace IServiceOriented.ServiceBus.Listeners
 {
     public class FileSystemListener : Listener
     {
-        public FileSystemListener()
+        public FileSystemListener(MessageDeliveryReaderFactory readerFactory)
         {
             OpenTimeout = TimeSpan.FromSeconds(10);
+            ReaderFactory = readerFactory;
         }
 
-        public FileSystemListener(string incomingFolder, string processedFolder) : this()
+        public FileSystemListener(MessageDeliveryReaderFactory readerFactory, string incomingFolder, string processedFolder) : this(readerFactory)
         {
             IncomingFolder = incomingFolder;
             ProcessedFolder = processedFolder;
@@ -65,22 +67,7 @@ namespace IServiceOriented.ServiceBus.Listeners
             get;
             set;
         }
-
-        int _maxHeaderSize = Int32.MaxValue;
-
-        MessageDeliveryConverter _converter;
-        public MessageDeliveryConverter Converter
-        {
-            get
-            {
-                if (_converter == null)
-                {
-                    _converter = MessageDeliveryConverter.CreateConverter(Endpoint.ContractType);
-                }
-                return _converter;
-            }
-        }
-
+        
         object _publishLock = new object();
         bool publishMessage(string path)
         {
@@ -112,21 +99,13 @@ namespace IServiceOriented.ServiceBus.Listeners
                         }
                     }
 
-                    try
+                    
+                    using (var reader = ReaderFactory.CreateReader(fileStream, true))
                     {
-                        XmlDictionaryReaderQuotas quotas = new XmlDictionaryReaderQuotas();
-                        using (XmlDictionaryReader xmlReader = XmlDictionaryReader.CreateTextReader(fileStream, quotas))
-                        {
-                            Message message = Message.CreateMessage(xmlReader, _maxHeaderSize, MessageVersion.Default);
-                            MessageDelivery delivery = Converter.CreateMessageDelivery(message);
-                            Runtime.PublishOneWay(new PublishRequest(delivery.ContractType, delivery.Action, delivery.Message, delivery.Context));
-                        }
-
+                        MessageDelivery delivery = reader.Read();
+                        Runtime.PublishOneWay(new PublishRequest(delivery.ContractType, delivery.Action, delivery.Message, delivery.Context));
                     }
-                    finally
-                    {
-                        fileStream.Close();
-                    }
+                
                     File.Move(path, Path.Combine(ProcessedFolder, Path.GetFileName(path)));
                     return true;
                 }
@@ -142,6 +121,13 @@ namespace IServiceOriented.ServiceBus.Listeners
             get;
             private set;
         }
+
+        public MessageDeliveryReaderFactory ReaderFactory
+        {
+            get;
+            private set;
+        }
+
 
         void onFileCreated(object sender, FileSystemEventArgs e)
         {

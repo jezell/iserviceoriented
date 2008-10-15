@@ -22,14 +22,14 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
         public MessageContractMessageDeliveryConverter(Type contractType)
         {
             foreach (WcfMessageInformation information in WcfUtils.GetMessageInformation(contractType))
-            {
-                cacheConverter(information.MessageType, information.Action);
+            {                
+                cacheConverter(contractType, information.MessageType, information.Action);
             }
         }
 
         Dictionary<string, TypedMessageConverter> _converterHash = new Dictionary<string, TypedMessageConverter>();
 
-        void cacheConverter(Type objType, string action)
+        void cacheConverter(Type contractType, Type objType, string action)
         {
             string key = objType + ":" + action;
             if (!_converterHash.ContainsKey(key))
