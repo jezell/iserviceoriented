@@ -37,7 +37,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
         [Test]
         public void Can_Create_Remove_Update_And_Delete_Endpoints()
         {
-            SqlSubscriptionDB db = new SqlSubscriptionDB(_connectionString, new Type[] { typeof(WcfProxyDispatcher) }, new Type[] { typeof(WcfListener)  }, new Type[] { typeof(PassThroughMessageFilter) });
+            SqlSubscriptionDB db = new SqlSubscriptionDB(_connectionString, new Type[] { typeof(WcfProxyDispatcher) }, new Type[] { typeof(WcfServiceHostListener)  }, new Type[] { typeof(PassThroughMessageFilter) });
 
             Assert.AreEqual(0, db.LoadListenerEndpoints().Count());
             Assert.AreEqual(0, db.LoadSubscriptionEndpoints().Count());

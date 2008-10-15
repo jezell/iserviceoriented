@@ -71,7 +71,8 @@ namespace IServiceOriented.ServiceBus.Services
         }
 
 
-        static Collection<Type> _knownMessageFilterTypes = new Collection<Type>() { typeof(WcfProxyDispatcher), typeof(WcfListener), typeof(WcfServiceHostListener), typeof(UnhandledMessageFilter), typeof(TypedMessageFilter), typeof(WcfServiceHostListener) };
+        static Collection<Type> _knownMessageFilterTypes = new Collection<Type>() { typeof(WcfProxyDispatcher), typeof(WcfListener), typeof(WcfServiceHostListener),
+            typeof(UnhandledMessageFilter), typeof(TypedMessageFilter), typeof(WcfDispatcher) };
         public static Collection<Type> KnownTypes
         {
             get
