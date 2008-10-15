@@ -100,6 +100,7 @@ namespace IServiceOriented.ServiceBus.Dispatchers
         
         public override void Dispatch(MessageDelivery messageDelivery)
         {
+            if (!Started) throw new InvalidOperationException("Dispatcher is not started yet");
             Factory.Endpoint.Address = new EndpointAddress(Endpoint.Address);
 
             IContextChannel proxy = CreateProxy();            
