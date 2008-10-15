@@ -83,7 +83,7 @@ namespace IServiceOriented.ServiceBus.Listeners
                         {
                             fileStream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.None);
                         }
-                        catch(FileNotFoundException)
+                        catch (FileNotFoundException)
                         {
                             throw;
                         }
@@ -95,6 +95,13 @@ namespace IServiceOriented.ServiceBus.Listeners
                             if (DateTime.Now - startTime > OpenTimeout)
                             {
                                 throw new TimeoutException("Timed out while trying to open file");
+                            }
+                        }
+                        finally
+                        {
+                            if (fileStream != null)
+                            {
+                                fileStream.Close();
                             }
                         }
                     }

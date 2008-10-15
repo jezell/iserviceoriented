@@ -6,7 +6,7 @@ using System.ServiceModel.Channels;
 
 namespace IServiceOriented.ServiceBus.Delivery.Formatters
 {
-    public class RawMessageMessageDeliveryConverter : MessageContractMessageDeliveryConverter
+    internal class RawMessageMessageDeliveryConverter : MessageContractMessageDeliveryConverter
     {
         public RawMessageMessageDeliveryConverter(Type contractType)
             : base(contractType)

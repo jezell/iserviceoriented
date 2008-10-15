@@ -16,7 +16,17 @@ namespace IServiceOriented.ServiceBus.Threading
 
         private readonly TimeSpan Timeout;
         private readonly Action<TimeSpan, object> UnitOfWork;
-        
+
+        public int Count
+        {
+            get
+            {
+                lock (_workers)
+                {
+                    return _workers.Count;
+                }
+            }
+        }
         class WorkerInfo
         {
             public AutoResetEvent StopEvent;
@@ -47,9 +57,9 @@ namespace IServiceOriented.ServiceBus.Threading
         
         List<WorkerInfo> _workers = new List<WorkerInfo>();
 
-        public void AddWorker()
+        public int AddWorker()
         {
-            AddWorker(null);
+            return AddWorker(null);
         }
 
         public int AddWorker(object state)

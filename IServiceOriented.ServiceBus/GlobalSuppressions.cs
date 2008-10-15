@@ -16,3 +16,6 @@
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1020:AvoidNamespacesWithFewTypes", Scope = "namespace", Target = "IServiceOriented.ServiceBus.Threading")]
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Scope = "member", Target = "IServiceOriented.ServiceBus.SimpleServiceLocator.#RegisterService(System.Type)")]
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Scope = "member", Target = "IServiceOriented.ServiceBus.SimpleServiceLocator.#RegisterService(System.Type,System.String)")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly", Scope = "member", Target = "IServiceOriented.ServiceBus.IO.MessageDeliveryReader.#System.IDisposable.Dispose()")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly", Scope = "member", Target = "IServiceOriented.ServiceBus.IO.MessageDeliveryWriter.#System.IDisposable.Dispose()")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1020:AvoidNamespacesWithFewTypes", Scope = "namespace", Target = "IServiceOriented.ServiceBus.IO")]

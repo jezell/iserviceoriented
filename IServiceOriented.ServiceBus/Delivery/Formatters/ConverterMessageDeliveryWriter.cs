@@ -8,7 +8,7 @@ using System.IO;
 
 namespace IServiceOriented.ServiceBus.Delivery.Formatters
 {
-    public class ConverterMessageDeliveryWriter<T> : MessageDeliveryWriter
+    internal class ConverterMessageDeliveryWriter<T> : MessageDeliveryWriter
     {
         public ConverterMessageDeliveryWriter(Stream baseStream, bool isOwner, MessageEncoder encoder) : base(baseStream, isOwner)
         {

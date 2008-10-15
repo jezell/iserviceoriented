@@ -91,6 +91,7 @@
     <Compile Include="Create.cs" />
     <Compile Include="TestWcfDispatcher.cs" />
     <Compile Include="TestWcfListener.cs" />
+    <Compile Include="TestWorkerThreads.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\IServiceOriented.ServiceBus\IServiceOriented.ServiceBus.csproj">

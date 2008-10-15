@@ -17,19 +17,19 @@ using IServiceOriented.ServiceBus.Listeners;
 
 namespace IServiceOriented.ServiceBus.Delivery.Formatters
 {
-    public class MessageContractMessageDeliveryConverter : MessageDeliveryConverter
+    internal class MessageContractMessageDeliveryConverter : MessageDeliveryConverter
     {
         public MessageContractMessageDeliveryConverter(Type contractType)
         {
             foreach (WcfMessageInformation information in WcfUtils.GetMessageInformation(contractType))
             {                
-                cacheConverter(contractType, information.MessageType, information.Action);
+                cacheConverter(information.MessageType, information.Action);
             }
         }
 
         Dictionary<string, TypedMessageConverter> _converterHash = new Dictionary<string, TypedMessageConverter>();
 
-        void cacheConverter(Type contractType, Type objType, string action)
+        void cacheConverter(Type objType, string action)
         {
             string key = objType + ":" + action;
             if (!_converterHash.ContainsKey(key))

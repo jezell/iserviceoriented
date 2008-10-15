@@ -17,7 +17,7 @@ using IServiceOriented.ServiceBus.Listeners;
 
 namespace IServiceOriented.ServiceBus.Delivery.Formatters
 {
-    public class DataContractMessageDeliveryConverter : MessageDeliveryConverter
+    internal class DataContractMessageDeliveryConverter : MessageDeliveryConverter
     {
         public DataContractMessageDeliveryConverter(Type interfaceType)
         {

@@ -8,7 +8,7 @@ namespace IServiceOriented.ServiceBus.IO
 {
     public abstract class MessageDeliveryWriter : IDisposable
     {
-        public MessageDeliveryWriter(Stream stream, bool isOwner)
+        protected MessageDeliveryWriter(Stream stream, bool isOwner)
         {
             BaseStream = stream;
             OwnsStream = isOwner;
