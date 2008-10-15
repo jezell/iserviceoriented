@@ -557,7 +557,7 @@ namespace IServiceOriented.ServiceBus
 
                     if (_started)
                     {
-                        subscription.Dispatcher.StopInternal() ;
+                        subscription.Dispatcher.StartInternal() ;
                     }
 
 
