@@ -52,7 +52,13 @@ namespace IServiceOriented.ServiceBus.Dispatchers
 
         protected override void Dispose(bool disposing)
         {
-            if (CommunicationObject.State != CommunicationState.Closed) CommunicationObject.Close();
+            if (disposing)
+            {
+                if (CommunicationObject != null)
+                {
+                    if (CommunicationObject.State != CommunicationState.Closed) CommunicationObject.Close();
+                }
+            }
             base.Dispose(disposing);
         }
     }

@@ -80,7 +80,17 @@ namespace IServiceOriented.ServiceBus.Dispatchers
                 }
             }
 
-            if(!IsOneWay) replyAction = _replyLookup[messageDelivery.Action];
+            if (!IsOneWay)
+            {
+                try
+                {
+                    replyAction = _replyLookup[messageDelivery.Action];
+                }
+                catch (KeyNotFoundException)
+                {
+                    Console.WriteLine(messageDelivery.Action);
+                }
+            }
 
             if (methodInfo != null)
             {

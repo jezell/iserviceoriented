@@ -119,7 +119,7 @@ namespace IServiceOriented.ServiceBus
 
     [Serializable]
     [DataContract]
-    public struct MessageDeliveryContextKey
+    public class MessageDeliveryContextKey
     {        
         public MessageDeliveryContextKey(string name)
         {
@@ -147,6 +147,10 @@ namespace IServiceOriented.ServiceBus
             {
                 return _name;
             }
+            protected set
+            {
+                _name = value;
+            }
         }
 
         string _namespace;
@@ -157,6 +161,10 @@ namespace IServiceOriented.ServiceBus
             get
             {
                 return _namespace;
+            }
+            protected set
+            {
+                _namespace = value;
             }
         }
 
@@ -175,7 +183,12 @@ namespace IServiceOriented.ServiceBus
 
         public override bool Equals(object obj)
         {
-            return Name.Equals(obj) && Namespace.Equals(obj);
+            MessageDeliveryContextKey key = obj as MessageDeliveryContextKey;
+            if (key != null)
+            {
+                return Name.Equals(key.Name) && Namespace.Equals(key.Namespace);
+            }
+            return false;
         }
 
         public static bool operator==(MessageDeliveryContextKey key1, MessageDeliveryContextKey key2)
