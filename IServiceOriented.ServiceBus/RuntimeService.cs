@@ -120,6 +120,14 @@ namespace IServiceOriented.ServiceBus
         }
 
         /// <summary>
+        /// Called when a message delivery expires
+        /// </summary>
+        /// <param name="delivery"></param>
+        protected virtual internal void OnMessageDeliveryExpired(MessageDelivery delivery)
+        {
+        }
+
+        /// <summary>
         /// Called when a message delivery fails
         /// </summary>
         /// <param name="delivery"></param>

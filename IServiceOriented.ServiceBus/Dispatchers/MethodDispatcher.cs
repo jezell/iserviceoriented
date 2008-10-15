@@ -82,14 +82,7 @@ namespace IServiceOriented.ServiceBus.Dispatchers
 
             if (!IsOneWay)
             {
-                try
-                {
-                    replyAction = _replyLookup[messageDelivery.Action];
-                }
-                catch (KeyNotFoundException)
-                {
-                    Console.WriteLine(messageDelivery.Action);
-                }
+                replyAction = _replyLookup[messageDelivery.Action];                
             }
 
             if (methodInfo != null)
@@ -100,7 +93,7 @@ namespace IServiceOriented.ServiceBus.Dispatchers
                 {
                     KeyValuePair<MessageDeliveryContextKey, object>[] replyData = new KeyValuePair<MessageDeliveryContextKey, object>[1];
                     replyData[0] = new KeyValuePair<MessageDeliveryContextKey, object>(MessageDelivery.CorrelationId, messageDelivery.MessageDeliveryId);                         
-                    Runtime.Publish(new PublishRequest(Endpoint.ContractType, replyAction, result, new MessageDeliveryContext(replyData)));
+                    Runtime.PublishOneWay(new PublishRequest(Endpoint.ContractType, replyAction, result, new MessageDeliveryContext(replyData)));
                 }
             }
             else

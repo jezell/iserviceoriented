@@ -23,13 +23,13 @@ namespace IServiceOriented.ServiceBus.UnitTests
         [TestFixtureSetUp]
         public void Init()
         {
-            ServiceBusManagementServiceTypeProvider.KnownTypes.Add(typeof(PassThroughMessageFilter));
+            ServiceBusManagementServiceTypeProvider.RegisteredKnownTypes.Add(typeof(PassThroughMessageFilter));
         }
 
         [TestFixtureTearDown]
         public void Uninit()
         {
-            ServiceBusManagementServiceTypeProvider.KnownTypes.Remove(typeof(PassThroughMessageFilter));
+            ServiceBusManagementServiceTypeProvider.RegisteredKnownTypes.Remove(typeof(PassThroughMessageFilter));
         }
 
         [Test]

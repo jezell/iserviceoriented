@@ -158,7 +158,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
                 {
                     tester.WaitForDeliveriesOrFailures(1, TimeSpan.FromSeconds(5), () =>
                     {
-                        serviceBusRuntime.Publish(new PublishRequest(typeof(IContract), "PublishThis", message));
+                        serviceBusRuntime.PublishOneWay(new PublishRequest(typeof(IContract), "PublishThis", message));
                     });
                 }
                 catch (TimeoutException) // should timeout while waiting
@@ -189,7 +189,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
                 
                 tester.WaitForDeliveries(1, TimeSpan.FromMinutes(1), ()=>
                 {
-                    serviceBusRuntime.Publish(new PublishRequest(typeof(IContract), "PublishThis", message));
+                    serviceBusRuntime.PublishOneWay(new PublishRequest(typeof(IContract), "PublishThis", message));
                 });
                 
                 Assert.AreEqual(1, ci.PublishedCount);
@@ -215,7 +215,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
                 tester.WaitForDeliveriesOrFailures(1, TimeSpan.FromSeconds(5), () =>
                 {
-                    serviceBusRuntime.Publish(new PublishRequest(typeof(IContract), "PublishThis", message));
+                    serviceBusRuntime.PublishOneWay(new PublishRequest(typeof(IContract), "PublishThis", message));
                 });
             
                 Assert.AreEqual(1, ci.PublishedCount);
@@ -244,7 +244,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
                 for (int i = 0; i < messageCount; i++)
                 {
                     string message = i.ToString();
-                    serviceBusRuntime.Publish(new PublishRequest(typeof(IContract), "PublishThis", message));
+                    serviceBusRuntime.PublishOneWay(new PublishRequest(typeof(IContract), "PublishThis", message));
                 }
 
                 DateTime start = DateTime.Now;
@@ -306,7 +306,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
                     for (int i = 0; i < messageCount; i++)
                     {
                         string message = i.ToString();
-                        serviceBusRuntime.Publish(new PublishRequest(typeof(IContract), "PublishThis", message));
+                        serviceBusRuntime.PublishOneWay(new PublishRequest(typeof(IContract), "PublishThis", message));
                     }
                 });
                             
@@ -364,7 +364,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
                         int tick; if ((tick = latch.Tick()) == 1) failFirst = true; Console.WriteLine("Tick fail " + tick);
                     };
 
-                    serviceBusRuntime.Publish(new PublishRequest(typeof(IContract), "PublishThis", message));
+                    serviceBusRuntime.PublishOneWay(new PublishRequest(typeof(IContract), "PublishThis", message));
 
                     // Wait for delivery
                     latch.Handle.WaitOne(TimeSpan.FromMinutes(1), false); // give it a minute
@@ -399,7 +399,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
                 tester.WaitForDeliveriesOrFailures(3, TimeSpan.FromMinutes(.5), () =>
                 {
-                    serviceBusRuntime.Publish(new PublishRequest(typeof(IContract), "PublishThis", message));
+                    serviceBusRuntime.PublishOneWay(new PublishRequest(typeof(IContract), "PublishThis", message));
                 });                   
         
                 Assert.AreEqual(0, ci.PublishedCount);

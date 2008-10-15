@@ -67,5 +67,6 @@ namespace IServiceOriented.ServiceBus
             _fastLookup.TryGetValue(value, out endpoint);
             return endpoint;
         }
+
     }
 }

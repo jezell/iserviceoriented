@@ -28,6 +28,7 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
         public const string TimeToProcessHeader = "timeToProcess";
         public const string ContractTypeNameHeader = "contractTypeName";
         public const string ContextHeader = "context";
+        public const string MustDeliverByHeader = "mustDeliverBy";
                 
         public const string MessagingNamespace = "http://iserviceoriented/servicebus/messaging";
         
@@ -42,11 +43,11 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
             
             msg.Headers.Add(System.ServiceModel.Channels.MessageHeader.CreateHeader(ContextHeader, MessagingNamespace, delivery.Context)); 
             msg.Headers.Add(System.ServiceModel.Channels.MessageHeader.CreateHeader(MessageTypeHeader, MessagingNamespace, objType.AssemblyQualifiedName));
-
             msg.Headers.Add(System.ServiceModel.Channels.MessageHeader.CreateHeader(MaxRetriesHeader, MessagingNamespace, delivery.MaxRetries));
             msg.Headers.Add(System.ServiceModel.Channels.MessageHeader.CreateHeader(RetryCountHeader, MessagingNamespace, delivery.RetryCount));
             msg.Headers.Add(System.ServiceModel.Channels.MessageHeader.CreateHeader(MessageIdHeader, MessagingNamespace, delivery.MessageDeliveryId));
             msg.Headers.Add(System.ServiceModel.Channels.MessageHeader.CreateHeader(SubscriptionIdHeader, MessagingNamespace, delivery.SubscriptionEndpointId));
+            msg.Headers.Add(System.ServiceModel.Channels.MessageHeader.CreateHeader(MustDeliverByHeader, MessagingNamespace, delivery.MustDeliverBy));
             if (delivery.TimeToProcess != null) msg.Headers.Add(System.ServiceModel.Channels.MessageHeader.CreateHeader(TimeToProcessHeader, MessagingNamespace, delivery.TimeToProcess));
             msg.Headers.Add(System.ServiceModel.Channels.MessageHeader.CreateHeader(ContractTypeNameHeader, MessagingNamespace, delivery.ContractTypeName));
 
@@ -67,9 +68,9 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
             {
                 timeToProcess = msg.Headers.GetHeader<DateTime>(TimeToProcessHeader, MessagingNamespace);
             }
-            string contractTypeName = msg.Headers.GetHeader<string>(ContractTypeNameHeader, MessagingNamespace);            
-
-            MessageDelivery delivery = new MessageDelivery(messageId, subscriptionId, contractTypeName == null ? null : Type.GetType(contractTypeName), msg.Headers.Action, value, maxRetries, retryCount, timeToProcess, new MessageDeliveryContext(context));
+            string contractTypeName = msg.Headers.GetHeader<string>(ContractTypeNameHeader, MessagingNamespace);
+            DateTime mustDeliverBy = msg.Headers.GetHeader<DateTime>(MustDeliverByHeader, MessagingNamespace);
+            MessageDelivery delivery = new MessageDelivery(messageId, subscriptionId, contractTypeName == null ? null : Type.GetType(contractTypeName), msg.Headers.Action, value, maxRetries, retryCount, timeToProcess, new MessageDeliveryContext(context), mustDeliverBy);
             return delivery;
         }
 

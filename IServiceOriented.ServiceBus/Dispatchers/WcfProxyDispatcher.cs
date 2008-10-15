@@ -125,7 +125,7 @@ namespace IServiceOriented.ServiceBus.Dispatchers
                             {
                                 KeyValuePair<MessageDeliveryContextKey, object>[] replyData = new KeyValuePair<MessageDeliveryContextKey, object>[1];
                                 replyData[0] = new KeyValuePair<MessageDeliveryContextKey, object>(MessageDelivery.CorrelationId, messageDelivery.MessageDeliveryId);
-                                Runtime.Publish(new PublishRequest(Endpoint.ContractType, lookup.ReplyActionLookup[messageDelivery.Action], result, new MessageDeliveryContext(replyData)));
+                                Runtime.PublishOneWay(new PublishRequest(Endpoint.ContractType, lookup.ReplyActionLookup[messageDelivery.Action], result, new MessageDeliveryContext(replyData)));
                             }
                         }
                         catch (System.Reflection.TargetInvocationException ex)
@@ -137,7 +137,7 @@ namespace IServiceOriented.ServiceBus.Dispatchers
 
                                 if (ex.InnerException is FaultException)
                                 {
-                                    Runtime.Publish(new PublishRequest(Endpoint.ContractType, lookup.ReplyActionLookup[messageDelivery.Action], ex.InnerException, new MessageDeliveryContext(replyData)));
+                                    Runtime.PublishOneWay(new PublishRequest(Endpoint.ContractType, lookup.ReplyActionLookup[messageDelivery.Action], ex.InnerException, new MessageDeliveryContext(replyData)));
                                 }
                                 else
                                 {

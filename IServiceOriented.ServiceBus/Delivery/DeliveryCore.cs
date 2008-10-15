@@ -20,11 +20,21 @@ namespace IServiceOriented.ServiceBus.Delivery
             Runtime.NotifyDelivery(delivery);
         }
 
+        protected void NotifyExpired(MessageDelivery delivery)
+        {
+            Runtime.NotifyExpired(delivery);
+        }
+
         protected void NotifyFailure(MessageDelivery delivery, bool permanent)
         {
             Runtime.NotifyFailure(delivery, permanent);
         }
 
         public abstract void Deliver(MessageDelivery delivery);
+
+        public abstract bool IsTransactional
+        {
+            get;
+        }
     }       
 }

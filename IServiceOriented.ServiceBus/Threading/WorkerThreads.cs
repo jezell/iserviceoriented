@@ -60,7 +60,7 @@ namespace IServiceOriented.ServiceBus.Threading
 
                 WorkerInfo info = new WorkerInfo()
                 {
-                    Thread = new Thread(worker),
+                    Thread = new Thread(worker) { IsBackground = true },
                     Stopping = false,
                     StopEvent = new AutoResetEvent(false),
                     State = state

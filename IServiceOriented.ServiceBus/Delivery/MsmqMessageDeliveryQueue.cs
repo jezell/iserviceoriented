@@ -248,6 +248,14 @@ namespace IServiceOriented.ServiceBus.Delivery
         {
             Dispose(false);
         }
+
+        public bool IsTransactional
+        {
+            get
+            {
+                return _queue.Transactional;
+            }
+        }
     }
 	
 	

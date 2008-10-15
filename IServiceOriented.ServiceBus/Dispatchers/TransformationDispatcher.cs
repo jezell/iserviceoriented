@@ -36,6 +36,7 @@ namespace IServiceOriented.ServiceBus.Dispatchers
         /// <summary>
         /// The name of the context key that stores a the IDs (ReadOnlyCollection of Guids) of the endpoints which have been involved in message transformation.
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public static readonly MessageDeliveryContextKey TransformedByKeyName = new MessageDeliveryContextKey("TransformedBy", MessageDelivery.MessagingNamespace);
 
         private class TransformationList : ReadOnlyCollection<string>
@@ -83,7 +84,7 @@ namespace IServiceOriented.ServiceBus.Dispatchers
                 PublishRequest result = Transform(new PublishRequest(Endpoint.ContractType, messageDelivery.Action, messageDelivery.Message, context));
                 if (result != null)
                 {
-                    Runtime.Publish(new PublishRequest(result.ContractType, result.Action, result.Message, context));
+                    Runtime.PublishOneWay(new PublishRequest(result.ContractType, result.Action, result.Message, context));
                 }
             }
             else

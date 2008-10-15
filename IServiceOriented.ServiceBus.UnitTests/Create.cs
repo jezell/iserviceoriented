@@ -42,6 +42,35 @@ namespace IServiceOriented.ServiceBus.UnitTests
             return new ServiceBusRuntime(new QueuedDeliveryCore(testQueue, retryQueue, failQueue));
         }
 
+        public static ServiceBusRuntime BinaryMsmqRuntime()
+        {
+            // Drop test queues if they already exist
+            if (MsmqMessageDeliveryQueue.Exists(_testQueuePath))
+            {
+                MsmqMessageDeliveryQueue.Delete(_testQueuePath);
+            }
+            if (MsmqMessageDeliveryQueue.Exists(_retryQueuePath))
+            {
+                MsmqMessageDeliveryQueue.Delete(_retryQueuePath);
+            }
+            if (MsmqMessageDeliveryQueue.Exists(_failQueuePath))
+            {
+                MsmqMessageDeliveryQueue.Delete(_failQueuePath);
+            }
+
+            // Create test queues
+            MsmqMessageDeliveryQueue.Create(_testQueuePath);
+            MsmqMessageDeliveryQueue.Create(_retryQueuePath);
+            MsmqMessageDeliveryQueue.Create(_failQueuePath);
+
+            var binaryFormatter = new System.Messaging.BinaryMessageFormatter();
+            MsmqMessageDeliveryQueue testQueue = new MsmqMessageDeliveryQueue(_testQueuePath, binaryFormatter);
+            MsmqMessageDeliveryQueue retryQueue = new MsmqMessageDeliveryQueue(_retryQueuePath, binaryFormatter);
+            MsmqMessageDeliveryQueue failQueue = new MsmqMessageDeliveryQueue(_failQueuePath, binaryFormatter);
+
+            return new ServiceBusRuntime(new QueuedDeliveryCore(testQueue, retryQueue, failQueue));
+        }
+
         static string _testQueuePath = Config.TestQueuePath;
         static string _retryQueuePath = Config.RetryQueuePath;
         static string _failQueuePath = Config.FailQueuePath;

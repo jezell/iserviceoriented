@@ -72,6 +72,13 @@ namespace IServiceOriented.ServiceBus.UnitTests
             }
         }
 
+        public bool IsTransactional
+        {
+            get
+            {
+                return false;
+            }
+        }
         
     }
 }

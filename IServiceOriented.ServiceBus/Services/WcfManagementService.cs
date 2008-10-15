@@ -62,7 +62,7 @@ namespace IServiceOriented.ServiceBus.Services
             }
 
 
-            foreach (Type t in KnownTypes)
+            foreach (Type t in RegisteredKnownTypes)
             {
                 knownTypes.Add(t);
             }
@@ -73,7 +73,7 @@ namespace IServiceOriented.ServiceBus.Services
 
         static Collection<Type> _knownMessageFilterTypes = new Collection<Type>() { typeof(WcfProxyDispatcher), typeof(WcfListener), typeof(WcfServiceHostListener),
             typeof(UnhandledMessageFilter), typeof(TypedMessageFilter), typeof(WcfDispatcher) };
-        public static Collection<Type> KnownTypes
+        public static Collection<Type> RegisteredKnownTypes
         {
             get
             {

@@ -162,7 +162,7 @@ namespace IServiceOriented.ServiceBus.Listeners
                 }
             }
             PublishRequest pr = new PublishRequest(contractType, action, message, new MessageDeliveryContext(context));
-            Runtime.Publish(pr);
+            Runtime.PublishOneWay(pr);
         }
 
     }

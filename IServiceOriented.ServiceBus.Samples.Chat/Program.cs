@@ -14,8 +14,8 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
     {
         static void Main(string[] args)
         {
-            ServiceBusManagementServiceTypeProvider.KnownTypes.Add(typeof(ChatFilter));
-            ServiceBusManagementServiceTypeProvider.KnownTypes.Add(typeof(WcfDispatcherWithUsernameCredentials));
+            ServiceBusManagementServiceTypeProvider.RegisteredKnownTypes.Add(typeof(ChatFilter));
+            ServiceBusManagementServiceTypeProvider.RegisteredKnownTypes.Add(typeof(WcfDispatcherWithUsernameCredentials));
 
             if(args.Length == 0)
             {

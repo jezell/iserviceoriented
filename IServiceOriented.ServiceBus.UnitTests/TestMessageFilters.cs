@@ -45,25 +45,38 @@ namespace IServiceOriented.ServiceBus.UnitTests
             Assert.IsTrue(tmf.Include(new PublishRequest(null, null, new C1IsMyBase())));
         }
 
+
+        
         [Test]
         public void UnhandledMessageFilter_Receives_Unhandled_Messages()
         {
-            using (var runtime = Create.MemoryQueueRuntime())
-            {
-                int handledCount = 0;
-                int unhandledCount = 0;
+            int handledCount = 0;
+            int unhandledCount = 0;
 
+            using (var runtime = Create.BinaryMsmqRuntime())
+            {
+                runtime.MessageDeliveryExpired += (o, msg) => System.Diagnostics.Trace.WriteLine("expired");
+
+                runtime.UnhandledException += (ex, p) => System.Diagnostics.Trace.WriteLine("Unhandled Exception = "+ex);
                 AutoResetEvent reset = new AutoResetEvent(false);
 
-                SubscriptionEndpoint handled = new SubscriptionEndpoint(Guid.NewGuid(), "Handled", null, null, typeof(void), new ActionDispatcher((e, d) => { handledCount++; System.Diagnostics.Trace.WriteLine("Handled Message = " + d.Message); reset.Set(); }), null);
-                SubscriptionEndpoint unhandled = new SubscriptionEndpoint(Guid.NewGuid(), "Unhandled", null, null, typeof(void), new ActionDispatcher((e, d) => { unhandledCount++; System.Diagnostics.Trace.WriteLine("Unhandled Message = " + d.Message); reset.Set(); }), new UnhandledMessageFilter(true, typeof(object)));
+                SubscriptionEndpoint handled = new SubscriptionEndpoint(Guid.NewGuid(), "Handled", null, null, typeof(void), new ActionDispatcher((e, d) => { 
+                    Interlocked.Increment(ref handledCount); 
+                    System.Diagnostics.Trace.WriteLine("Handled Message = " + d.Message); 
+                    reset.Set(); 
+                }), null);
+                SubscriptionEndpoint unhandled = new SubscriptionEndpoint(Guid.NewGuid(), "Unhandled", null, null, typeof(void), new ActionDispatcher((e, d) => { 
+                    Interlocked.Increment(ref unhandledCount); 
+                    System.Diagnostics.Trace.WriteLine("Unhandled Message = " + d.Message); 
+                    reset.Set(); }), 
+                    new UnhandledMessageFilter(true, typeof(object)));
 
                 runtime.Subscribe(handled);
                 runtime.Subscribe(unhandled);
 
                 runtime.Start();
 
-                runtime.Publish(null, null, "Handled");
+                runtime.PublishOneWay(null, null, "Handled");
 
                 // Make sure that unhandled doesn't get the message if it is handled
                 if (reset.WaitOne(1000 * 10, true))
@@ -82,7 +95,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
                 unhandledCount = 0;
 
 
-                runtime.Publish(null, null, "Unhandled");
+                runtime.PublishOneWay(null, null, "Unhandled");
 
                 // Make sure that unhandled gets the message if it is handled
                 if (reset.WaitOne(1000 * 10, true))

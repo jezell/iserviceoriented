@@ -39,7 +39,7 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
             {
                 if (request.From != "System")
                 {
-                    _serviceBus.Publish(new PublishRequest(typeof(IChatService), "SendMessage", new SendMessageRequest("System", request.From, request.To + " is an invalid user"),
+                    _serviceBus.PublishOneWay(new PublishRequest(typeof(IChatService), "SendMessage", new SendMessageRequest("System", request.From, request.To + " is an invalid user"),
                         new MessageDeliveryContext(new KeyValuePair<MessageDeliveryContextKey, object>[] { new KeyValuePair<MessageDeliveryContextKey, object>(MessageDelivery.PrimaryIdentityNameKey, "SYSTEM") })));
                 }
             }

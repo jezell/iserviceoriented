@@ -129,42 +129,33 @@ namespace IServiceOriented.ServiceBus
             _namespace = String.Empty;
         }
 
-        public MessageDeliveryContextKey(string name, string ns)
+        public MessageDeliveryContextKey(string name, string ns) : this(name)
         {
-            if (String.IsNullOrEmpty(name)) throw new ArgumentException("Name cannot be null or empty");
             if (ns == null) throw new ArgumentException("Namespace cannot be null");
 
-            _name = name;
             _namespace = ns ?? String.Empty;
         }
 
-
+        [DataMember(Name="Name")]
         string _name;        
-        [DataMember]
+        
         public string Name
         {
             get
             {
                 return _name;
             }
-            protected set
-            {
-                _name = value;
-            }
         }
 
+        [DataMember(Name = "Namespace")]
         string _namespace;
 
-        [DataMember]
+        
         public string Namespace
         {
             get
             {
                 return _namespace;
-            }
-            protected set
-            {
-                _namespace = value;
             }
         }
 

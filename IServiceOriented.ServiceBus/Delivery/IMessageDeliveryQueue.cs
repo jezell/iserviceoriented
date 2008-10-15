@@ -14,5 +14,10 @@ namespace IServiceOriented.ServiceBus.Delivery
         MessageDelivery Dequeue(string id, TimeSpan timeout);
 
         IEnumerable<MessageDelivery> ListMessages();
+
+        bool IsTransactional
+        {
+            get;
+        }
     }
 }

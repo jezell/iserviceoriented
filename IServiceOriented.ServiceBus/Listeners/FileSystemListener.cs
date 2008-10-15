@@ -119,7 +119,7 @@ namespace IServiceOriented.ServiceBus.Listeners
                         {
                             Message message = Message.CreateMessage(xmlReader, _maxHeaderSize, MessageVersion.Default);
                             MessageDelivery delivery = Converter.CreateMessageDelivery(message);
-                            Runtime.Publish(new PublishRequest(delivery.ContractType, delivery.Action, delivery.Message, delivery.Context));
+                            Runtime.PublishOneWay(new PublishRequest(delivery.ContractType, delivery.Action, delivery.Message, delivery.Context));
                         }
 
                     }

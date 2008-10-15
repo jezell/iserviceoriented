@@ -55,7 +55,7 @@ def Execute():
             }), new TypedMessageFilter(typeof(AfterTransformation))));
             runtime.Start();
 
-            runtime.Publish(new PublishRequest(null, null, new BeforeTransformation() { Value = "1000" }));
+            runtime.PublishOneWay(new PublishRequest(null, null, new BeforeTransformation() { Value = "1000" }));
 
             if (!reset.WaitOne(1000 * 10, true))
             {

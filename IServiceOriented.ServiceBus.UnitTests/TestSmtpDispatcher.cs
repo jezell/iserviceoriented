@@ -26,7 +26,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
                 tester.StartAndStop(() =>
                 {
                     dispatchRuntime.Subscribe(subscription);
-                    dispatchRuntime.Publish(typeof(IContract), "PublishThis", "this is a test message");
+                    dispatchRuntime.PublishOneWay(typeof(IContract), "PublishThis", "this is a test message");
                 });
             }
             else

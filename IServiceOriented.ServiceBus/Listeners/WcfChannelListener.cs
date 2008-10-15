@@ -45,7 +45,7 @@ namespace IServiceOriented.ServiceBus.Listeners
             {
                 IInputChannel inputChannel = ChannelListener.AcceptChannel(timeout);
                 Message message = inputChannel.Receive();
-                Runtime.Publish(new PublishRequest(typeof(IPassThroughServiceContract), message.Headers.Action, message));
+                Runtime.PublishOneWay(new PublishRequest(typeof(IPassThroughServiceContract), message.Headers.Action, message));
             }
             catch (TimeoutException)
             {

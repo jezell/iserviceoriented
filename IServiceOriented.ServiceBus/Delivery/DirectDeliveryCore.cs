@@ -13,6 +13,13 @@ namespace IServiceOriented.ServiceBus.Delivery
     /// </remarks>
     public class DirectDeliveryCore : DeliveryCore
     {
+        public DirectDeliveryCore()
+        {
+        }
+        public DirectDeliveryCore(bool transactional)
+        {
+            _transactional = transactional;
+        }
         public override void Deliver(MessageDelivery delivery)
         {
             if (!Started)
@@ -31,6 +38,15 @@ namespace IServiceOriented.ServiceBus.Delivery
             catch(Exception ex)
             {
                 throw new DeliveryException("Unhandled exception while attempting to deliver the message", ex);
+            }
+        }
+
+        bool _transactional;
+        public override bool IsTransactional
+        {
+            get 
+            {
+                return _transactional;
             }
         }
     }

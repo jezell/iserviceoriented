@@ -41,5 +41,13 @@ namespace IServiceOriented.ServiceBus.UnitTests
         #endregion
 
         public static readonly NullMessageDeliveryQueue Instance = new NullMessageDeliveryQueue();
+
+        public bool IsTransactional
+        {
+            get
+            {
+                return false;
+            }
+        }
     }
 }

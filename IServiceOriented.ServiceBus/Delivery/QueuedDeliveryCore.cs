@@ -19,12 +19,26 @@ namespace IServiceOriented.ServiceBus.Delivery
             _messageDeliveryQueue = deliveryQueue;
             _retryQueue = retryQueue;
             _failureQueue = failureQueue;
+
+            _transactional = deliveryQueue.IsTransactional && retryQueue.IsTransactional && failureQueue.IsTransactional;
+
+            if (!_transactional)
+            {
+                throw new InvalidOperationException("Only transactional queues are allowed");
+            }
         }
 
         public QueuedDeliveryCore(IMessageDeliveryQueue deliveryQueue, IMessageDeliveryQueue failureQueue)
         {
+            _transactional = deliveryQueue.IsTransactional && failureQueue.IsTransactional;
+            
+            if (!_transactional)
+            {
+                throw new InvalidOperationException("Only transactional queues are allowed");
+            }
+
             _messageDeliveryQueue = deliveryQueue;
-            _failureQueue = failureQueue;
+            _failureQueue = failureQueue;            
         }
 
 
@@ -270,40 +284,50 @@ namespace IServiceOriented.ServiceBus.Delivery
                         MessageDelivery delivery = work.Delivery;
                         if (delivery != null)
                         {
-                            if (delivery.TimeToProcess != null)
+                            if (!delivery.IsExpired)
                             {
-                                int mDelay = (int)(delivery.TimeToProcess.Value - DateTime.Now).TotalMilliseconds;
-                                if (mDelay > 0)
+                                if (delivery.TimeToProcess != null)
                                 {
-                                    System.Diagnostics.Debug.WriteLine("Time to process is " + mDelay + " milliseconds away. Requeuing in " + FUTURE_SLEEP_MS);
-                                    Thread.Sleep(FUTURE_SLEEP_MS); // Sleep briefly in case we are in a loop of future messages, should be a little smarter
-                                    QueueRetry(delivery);
-                                    return;
+                                    int mDelay = (int)(delivery.TimeToProcess.Value - DateTime.Now).TotalMilliseconds;
+                                    if (mDelay > 0)
+                                    {
+                                        System.Diagnostics.Debug.WriteLine("Time to process is " + mDelay + " milliseconds away. Requeuing in " + FUTURE_SLEEP_MS);
+                                        Thread.Sleep(FUTURE_SLEEP_MS); // Sleep briefly in case we are in a loop of future messages, should be a little smarter
+                                        QueueRetry(delivery);
+                                        return;
+                                    }
                                 }
-                            }
 
-                            SubscriptionEndpoint endpoint = Runtime.GetSubscription(delivery.SubscriptionEndpointId);
-                            if (endpoint != null)
-                            {
-                                Dispatcher dispatcher = endpoint.Dispatcher;
-
-                                if (dispatcher != null)
+                                SubscriptionEndpoint endpoint = Runtime.GetSubscription(delivery.SubscriptionEndpointId);
+                                if (endpoint != null)
                                 {
-                                    dispatcher.Dispatch(delivery);
+                                    Dispatcher dispatcher = endpoint.Dispatcher;
+
+                                    if (dispatcher != null)
+                                    {
+                                        dispatcher.Dispatch(delivery);
+                                    }
+                                    else
+                                    {
+                                        throw new InvalidOperationException("Dispatcher is not set");
+                                    }
                                 }
                                 else
                                 {
-                                    throw new InvalidOperationException("Dispatcher is not set");
+                                    System.Diagnostics.Debug.WriteLine(String.Format(CultureInfo.InvariantCulture, "Subscription {0} no longer exists. Skipping delivery.", delivery.SubscriptionEndpointId));
                                 }
+                                NotifyDelivery(delivery);
                             }
                             else
-                            {
-                                System.Diagnostics.Debug.WriteLine(String.Format(CultureInfo.InvariantCulture, "Subscription {0} no longer exists. Skipping delivery.", delivery.SubscriptionEndpointId));
+                            {                            
+                                QueueFail(delivery, new TimeoutException("The Message expired before it could be delivered."));
+
+                                NotifyExpired(delivery);
+                                NotifyFailure(delivery, true);
                             }
+
                         }
-
-                        NotifyDelivery(delivery);                                  
-
+                        
                         work.Transaction.Commit();
                     }
                     catch (Exception ex)
@@ -385,6 +409,15 @@ namespace IServiceOriented.ServiceBus.Delivery
                 NotifyUnhandledException(ex, false);
             }
             return clean;
+        }
+
+        bool _transactional;
+        public override bool IsTransactional
+        {
+            get
+            {
+                return _transactional;
+            }
         }
     }
 

@@ -5,6 +5,7 @@ using System.Linq;
 using NUnit.Framework;
 using IServiceOriented.ServiceBus.Delivery;
 using IServiceOriented.ServiceBus.Dispatchers;
+using IServiceOriented.ServiceBus.Delivery.Formatters;
 
 namespace IServiceOriented.ServiceBus.UnitTests
 {
@@ -19,7 +20,8 @@ namespace IServiceOriented.ServiceBus.UnitTests
         [Test]
         public void QueuedDeliveryCore_Publishes_Response_Messages_For_TwoWay_Operation()
         {
-            using (ServiceBusRuntime runtime = new ServiceBusRuntime(new QueuedDeliveryCore(new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue(), new NonTransactionalMemoryQueue())))
+            System.Messaging.IMessageFormatter binaryFormatter = new System.Messaging.BinaryMessageFormatter();
+            using (ServiceBusRuntime runtime = Create.BinaryMsmqRuntime())
             {
                 CEcho echo = new CEcho();
 
@@ -30,7 +32,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
                 {
                     string message = "echo this";
 
-                    MessageDelivery[] output = runtime.Publish(new PublishRequest(typeof(void), "Echo", message), PublishWait.Timeout, TimeSpan.FromSeconds(10));
+                    MessageDelivery[] output = runtime.PublishTwoWay(new PublishRequest(typeof(void), "Echo", message), TimeSpan.FromSeconds(10));
 
                     Assert.IsNotNull(output);
                     Assert.AreEqual(1, output.Length);

@@ -55,7 +55,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
             {                                
                 listenerTester.WaitForDeliveries(1, TimeSpan.FromSeconds(10), ()=>
                 {
-                    dispatchRuntime.Publish(typeof(IContract), "PublishThis", message);
+                    dispatchRuntime.PublishOneWay(typeof(IContract), "PublishThis", message);
                 });            
             });
 
@@ -83,7 +83,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
             dispatchTester.StartAndStop(() =>
             {
-                dispatchRuntime.Publish(typeof(IContract), "PublishThis", message);
+                dispatchRuntime.PublishOneWay(typeof(IContract), "PublishThis", message);
 
                 listenerTester.WaitForDeliveries(1, TimeSpan.FromSeconds(10), () =>
                 {                    

@@ -22,18 +22,11 @@ namespace IServiceOriented.ServiceBus
     [KnownType("GetKnownTypes")]
     public class MessageDelivery 
     {
-        public MessageDelivery(Guid subscriptionEndpointId, Type contractType, string action, object message, int maxRetries, MessageDeliveryContext context)
-        {
-            MessageDeliveryId = Guid.NewGuid().ToString();
-            SubscriptionEndpointId = subscriptionEndpointId;
-            Action = action;
-            Message = message;
-            MaxRetries = maxRetries;
-            Context = context;
-            ContractType = contractType;
+        public MessageDelivery(Guid subscriptionEndpointId, Type contractType, string action, object message, int maxRetries, MessageDeliveryContext context) : this (Guid.NewGuid().ToString(), subscriptionEndpointId, contractType, action, message, maxRetries, 0, null, context, DateTime.MaxValue)
+        {            
         }
 
-        public MessageDelivery(string messageId, Guid subscriptionEndpointId, Type contractType, string action, object message, int maxRetries, int retryCount, DateTime? timeToProcess, MessageDeliveryContext context)
+        public MessageDelivery(string messageId, Guid subscriptionEndpointId, Type contractType, string action, object message, int maxRetries, int retryCount, DateTime? timeToProcess, MessageDeliveryContext context, DateTime mustDeliverBy)
         {
             MessageDeliveryId = messageId;
             SubscriptionEndpointId = subscriptionEndpointId;
@@ -44,6 +37,7 @@ namespace IServiceOriented.ServiceBus
             MaxRetries = maxRetries;
             Context = context;
             ContractType = contractType;
+            MustDeliverBy = mustDeliverBy;
         }
         
         
@@ -158,6 +152,19 @@ namespace IServiceOriented.ServiceBus
             private set { _timeToProcess = value; }
         }
 
+        private DateTime _mustDeliverBy;
+        /// <summary>
+        /// Gets the time that this message must be processed by.
+        /// </summary>
+        [DataMember]
+        public DateTime MustDeliverBy
+        {
+            get { return _mustDeliverBy; }
+            private set { _mustDeliverBy = value; }
+        }
+
+
+
 
         /// <summary>
         /// Gets the maximum number of times this message will be retried.
@@ -210,7 +217,7 @@ namespace IServiceOriented.ServiceBus
         public MessageDelivery CreateRetry(bool resetRetryCount, DateTime timeToDeliver)
         {            
             int retryCount = resetRetryCount ? 0 : (_retryCount + 1);            
-            return new MessageDelivery(_messageId, _subscriptionEndpointId, _contractType, _action, _message, _maxRetries, retryCount, timeToDeliver, _context);             
+            return new MessageDelivery(_messageId, _subscriptionEndpointId, _contractType, _action, _message, _maxRetries, retryCount, timeToDeliver, _context, _mustDeliverBy);             
         }
 
 
@@ -241,15 +248,28 @@ namespace IServiceOriented.ServiceBus
                 context[Exceptions] = new ReadOnlyCollection<string>(exceptions);
             }            
                                     
-            return new MessageDelivery(_messageId, _subscriptionEndpointId, _contractType, _action, _message, _maxRetries, retryCount, timeToDeliver, new MessageDeliveryContext(context));
+            return new MessageDelivery(_messageId, _subscriptionEndpointId, _contractType, _action, _message, _maxRetries, retryCount, timeToDeliver, new MessageDeliveryContext(context), _mustDeliverBy);
+        }
+
+        public bool IsExpired
+        {
+            get
+            {
+                return _mustDeliverBy < DateTime.Now;
+            }
         }
 
         public const string MessagingNamespace = "http://iserviceoriented.com/servicebus/messaging/";
 
-        public static readonly MessageDeliveryContextKey PrimaryIdentityNameKey =  new MessageDeliveryContextKey("PrimaryIdentityName", MessagingNamespace);
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
+        public static readonly MessageDeliveryContextKey PrimaryIdentityNameKey = new MessageDeliveryContextKey("PrimaryIdentityName", MessagingNamespace);
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public static readonly MessageDeliveryContextKey WindowsIdentityNameKey = new MessageDeliveryContextKey("WindowsIdentityName", MessagingNamespace);
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public static readonly MessageDeliveryContextKey WindowsIdentityImpersonationLevelKey = new MessageDeliveryContextKey("WindowsImpersonationLevel", MessagingNamespace);
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public static readonly MessageDeliveryContextKey CorrelationId = new MessageDeliveryContextKey("CorrelationId", MessagingNamespace);
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public static readonly MessageDeliveryContextKey Exceptions = new MessageDeliveryContextKey("Exceptions", MessagingNamespace);
     }
 }
