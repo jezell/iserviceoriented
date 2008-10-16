@@ -215,7 +215,7 @@ namespace IServiceOriented.ServiceBus.Delivery
         }
         const int FUTURE_SLEEP_MS = 100;
         const int RETRY_SLEEP_MS = 100;
-        const int DEQUEUE_TIMEOUT_SECONDS = 5;
+        const int DEQUEUE_TIMEOUT_SECONDS = 1;
 
         List<Thread> _workerThreads = new List<Thread>();
         object _workerThreadsLock = new object();

@@ -27,8 +27,11 @@ namespace IServiceOriented.ServiceBus.Listeners
 
         protected override void OnStop()
         {
-            CommunicationObject.Close();
-            CommunicationObject = null;
+            if (CommunicationObject != null)
+            {
+                CommunicationObject.Close();
+                CommunicationObject = null;
+            }
             base.OnStop();
         }
         

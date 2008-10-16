@@ -20,7 +20,6 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
 {
     public abstract class MessageDeliveryConverter
     {
-        public const string MessageTypeHeader = "messageType";
         public const string MaxRetriesHeader = "maxRetries";
         public const string RetryCountHeader = "retryCount";
         public const string MessageIdHeader = "messageId";
@@ -42,7 +41,6 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
             Message msg = ToMessageCore(delivery);                        
             
             msg.Headers.Add(System.ServiceModel.Channels.MessageHeader.CreateHeader(ContextHeader, MessagingNamespace, delivery.Context)); 
-            msg.Headers.Add(System.ServiceModel.Channels.MessageHeader.CreateHeader(MessageTypeHeader, MessagingNamespace, objType.AssemblyQualifiedName));
             msg.Headers.Add(System.ServiceModel.Channels.MessageHeader.CreateHeader(MaxRetriesHeader, MessagingNamespace, delivery.MaxRetries));
             msg.Headers.Add(System.ServiceModel.Channels.MessageHeader.CreateHeader(RetryCountHeader, MessagingNamespace, delivery.RetryCount));
             msg.Headers.Add(System.ServiceModel.Channels.MessageHeader.CreateHeader(MessageIdHeader, MessagingNamespace, delivery.MessageDeliveryId));
@@ -74,13 +72,24 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
             return delivery;
         }
 
+        public abstract IEnumerable<string> SupportedActions
+        {
+            get;
+        }
+        
+
         public static MessageDeliveryConverter CreateConverter(Type interfaceType)
         {
-            if (WcfUtils.UsesMessages(interfaceType))
+            ContractDescription description = ContractDescription.GetContract(interfaceType);
+
+            int rawMessageOperationCount = description.Operations.Where( o => o.Messages.First().Body.Parts.First().Type == typeof(Message)).Count();
+            int messageContractOperationCount = description.Operations.Where(o => o.Messages.First().MessageType != null).Count();
+            
+            if (rawMessageOperationCount > 0)
             {
                 return new RawMessageMessageDeliveryConverter(interfaceType);
             }
-            else if (WcfUtils.UsesMessageContracts(interfaceType))
+            else if (messageContractOperationCount > 0)
             {
                 return new MessageContractMessageDeliveryConverter(interfaceType);
             }
@@ -88,6 +97,18 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
             {
                 return new DataContractMessageDeliveryConverter(interfaceType);
             }
+        }
+
+
+        public static MessageDeliveryConverter CreateConverter(params Type[] contractTypes)
+        {
+            MessageDeliveryConverter[] converters = new MessageDeliveryConverter[contractTypes.Length];
+
+            for(int i = 0; i < contractTypes.Length; i ++)
+            {
+                converters[i] = CreateConverter(contractTypes[i]);
+            }
+            return new CompositeMessageDeliveryConverter(converters);
         }
     }
 

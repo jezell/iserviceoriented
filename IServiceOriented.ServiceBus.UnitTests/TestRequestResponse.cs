@@ -6,6 +6,7 @@ using NUnit.Framework;
 using IServiceOriented.ServiceBus.Delivery;
 using IServiceOriented.ServiceBus.Dispatchers;
 using IServiceOriented.ServiceBus.Delivery.Formatters;
+using System.ServiceModel.Description;
 
 namespace IServiceOriented.ServiceBus.UnitTests
 {
@@ -14,6 +15,12 @@ namespace IServiceOriented.ServiceBus.UnitTests
     {
         public TestRequestResponse()
         {
+        }
+
+        public void TEst()
+        {
+            ContractDescription description = ContractDescription.GetContract(typeof(ISendMessageContract));
+            Console.WriteLine(description);
         }
 
 

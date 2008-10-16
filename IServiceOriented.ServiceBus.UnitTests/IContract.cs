@@ -11,7 +11,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
     [ServiceContract]
     public interface IContract
     {
-        [OperationContract(IsOneWay=true)]
+        [OperationContract(IsOneWay=true, Action="PublishThis")]
         void PublishThis(string message);
     }
 
@@ -24,6 +24,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
         int publishedCount = 0;
         volatile int failCount = 0;
         int failInterval = 0;
+
 
         public void PublishThis(string message)
         {

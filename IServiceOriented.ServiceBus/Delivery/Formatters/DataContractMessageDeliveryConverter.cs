@@ -19,45 +19,71 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
 {
     internal class DataContractMessageDeliveryConverter : MessageDeliveryConverter
     {
-        public DataContractMessageDeliveryConverter(Type interfaceType)
+        public DataContractMessageDeliveryConverter(Type contractType)
+            : this(ContractDescription.GetContract(contractType))
         {
-            foreach (WcfMessageInformation information in WcfUtils.GetMessageInformation(interfaceType))
+            
+        }
+
+        public DataContractMessageDeliveryConverter(ContractDescription contract)
+        {
+            foreach (OperationDescription operation in contract.Operations)
             {
-                cacheSerializer(interfaceType, information.MessageType);
+                foreach (MessageDescription message in operation.Messages)
+                {
+                    cacheSerializer(operation, message);
+                }
             }
         }
 
-        Dictionary<Type, DataContractSerializer> _serializers = new Dictionary<Type, DataContractSerializer>();
+        Dictionary<string, DataContractSerializer> _serializers = new Dictionary<string, DataContractSerializer>();
 
-        void cacheSerializer(Type interfaceType, Type messageType)
+        void cacheSerializer(OperationDescription operation, MessageDescription message)
         {
-            if (!_serializers.ContainsKey(messageType))
+            if (!_serializers.ContainsKey(message.Action))
             {
-                _serializers.Add(messageType, new DataContractSerializer(messageType, WcfUtils.GetServiceKnownTypes(interfaceType)));
+                _serializers.Add(message.Action, message.Body.Parts.Count == 0 ? null : new DataContractSerializer(message.Body.Parts[0].Type, operation.KnownTypes));
             }
         }
 
-        DataContractSerializer getSerializer(Type interfaceType)
+        DataContractSerializer getSerializer(string action)
         {
             try
             {
-                return _serializers[interfaceType];
+                return _serializers[action];
             }
             catch (KeyNotFoundException)
             {
-                throw new InvalidOperationException("Unsupported interface or action");
+                throw new InvalidOperationException("Unsupported action");
             }
         }
 
         protected override Message ToMessageCore(MessageDelivery delivery)
         {
+            if (!_serializers.ContainsKey(delivery.Action))
+            {
+                throw new InvalidOperationException("Unsupported action");
+            }
+            
             return System.ServiceModel.Channels.Message.CreateMessage(MessageVersion.Default, delivery.Action, delivery.Message);
         }
 
         protected override object GetMessageObject(Message message)
         {
-            var serializer = getSerializer(Type.GetType(message.Headers.GetHeader<string>(MessageTypeHeader, MessagingNamespace)));
-            return serializer.ReadObject(message.GetReaderAtBodyContents());
+            var serializer = getSerializer(message.Headers.Action);
+            if (serializer != null)
+            {
+                return serializer.ReadObject(message.GetReaderAtBodyContents());
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public override IEnumerable<string> SupportedActions
+        {
+            get { return _serializers.Keys; }
         }
     }
 }

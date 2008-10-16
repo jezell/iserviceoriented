@@ -93,6 +93,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DeliveryException.cs" />
+    <Compile Include="Delivery\Formatters\CompositeMessageDeliveryConverter.cs" />
     <Compile Include="Delivery\Formatters\ConverterMessageDeliveryReader.cs" />
     <Compile Include="Delivery\Formatters\ConverterMessageDeliveryReaderFactory.cs" />
     <Compile Include="Delivery\Formatters\ConverterMessageDeliveryWriter.cs" />
@@ -165,7 +166,6 @@
     <Compile Include="Listeners\WcfListener.cs" />
     <Compile Include="Listeners\WcfServiceHostFactory.cs" />
     <Compile Include="Services\WcfManagementService.cs" />
-    <Compile Include="WcfUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />

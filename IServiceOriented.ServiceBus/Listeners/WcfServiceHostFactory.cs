@@ -12,6 +12,7 @@ using System.Reflection.Emit;
 using System.Security.Principal;
 
 using IServiceOriented.ServiceBus.Collections;
+using System.ServiceModel.Description;
 
 namespace IServiceOriented.ServiceBus.Listeners
 {
@@ -68,19 +69,16 @@ namespace IServiceOriented.ServiceBus.Listeners
             CustomAttributeBuilder attributeBuilder = new CustomAttributeBuilder(typeof(ServiceBehaviorAttribute).GetConstructor(new Type[] { }), new object[] { }, new PropertyInfo[] { typeof(ServiceBehaviorAttribute).GetProperty("InstanceContextMode"), typeof(ServiceBehaviorAttribute).GetProperty("ConcurrencyMode"), typeof(ServiceBehaviorAttribute).GetProperty("Namespace") }, new object[] { InstanceContextMode.Single, ConcurrencyMode.Multiple, "http://iserviceoriented.com/serviceBus/2008/" });                    
             typeBuilder.SetCustomAttribute(attributeBuilder);
 
-            foreach (MethodInfo methodInfo in interfaceType.GetMethods())
+            foreach (OperationDescription od in ContractDescription.GetContract(interfaceType).Operations)
             {
-                // Only add methods with OperationContractAttribute
-                if(WcfUtils.IsServiceMethod(methodInfo))
+                MethodInfo method = od.SyncMethod;
+                MessageDescription message = od.Messages.Where(m => m.Direction == MessageDirection.Input).First();
+                if (message.Body.Parts.Count > 1)
                 {
-                    string action = WcfUtils.GetAction(interfaceType, methodInfo);                    
-                    if (methodInfo.GetParameters().Length != 1)
-                    {
-                        continue; // skip methods that don't accept a single parameter
-                    }
-
-                    definePublishOverride(interfaceType, typeBuilder, methodInfo, action);
+                    throw new InvalidOperationException("Only single parameter methods are currently supported");
                 }
+
+                definePublishOverride(interfaceType, typeBuilder, method, message.Action);
             }
             Type impType = typeBuilder.CreateType();
             return impType;        

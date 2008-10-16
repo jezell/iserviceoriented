@@ -41,7 +41,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
                 string message = "blah blah test test";
 
 
-                contractDispatcher.Dispatch(new MessageDelivery(endpoint.Id, typeof(IContract), "http://tempuri.org/PublishThis", message, 3, new MessageDeliveryContext()));
+                contractDispatcher.Dispatch(new MessageDelivery(endpoint.Id, typeof(IContract), "PublishThis", message, 3, new MessageDeliveryContext()));
 
                 Assert.AreEqual(1, ci.PublishedCount);
                 Assert.AreEqual(message, ci.PublishedMessages[0]);
@@ -102,8 +102,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
                 runtime.Start();
 
-
-                string action = "http://tempuri.org/IContract/PublishThis";
+                string action = "PublishThis";
                 string body = "blah blah test test";
 
                 XmlDocument document = new XmlDocument();

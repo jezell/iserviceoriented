@@ -10,6 +10,7 @@ using IServiceOriented.ServiceBus.Threading;
 using IServiceOriented.ServiceBus.Collections;
 using IServiceOriented.ServiceBus.Listeners;
 using System.ServiceModel.Channels;
+using System.ServiceModel.Description;
 
 namespace IServiceOriented.ServiceBus.Dispatchers
 {    
@@ -42,24 +43,28 @@ namespace IServiceOriented.ServiceBus.Dispatchers
 
             Dictionary<string, MethodInfo> actionLookup = new Dictionary<string, MethodInfo>();
             Dictionary<string, string> replyActionLookup = new Dictionary<string, string>();
-            foreach (MethodInfo method in endpoint.ContractType.GetMethods())
+            foreach (OperationDescription operation in ContractDescription.GetContract(endpoint.ContractType).Operations)
             {
-                if (WcfUtils.IsServiceMethod(method))
+                MessageDescription requestMessage = operation.Messages.Where(md => md.Direction == MessageDirection.Input).First();
+                MessageDescription responseMessage = operation.Messages.Where(md => md.Direction == MessageDirection.Output).FirstOrDefault();
+                
+                if (requestMessage.Action == "*")
                 {
-                    string action = WcfUtils.GetAction(endpoint.ContractType, method);
-                    if (action == "*")
-                    {
-                        _passThrough = true;
-                    }
-                    actionLookup.Add(action, method);
-                    
-                    string replyAction = WcfUtils.GetReplyAction(endpoint.ContractType, method);
-                    
-                    if(replyAction != null)
-                    {
-                        replyActionLookup.Add(action, replyAction);
-                    }                 
+                    _passThrough = true;
                 }
+
+                actionLookup.Add(requestMessage.Action, operation.SyncMethod);
+
+                if (responseMessage != null)
+                {
+                    string replyAction = responseMessage.Action;
+
+                    if (replyAction != null)
+                    {
+                        replyActionLookup.Add(requestMessage.Action, replyAction);
+                    }
+                }
+            
             }
             lookup.MethodLookup = actionLookup;
             lookup.ReplyActionLookup = replyActionLookup;
@@ -176,9 +181,18 @@ namespace IServiceOriented.ServiceBus.Dispatchers
         [NonSerialized]
         ActionLookup _lookup;
 
-        public static MessageFilter CreateMessageFilter(Type interfaceType)
-        {               
-            return new TypedMessageFilter(WcfUtils.GetMessageInformation(interfaceType).Select(mi => mi.MessageType).ToArray());
+        public static MessageFilter CreateMessageFilter(Type contractType)
+        {
+            ContractDescription description = ContractDescription.GetContract(contractType);
+            List<Type> messageTypes = new List<Type>();
+            foreach (OperationDescription operation in description.Operations)
+            {
+                foreach (MessageDescription message in operation.Messages)
+                {
+                    messageTypes.Add(message.Body.Parts[0].Type);
+                }
+            }
+            return new TypedMessageFilter(messageTypes.ToArray());
         }
     }
 

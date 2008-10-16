@@ -19,49 +19,78 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
 {
     internal class MessageContractMessageDeliveryConverter : MessageDeliveryConverter
     {
-        public MessageContractMessageDeliveryConverter(Type contractType)
+        public MessageContractMessageDeliveryConverter(Type contractType) : this(ContractDescription.GetContract(contractType))
         {
-            foreach (WcfMessageInformation information in WcfUtils.GetMessageInformation(contractType))
-            {                
-                cacheConverter(information.MessageType, information.Action);
+            
+        }
+
+        public MessageContractMessageDeliveryConverter(ContractDescription contract)
+        {
+            foreach (OperationDescription operation in contract.Operations)
+            {
+                foreach (MessageDescription message in operation.Messages)
+                {
+                    if (message.MessageType == null && message.Body.Parts.Count > 0)
+                    {
+                        throw new InvalidOperationException("Unsupported message contract format");
+                    }
+                    cacheConverter(message.Action, message.MessageType);
+                }
             }
         }
 
         Dictionary<string, TypedMessageConverter> _converterHash = new Dictionary<string, TypedMessageConverter>();
 
-        void cacheConverter(Type objType, string action)
+        void cacheConverter(string action, Type messageType)
         {
-            string key = objType + ":" + action;
-            if (!_converterHash.ContainsKey(key))
-            {
-                _converterHash.Add(key, (TypedMessageConverter)TypedMessageConverter.Create(objType, action));
+            if (!_converterHash.ContainsKey(action))
+            {                
+                _converterHash.Add(action, messageType == null ? null : (TypedMessageConverter)TypedMessageConverter.Create(messageType, action));
             }
         }
 
-        TypedMessageConverter getCachedConverter(Type objType, string action)
+        TypedMessageConverter getCachedConverter(string action)
         {
-            string key = objType + ":" + action;
             try
             {
-                return (TypedMessageConverter)_converterHash[key];
+                return (TypedMessageConverter)_converterHash[action];
             }
             catch (KeyNotFoundException)
             {
-                throw new InvalidOperationException("Unsupported interface or action");
+                throw new InvalidOperationException("Unsupported action");
             }
         }
 
         protected override object GetMessageObject(Message message)
         {            
-            TypedMessageConverter converter = getCachedConverter(Type.GetType(message.Headers.GetHeader<string>(MessageTypeHeader, MessagingNamespace)), message.Headers.Action);
+            TypedMessageConverter converter = getCachedConverter(message.Headers.Action);
             return converter.FromMessage(message);
         }
 
         protected override Message ToMessageCore(MessageDelivery delivery)
         {
-            Type objType = delivery.Message.GetType();            
-            TypedMessageConverter converter = getCachedConverter(objType, delivery.Action);
-            return converter.ToMessage(delivery.Message);        
+            if (!_converterHash.ContainsKey(delivery.Action))
+            {
+                throw new InvalidOperationException("Unsupported action");
+            }
+
+            TypedMessageConverter converter = getCachedConverter(delivery.Action);
+            if (converter != null)
+            {
+                return converter.ToMessage(delivery.Message);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public override IEnumerable<string> SupportedActions
+        {
+            get 
+            {
+                return _converterHash.Keys;
+            }
         }
     }
 
