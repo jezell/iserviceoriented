@@ -82,6 +82,13 @@ namespace IServiceOriented.ServiceBus.Listeners
                         try
                         {
                             fileStream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.None);
+
+                            using (var reader = ReaderFactory.CreateReader(fileStream, true))
+                            {
+                                MessageDelivery delivery = reader.Read();
+                                Runtime.PublishOneWay(new PublishRequest(delivery.ContractType, delivery.Action, delivery.Message, delivery.Context));
+                            }
+
                         }
                         catch (FileNotFoundException)
                         {
@@ -90,12 +97,12 @@ namespace IServiceOriented.ServiceBus.Listeners
                         catch (IOException ex)
                         {
                             System.Diagnostics.Trace.WriteLine(ex);
-
                             Thread.Sleep(1000);
                             if (DateTime.Now - startTime > OpenTimeout)
                             {
-                                throw new TimeoutException("Timed out while trying to open file");
+                                throw new TimeoutException("Timed out while trying to open file", ex);
                             }
+                
                         }
                         finally
                         {
@@ -105,14 +112,6 @@ namespace IServiceOriented.ServiceBus.Listeners
                             }
                         }
                     }
-
-                    
-                    using (var reader = ReaderFactory.CreateReader(fileStream, true))
-                    {
-                        MessageDelivery delivery = reader.Read();
-                        Runtime.PublishOneWay(new PublishRequest(delivery.ContractType, delivery.Action, delivery.Message, delivery.Context));
-                    }
-                
                     File.Move(path, Path.Combine(ProcessedFolder, Path.GetFileName(path)));
                     return true;
                 }

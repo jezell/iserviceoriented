@@ -143,6 +143,7 @@ namespace IServiceOriented.ServiceBus.Threading
                                 w.Thread.Abort();
                             }
                         }
+                        _workers.Clear();
                     }
                 }
                 _disposed = true;
