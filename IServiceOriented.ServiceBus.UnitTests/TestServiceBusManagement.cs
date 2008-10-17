@@ -23,13 +23,13 @@ namespace IServiceOriented.ServiceBus.UnitTests
         [TestFixtureSetUp]
         public void Init()
         {
-            ServiceBusManagementServiceTypeProvider.RegisteredKnownTypes.Add(typeof(PassThroughMessageFilter));
+            
         }
 
         [TestFixtureTearDown]
         public void Uninit()
         {
-            ServiceBusManagementServiceTypeProvider.RegisteredKnownTypes.Remove(typeof(PassThroughMessageFilter));
+            
         }
 
         [Test]
@@ -65,7 +65,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
                 {
                     Service.Use<IServiceBusManagementService>(managementService =>
                     {
-                        SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "name of endpoint", "NamedPipeClient", "net.pipe://test/someservice/", typeof(IContract), new WcfProxyDispatcher(), new PassThroughMessageFilter());
+                        SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "name of endpoint", "NamedPipeClient", "net.pipe://test/someservice/", typeof(IContract), new WcfProxyDispatcher(), null);
                         managementService.Subscribe(endpoint);
 
                         SubscriptionEndpoint added = managementService.ListSubscribers().First();

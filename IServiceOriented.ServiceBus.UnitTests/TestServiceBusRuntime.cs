@@ -32,7 +32,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
             Assert.AreEqual(endpoint1.ConfigurationName, endpoint2.ConfigurationName);
             Assert.AreEqual(endpoint1.ContractType, endpoint2.ContractType);
             Assert.AreEqual(endpoint1.Address, endpoint2.Address);
-            Assert.AreEqual(endpoint1.Filter.GetType(), endpoint2.Filter.GetType()); // todo: should we require .Equals?
+            
             Assert.IsInstanceOfType(endpoint1.Dispatcher.GetType(), endpoint2.Dispatcher);
         }
 

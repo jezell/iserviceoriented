@@ -31,34 +31,15 @@ namespace IServiceOriented.ServiceBus.Dispatchers
         protected override void OnStart()
         {
             base.OnStart();
-            CommunicationObject = CreateCommunicationObject();
-            CommunicationObject.Open();
         }
 
         protected override void OnStop()
         {
-            CommunicationObject.Close();
-            CommunicationObject = null;
             base.OnStop();
         }
-
-        protected abstract ICommunicationObject CreateCommunicationObject();
-
-        protected ICommunicationObject CommunicationObject
-        {
-            get;
-            private set;
-        }
-
+     
         protected override void Dispose(bool disposing)
         {
-            if (disposing)
-            {
-                if (CommunicationObject != null)
-                {
-                    if (CommunicationObject.State != CommunicationState.Closed) CommunicationObject.Close();
-                }
-            }
             base.Dispose(disposing);
         }
     }

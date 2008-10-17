@@ -48,43 +48,14 @@ namespace IServiceOriented.ServiceBus.Services
         }
     }
 
-    public static class ServiceBusManagementServiceTypeProvider
-    {
-        public static IEnumerable<Type> GetKnownTypes(ICustomAttributeProvider provider)
-        {
-            List<Type> knownTypes = new List<Type>();
-            foreach (KnownTypeAttribute a in provider.GetCustomAttributes(typeof(KnownTypeAttribute), true).Cast<KnownTypeAttribute>())
-            {
-                if(a.Type != null)
-                {
-                    knownTypes.Add(a.Type);
-                }
-            }
-
-
-            foreach (Type t in RegisteredKnownTypes)
-            {
-                knownTypes.Add(t);
-            }
-
-            return knownTypes.ToArray();
-        }
-
-
-        static Collection<Type> _knownMessageFilterTypes = new Collection<Type>() { typeof(WcfProxyDispatcher), typeof(WcfListener), typeof(WcfServiceHostListener),
-            typeof(UnhandledMessageFilter), typeof(TypedMessageFilter), typeof(WcfDispatcher) };
-        public static Collection<Type> RegisteredKnownTypes
-        {
-            get
-            {
-                return _knownMessageFilterTypes;
-            }
-
-        }
-    }
 
     [ServiceContract]
-    [ServiceKnownType("GetKnownTypes", typeof(ServiceBusManagementServiceTypeProvider))]
+    [ServiceKnownType(typeof(WcfDispatcher))]
+    [ServiceKnownType(typeof(WcfListener))]
+    [ServiceKnownType(typeof(TypedMessageFilter))]
+    [ServiceKnownType(typeof(UnhandledMessageFilter))]
+    [ServiceKnownType(typeof(WcfProxyDispatcher))]
+    [ServiceKnownType(typeof(WcfServiceHostListener))]
     public interface IServiceBusManagementService
     {
         [OperationContract(Action = WcfManagementServiceActions.Subscribe)]
@@ -104,7 +75,7 @@ namespace IServiceOriented.ServiceBus.Services
         [OperationContract(Action = WcfManagementServiceActions.ListListeners, ReplyAction = WcfManagementServiceActions.ListListenersResponse)]
         Collection<ListenerEndpoint> ListListeners();
 
-        [OperationContract(Action = WcfManagementServiceActions.ListSubscribers, ReplyAction = WcfManagementServiceActions.ListSubscribersResponse)]
+        [OperationContract(Action = WcfManagementServiceActions.ListSubscribers, ReplyAction = WcfManagementServiceActions.ListSubscribersResponse)]        
         Collection<SubscriptionEndpoint> ListSubscribers();
     }
 

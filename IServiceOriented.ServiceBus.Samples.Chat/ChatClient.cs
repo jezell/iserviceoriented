@@ -5,6 +5,7 @@ using System.Text;
 using System.Runtime.Serialization;
 using System.ServiceModel;
 using IServiceOriented.ServiceBus.Dispatchers;
+using IServiceOriented.ServiceBus.Services;
 
 namespace IServiceOriented.ServiceBus.Samples.Chat
 {
@@ -13,12 +14,20 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
         public ChatClient(string name)
         {
             _from = name;
-            _host = new ServiceHost(new ChatClientService(), new Uri("http://localhost/chat/" + _from));            
+            _host = new ServiceHost(new ChatClientService(), new Uri("http://localhost/chat/" + _from));          
         }
+
+        Guid _id = Guid.NewGuid();
 
         public void Start()
         {
-            _host.Open();         
+            _host.Open();
+
+            Service.Use<IServiceBusManagementService>(service =>
+                {
+                    service.Subscribe(new SubscriptionEndpoint(_id, "chat", "ChatClientOut", _host.Description.Endpoints[0].Address.ToString(),
+                            typeof(IChatService), new WcfDispatcherWithUsernameCredentials(), new ChatFilter() { To = _from }));
+                });
         }
 
         string _from;   
@@ -38,11 +47,16 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
         public void Stop()
         {
             _host.Close();
+
+            Service.Use<IServiceBusManagementService>(service =>
+            {
+                service.Unsubscribe(_id);
+            });
         }        
     }
 
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConfigurationName = "ChatServerOut")]
-    [AutoSubscribe(Name = "Autosubscribed", ConfigurationName = "ChatClientOut", ContractType = typeof(IChatService), DispatcherType = typeof(WcfDispatcherWithUsernameCredentials))]
+    
     public class ChatClientService : IChatService
     {
         #region IChatService Members

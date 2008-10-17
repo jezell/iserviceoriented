@@ -11,7 +11,7 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
     [ServiceContract]
     public interface IChatService
     {
-        [OperationContract(IsOneWay=true)]
+        [OperationContract(IsOneWay=true, Action="SendMessage")]
         void SendMessage(SendMessageRequest request);
     }
 

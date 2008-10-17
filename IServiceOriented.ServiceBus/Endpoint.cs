@@ -14,7 +14,7 @@ namespace IServiceOriented.ServiceBus
     [Serializable]
     [DataContract]
     public abstract class Endpoint
-    {
+    {        
         protected Endpoint(Guid id, string name, string configurationName, string address, Type contractType, bool transient) : this(id, name, configurationName, address, contractType)
         {
             Transient = transient;

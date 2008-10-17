@@ -78,41 +78,30 @@ namespace IServiceOriented.ServiceBus.Dispatchers
         {         
         }
 
-        protected override ICommunicationObject CreateCommunicationObject()
+        protected ChannelFactory CreateFactory()
         {
             Type channelType = typeof(ChannelFactory<>).MakeGenericType(Endpoint.ContractType);
-            ChannelFactory factory = (ChannelFactory)Activator.CreateInstance(channelType, Endpoint.ConfigurationName);
+            ChannelFactory factory = (ChannelFactory)Activator.CreateInstance(channelType, Endpoint.ConfigurationName);            
             return factory;
         }
 
-        protected ChannelFactory Factory
-        {
-            get
-            {
-                return (ChannelFactory)CommunicationObject;
-            }
-        }
-
-        protected IContextChannel CreateProxy()
+        protected IContextChannel CreateProxy(IChannelFactory factory)
         {
             Type channelType = typeof(ChannelFactory<>).MakeGenericType(Endpoint.ContractType);            
-            return (IContextChannel)channelType.GetMethod("CreateChannel", new Type[] { }).Invoke(Factory, new object[] { });
+            return (IContextChannel)channelType.GetMethod("CreateChannel", new Type[] { }).Invoke(factory, new object[] { });
         }
 
-        protected virtual void ApplySecurityContext(MessageDelivery messageDelivery)
-        {
-        }
         
         public override void Dispatch(MessageDelivery messageDelivery)
         {
             if (!Started) throw new InvalidOperationException("Dispatcher is not started yet");
-            Factory.Endpoint.Address = new EndpointAddress(Endpoint.Address);
-
-            IContextChannel proxy = CreateProxy();            
+            ChannelFactory factory = CreateFactory();
+            factory.Endpoint.Address = new EndpointAddress(Endpoint.Address);
+            ApplySecurityContext(messageDelivery, factory);
+            IContextChannel proxy = CreateProxy(factory);            
             using (OperationContextScope scope = new OperationContextScope(proxy))
             {
-                ApplySecurityContext(messageDelivery);
-
+                
                 bool success = false;
                 try
                 {

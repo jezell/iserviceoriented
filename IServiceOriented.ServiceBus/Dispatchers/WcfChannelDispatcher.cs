@@ -13,21 +13,9 @@ namespace IServiceOriented.ServiceBus.Dispatchers
     [DataContract]
     public abstract class WcfChannelDispatcher : WcfDispatcher
     {
-        protected abstract ChannelFactory<IOutputChannel> CreateChannel();
+        protected abstract ChannelFactory<IOutputChannel> CreateChannelFactory();
 
-        protected override ICommunicationObject CreateCommunicationObject()
-        {
-            return CreateChannel();
-        }
-
-        protected ChannelFactory<IOutputChannel> OutputChannelFactory
-        {
-            get
-            {
-                return (ChannelFactory<IOutputChannel>)CommunicationObject;
-            }
-        }
-
+        
         protected override void OnStart()
         {
             _converter = MessageDeliveryConverter.CreateConverter(Endpoint.ContractType);
@@ -39,7 +27,7 @@ namespace IServiceOriented.ServiceBus.Dispatchers
 
         public override void Dispatch(MessageDelivery messageDelivery)
         {
-            IOutputChannel channel = OutputChannelFactory.CreateChannel();
+            IOutputChannel channel = CreateChannelFactory().CreateChannel();
             bool closed = false;            
             try
             {

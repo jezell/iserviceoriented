@@ -7,6 +7,7 @@ using System.Runtime.Serialization;
 using IServiceOriented.ServiceBus.Services;
 using IServiceOriented.ServiceBus.Listeners;
 using IServiceOriented.ServiceBus.Dispatchers;
+using System.ServiceModel.Description;
 
 namespace IServiceOriented.ServiceBus.Samples.Chat
 {    
@@ -14,9 +15,6 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
     {
         static void Main(string[] args)
         {
-            ServiceBusManagementServiceTypeProvider.RegisteredKnownTypes.Add(typeof(ChatFilter));
-            ServiceBusManagementServiceTypeProvider.RegisteredKnownTypes.Add(typeof(WcfDispatcherWithUsernameCredentials));
-
             if(args.Length == 0)
             {
                 Console.WriteLine("usage: Chat.exe [server | client]");
