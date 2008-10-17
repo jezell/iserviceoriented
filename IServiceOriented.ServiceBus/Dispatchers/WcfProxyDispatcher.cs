@@ -140,9 +140,10 @@ namespace IServiceOriented.ServiceBus.Dispatchers
                                 KeyValuePair<MessageDeliveryContextKey, object>[] replyData = new KeyValuePair<MessageDeliveryContextKey, object>[1];
                                 replyData[0] = new KeyValuePair<MessageDeliveryContextKey, object>(MessageDelivery.CorrelationId, messageDelivery.MessageDeliveryId);
 
-                                if (ex.InnerException is FaultException)
+                                FaultException fex = ex.InnerException as FaultException;
+                                if (fex != null)
                                 {
-                                    Runtime.PublishOneWay(new PublishRequest(Endpoint.ContractType, lookup.ReplyActionLookup[messageDelivery.Action], ex.InnerException, new MessageDeliveryContext(replyData)));
+                                    Runtime.PublishOneWay(new PublishRequest(Endpoint.ContractType, fex.Action, ((FaultException)ex.InnerException), new MessageDeliveryContext(replyData)));
                                 }
                                 else
                                 {

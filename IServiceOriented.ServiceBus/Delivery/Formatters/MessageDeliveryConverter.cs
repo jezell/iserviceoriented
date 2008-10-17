@@ -34,7 +34,7 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
         protected abstract Message ToMessageCore(MessageDelivery delivery);
         protected abstract object GetMessageObject(Message message);
 
-        public Message ToMessage(MessageDelivery delivery)
+        public virtual Message ToMessage(MessageDelivery delivery)
         {
             Type objType = delivery.Message.GetType();
 
@@ -52,7 +52,7 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
             return msg;
         }
 
-        public MessageDelivery ToMessageDelivery(Message msg)
+        public virtual MessageDelivery ToMessageDelivery(Message msg)
         {                
             MessageDeliveryContext context = msg.Headers.GetHeader<MessageDeliveryContext>(ContextHeader, MessagingNamespace);
             object value = GetMessageObject(msg);            
@@ -78,36 +78,52 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
         }
         
 
-        public static MessageDeliveryConverter CreateConverter(Type interfaceType)
+        internal static MessageDeliveryConverter CreateConverter(ContractDescription description, bool includeFaults)
         {
-            ContractDescription description = ContractDescription.GetContract(interfaceType);
-
             int rawMessageOperationCount = description.Operations.Where( o => o.Messages.First().Body.Parts.First().Type == typeof(Message)).Count();
             int messageContractOperationCount = description.Operations.Where(o => o.Messages.First().MessageType != null).Count();
-            
+
+            MessageDeliveryConverter messageConverter;
+
             if (rawMessageOperationCount > 0)
             {
-                return new RawMessageMessageDeliveryConverter(interfaceType);
+                messageConverter = new RawMessageMessageDeliveryConverter(description);
             }
             else if (messageContractOperationCount > 0)
             {
-                return new MessageContractMessageDeliveryConverter(interfaceType);
+                messageConverter = new MessageContractMessageDeliveryConverter(description);
             }
             else
             {
-                return new DataContractMessageDeliveryConverter(interfaceType);
+                messageConverter = new DataContractMessageDeliveryConverter(description);
+            }
+
+            if (includeFaults)
+            {
+                MessageDeliveryConverter faultConverter = new FaultContractMessageDeliveryConverter(description);
+                return new CompositeMessageDeliveryConverter(messageConverter, faultConverter);
+            }
+            else
+            {
+                return messageConverter;
             }
         }
 
 
         public static MessageDeliveryConverter CreateConverter(params Type[] contractTypes)
         {
-            MessageDeliveryConverter[] converters = new MessageDeliveryConverter[contractTypes.Length];
+            return CreateConverter((from t in contractTypes select ContractDescription.GetContract(t)).ToArray());
+        }
 
-            for(int i = 0; i < contractTypes.Length; i ++)
+        public static MessageDeliveryConverter CreateConverter(params ContractDescription[] contracts)
+        {
+            MessageDeliveryConverter[] converters = new MessageDeliveryConverter[contracts.Length + 1];
+
+            for (int i = 0; i < contracts.Length; i++)
             {
-                converters[i] = CreateConverter(contractTypes[i]);
+                converters[i] = CreateConverter(contracts[i], false);
             }
+            converters[converters.Length - 1] = new FaultContractMessageDeliveryConverter(contracts);
             return new CompositeMessageDeliveryConverter(converters);
         }
     }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.ServiceModel.Channels;
+using System.ServiceModel.Description;
 
 namespace IServiceOriented.ServiceBus.Delivery.Formatters
 {
@@ -13,6 +14,11 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
         {
 
         }
+
+        public RawMessageMessageDeliveryConverter(ContractDescription contract) : base(contract)
+        {
+        }
+
         protected override object GetMessageObject(System.ServiceModel.Channels.Message message)
         {
             return message;

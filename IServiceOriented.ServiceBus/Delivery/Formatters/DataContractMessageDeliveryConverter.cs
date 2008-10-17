@@ -42,10 +42,17 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
         {
             if (!_serializers.ContainsKey(message.Action))
             {
-                _serializers.Add(message.Action, message.Body.Parts.Count == 0 ? null : new DataContractSerializer(message.Body.Parts[0].Type, operation.KnownTypes));
+                if (message.Body.ReturnValue != null)
+                {
+                    // this is a return message
+                    _serializers.Add(message.Action,  new DataContractSerializer(message.Body.ReturnValue.Type, operation.KnownTypes));
+                }
+                else
+                {
+                    _serializers.Add(message.Action, message.Body.Parts.Count == 0 ? null : new DataContractSerializer(message.Body.Parts[0].Type, operation.KnownTypes));
+                }
             }
-        }
-
+        }        
         DataContractSerializer getSerializer(string action)
         {
             try
@@ -64,8 +71,17 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
             {
                 throw new InvalidOperationException("Unsupported action");
             }
-            
-            return System.ServiceModel.Channels.Message.CreateMessage(MessageVersion.Default, delivery.Action, delivery.Message);
+
+            var serializer = _serializers[delivery.Action];
+            // todo: should we default messageversion here?
+            if (serializer != null)
+            {
+                return System.ServiceModel.Channels.Message.CreateMessage(MessageVersion.Default, delivery.Action, delivery.Message, serializer);
+            }
+            else
+            {
+                return System.ServiceModel.Channels.Message.CreateMessage(MessageVersion.Default, delivery.Action, delivery.Message);
+            }
         }
 
         protected override object GetMessageObject(Message message)

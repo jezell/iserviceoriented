@@ -44,6 +44,7 @@ namespace IServiceOriented.ServiceBus.Threading
                 while (!info.Stopping)
                 {
                     UnitOfWork(Timeout, info.State);
+                    Thread.Sleep(1);
                 }
             }
             finally

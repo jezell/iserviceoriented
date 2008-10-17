@@ -42,7 +42,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
             BinaryMessageEncodingBindingElement element = new BinaryMessageEncodingBindingElement();
             MessageEncoder encoder = element.CreateMessageEncoderFactory().Encoder;
 
-            MessageDeliveryFormatter formatter = new MessageDeliveryFormatter(new ConverterMessageDeliveryReaderFactory<T>(encoder), new ConverterMessageDeliveryWriterFactory<T>(encoder));            
+            MessageDeliveryFormatter formatter = new MessageDeliveryFormatter(new ConverterMessageDeliveryReaderFactory(encoder, typeof(T)), new ConverterMessageDeliveryWriterFactory(encoder, typeof(T)));            
             
             MsmqMessageDeliveryQueue testQueue = new MsmqMessageDeliveryQueue(_testQueuePath, formatter);
             MsmqMessageDeliveryQueue retryQueue = new MsmqMessageDeliveryQueue(_retryQueuePath, formatter);

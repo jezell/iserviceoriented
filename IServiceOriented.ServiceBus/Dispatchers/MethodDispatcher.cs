@@ -46,7 +46,7 @@ namespace IServiceOriented.ServiceBus.Dispatchers
 
                 if (!IsOneWay)
                 {
-                    _replyLookup.Add(method.Name, method.Name + "Reply");
+                    _replyLookup.Add(method.Name, method.Name + "Response");
                 }
             }            
         }
@@ -80,21 +80,40 @@ namespace IServiceOriented.ServiceBus.Dispatchers
                 }
             }
 
-            if (!IsOneWay)
-            {
-                replyAction = _replyLookup[messageDelivery.Action];                
-            }
-
+            
             if (methodInfo != null)
             {
-                object result = methodInfo.Invoke(Target, new object[] { messageDelivery.Message });
-
-                if (!IsOneWay)
+                object result;
+                try
                 {
+                    result = methodInfo.Invoke(Target, new object[] { messageDelivery.Message });
+
                     KeyValuePair<MessageDeliveryContextKey, object>[] replyData = new KeyValuePair<MessageDeliveryContextKey, object>[1];
-                    replyData[0] = new KeyValuePair<MessageDeliveryContextKey, object>(MessageDelivery.CorrelationId, messageDelivery.MessageDeliveryId);                         
-                    Runtime.PublishOneWay(new PublishRequest(Endpoint.ContractType, replyAction, result, new MessageDeliveryContext(replyData)));
+                    replyData[0] = new KeyValuePair<MessageDeliveryContextKey, object>(MessageDelivery.CorrelationId, messageDelivery.MessageDeliveryId);
+                    if (!IsOneWay)
+                    {
+                        replyAction = _replyLookup[messageDelivery.Action];
+                        Runtime.PublishOneWay(new PublishRequest(Endpoint.ContractType, replyAction, result, new MessageDeliveryContext(replyData)));
+                    }                    
                 }
+                catch(TargetInvocationException ex)
+                {
+                    result = ex.InnerException;
+                    if (!IsOneWay)
+                    {
+                        KeyValuePair<MessageDeliveryContextKey, object>[] replyData = new KeyValuePair<MessageDeliveryContextKey, object>[1];
+                        replyData[0] = new KeyValuePair<MessageDeliveryContextKey, object>(MessageDelivery.CorrelationId, messageDelivery.MessageDeliveryId);
+                        Runtime.PublishOneWay(new PublishRequest(Endpoint.ContractType, replyAction, result, new MessageDeliveryContext(replyData)));
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+                
+                    
+
+                
             }
             else
             {

@@ -82,9 +82,17 @@ namespace IServiceOriented.ServiceBus.UnitTests
         public string Data;
     }
 
+    [DataContract]
+    public class SendFault
+    {
+        [DataMember]
+        public string Data;
+    }
+
     [ServiceContract]
     public interface ISendDataContract
     {
+        [FaultContract(typeof(SendFault), Action="sendFault")]
         [OperationContract(Action="send")]
         void Send(DataContractMessage message);
     }
@@ -139,7 +147,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
             BinaryMessageEncodingBindingElement element = new BinaryMessageEncodingBindingElement();
             MessageEncoder encoder = element.CreateMessageEncoderFactory().Encoder;
 
-            MessageDeliveryFormatter formatter = new MessageDeliveryFormatter(new ConverterMessageDeliveryReaderFactory<IContract>(encoder), new ConverterMessageDeliveryWriterFactory<IContract>(encoder));            
+            MessageDeliveryFormatter formatter = new MessageDeliveryFormatter(new ConverterMessageDeliveryReaderFactory(encoder, typeof(IContract)), new ConverterMessageDeliveryWriterFactory(encoder, typeof(IContract)));            
 
             MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath, formatter);
 
@@ -171,7 +179,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
             BinaryMessageEncodingBindingElement element = new BinaryMessageEncodingBindingElement();
             MessageEncoder encoder = element.CreateMessageEncoderFactory().Encoder;
 
-            MessageDeliveryFormatter formatter = new MessageDeliveryFormatter(new ConverterMessageDeliveryReaderFactory<IContract>(encoder), new ConverterMessageDeliveryWriterFactory<IContract>(encoder));            
+            MessageDeliveryFormatter formatter = new MessageDeliveryFormatter(new ConverterMessageDeliveryReaderFactory(encoder, typeof(IContract)), new ConverterMessageDeliveryWriterFactory(encoder, typeof(IContract)));            
 
 
             MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath, formatter);
@@ -212,7 +220,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
             BinaryMessageEncodingBindingElement element = new BinaryMessageEncodingBindingElement();
             MessageEncoder encoder = element.CreateMessageEncoderFactory().Encoder;
 
-            MessageDeliveryFormatter formatter = new MessageDeliveryFormatter(new ConverterMessageDeliveryReaderFactory<IContract>(encoder), new ConverterMessageDeliveryWriterFactory<IContract>(encoder));            
+            MessageDeliveryFormatter formatter = new MessageDeliveryFormatter(new ConverterMessageDeliveryReaderFactory(encoder, typeof(IContract)), new ConverterMessageDeliveryWriterFactory(encoder, typeof(IContract)));            
 
             MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath, formatter);
             SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "SubscriptionName", "http://localhost/test", "SubscriptionConfigName", typeof(IContract), new WcfProxyDispatcher(), new PassThroughMessageFilter());
@@ -257,7 +265,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
             BinaryMessageEncodingBindingElement element = new BinaryMessageEncodingBindingElement();
             MessageEncoder encoder = element.CreateMessageEncoderFactory().Encoder;
 
-            MessageDeliveryFormatter formatter = new MessageDeliveryFormatter(new ConverterMessageDeliveryReaderFactory<IContract>(encoder), new ConverterMessageDeliveryWriterFactory<IContract>(encoder));            
+            MessageDeliveryFormatter formatter = new MessageDeliveryFormatter(new ConverterMessageDeliveryReaderFactory(encoder, typeof(IContract)), new ConverterMessageDeliveryWriterFactory(encoder, typeof(IContract)));            
 
             MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath, formatter);
             SubscriptionEndpoint endpoint = new SubscriptionEndpoint(Guid.NewGuid(), "SubscriptionName", "http://localhost/test", "SubscriptionConfigName", typeof(IContract), new WcfProxyDispatcher(), new PassThroughMessageFilter());
@@ -303,7 +311,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
             BinaryMessageEncodingBindingElement element = new BinaryMessageEncodingBindingElement();
             MessageEncoder encoder = element.CreateMessageEncoderFactory().Encoder;
 
-            MessageDeliveryFormatter formatter = new MessageDeliveryFormatter(new ConverterMessageDeliveryReaderFactory<ISendDataContract>(encoder), new ConverterMessageDeliveryWriterFactory<ISendDataContract>(encoder));            
+            MessageDeliveryFormatter formatter = new MessageDeliveryFormatter(new ConverterMessageDeliveryReaderFactory(encoder, typeof(ISendDataContract)), new ConverterMessageDeliveryWriterFactory(encoder, typeof(ISendDataContract)));            
 
             MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath, formatter);
             string action = "send";
@@ -337,6 +345,50 @@ namespace IServiceOriented.ServiceBus.UnitTests
             }
         }
 
+        [Test]
+        public void MessageContractFormatter_Can_Roundtrip_FaultContract()
+        {
+            recreateQueue();
+
+
+            BinaryMessageEncodingBindingElement element = new BinaryMessageEncodingBindingElement();
+            MessageEncoder encoder = element.CreateMessageEncoderFactory().Encoder;
+
+            MessageDeliveryFormatter formatter = new MessageDeliveryFormatter(new ConverterMessageDeliveryReaderFactory(encoder, typeof(ISendDataContract)), new ConverterMessageDeliveryWriterFactory(encoder, typeof(ISendDataContract)));
+
+            MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath, formatter);
+            string action = "sendFault";
+            FaultException<SendFault> outgoing = new FaultException<SendFault>(new SendFault() { Data = "This is a test" });
+
+            Dictionary<MessageDeliveryContextKey, object> context = new Dictionary<MessageDeliveryContextKey, object>();
+            context.Add(new MessageDeliveryContextKey("test"), "value");
+
+            MessageDelivery outgoingDelivery = new MessageDelivery(Guid.NewGuid(), typeof(ISendDataContract), action, outgoing, 5, new MessageDeliveryContext(context));
+            using (TransactionScope ts = new TransactionScope())
+            {
+                queue.Enqueue(outgoingDelivery);
+                ts.Complete();
+            }
+            using (TransactionScope ts = new TransactionScope())
+            {
+                MessageDelivery delivery = queue.Dequeue(TimeSpan.FromMinutes(1));
+                Assert.AreEqual(typeof(FaultException<SendFault>), delivery.Message.GetType());
+                FaultException<SendFault> incoming = (FaultException<SendFault>)delivery.Message;
+                Assert.AreEqual(incoming.Data, outgoing.Data);
+                Assert.AreEqual(context[new MessageDeliveryContextKey("test")], delivery.Context[new MessageDeliveryContextKey("test")]);
+
+                Assert.AreEqual(outgoingDelivery.Action, delivery.Action);
+                Assert.AreEqual(outgoingDelivery.ContractType, delivery.ContractType);
+                Assert.AreEqual(outgoingDelivery.MaxRetries, delivery.MaxRetries);
+                Assert.AreEqual(outgoingDelivery.MessageDeliveryId, delivery.MessageDeliveryId);
+                Assert.AreEqual(outgoingDelivery.RetryCount, delivery.RetryCount);
+                Assert.AreEqual(outgoingDelivery.TimeToProcess, delivery.TimeToProcess);
+                Assert.AreEqual(outgoingDelivery.SubscriptionEndpointId, delivery.SubscriptionEndpointId);
+                ts.Complete();
+            }
+        }
+
+
 
         [Test]
         public void MessageContractFormatter_Can_Roundtrip_MessageContract()
@@ -345,7 +397,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
             BinaryMessageEncodingBindingElement element = new BinaryMessageEncodingBindingElement();
             MessageEncoder encoder = element.CreateMessageEncoderFactory().Encoder;
 
-            MessageDeliveryFormatter formatter = new MessageDeliveryFormatter(new ConverterMessageDeliveryReaderFactory<ISendMessageContract>(encoder), new ConverterMessageDeliveryWriterFactory<ISendMessageContract>(encoder));            
+            MessageDeliveryFormatter formatter = new MessageDeliveryFormatter(new ConverterMessageDeliveryReaderFactory(encoder, typeof(ISendMessageContract)), new ConverterMessageDeliveryWriterFactory(encoder, typeof(ISendMessageContract)));            
 
             MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath, formatter);
             string action = "send";
@@ -397,7 +449,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
             BinaryMessageEncodingBindingElement element = new BinaryMessageEncodingBindingElement();
             MessageEncoder encoder = element.CreateMessageEncoderFactory().Encoder;
-            MessageDeliveryFormatter formatter = new MessageDeliveryFormatter(new ConverterMessageDeliveryReaderFactory<T>(encoder), new ConverterMessageDeliveryWriterFactory<T>(encoder));            
+            MessageDeliveryFormatter formatter = new MessageDeliveryFormatter(new ConverterMessageDeliveryReaderFactory(encoder, typeof(T)), new ConverterMessageDeliveryWriterFactory(encoder, typeof(T)));            
 
 
             MsmqMessageDeliveryQueue queue = new MsmqMessageDeliveryQueue(Config.TestQueuePath, formatter);

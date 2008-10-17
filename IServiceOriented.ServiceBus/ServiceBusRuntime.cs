@@ -424,7 +424,7 @@ namespace IServiceOriented.ServiceBus
                 foreach (MessageDelivery md in determineDeliveries(publishRequest))
                 {
                     DeliveryCore deliveryCore = SelectDeliveryCore(md);
-                    deliveryCore.Deliver(md);
+                    deliveryCore.Deliver(md);                    
                 }
                 ts.Complete();
             }

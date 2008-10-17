@@ -305,7 +305,7 @@ namespace IServiceOriented.ServiceBus.Delivery
 
                                     if (dispatcher != null)
                                     {
-                                        dispatcher.Dispatch(delivery);
+                                        dispatcher.Dispatch(delivery);                                        
                                     }
                                     else
                                     {
@@ -332,20 +332,27 @@ namespace IServiceOriented.ServiceBus.Delivery
                     }
                     catch (Exception ex)
                     {
-                        bool retry = !work.Delivery.RetriesMaxed;
-                        if (retry)
+                        try
                         {
-                            QueueRetry(work.Delivery, ex);
-                        }
-                        else
-                        {
-                            QueueFail(work.Delivery, ex);
-                        }
+                            bool retry = !work.Delivery.RetriesMaxed;
+                            if (retry)
+                            {
+                                QueueRetry(work.Delivery, ex);
+                            }
+                            else
+                            {
+                                QueueFail(work.Delivery, ex);
+                            }
 
-                        NotifyUnhandledException(ex, false);
-                        NotifyFailure(work.Delivery, !retry);
-                        
-                        work.Transaction.Commit();
+                            NotifyUnhandledException(ex, false);
+                            NotifyFailure(work.Delivery, !retry);
+
+                            work.Transaction.Commit();
+                        }
+                        catch (Exception innerEx)
+                        {
+                            throw new DeliveryException("Unhandled exception while attempting to requeue a message: "+innerEx, ex);
+                        }
 
                         throw new DeliveryException("Unhandled exception while attempting to deliver a message.", ex);
                     }

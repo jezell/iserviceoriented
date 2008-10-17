@@ -397,7 +397,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
                 tester.AddTestListener();
                 tester.AddTestSubscription(ci, new PassThroughMessageFilter());
 
-                tester.WaitForDeliveriesOrFailures(3, TimeSpan.FromMinutes(.5), () =>
+                tester.WaitForDeliveriesOrFailures(3, TimeSpan.FromSeconds(10), () =>
                 {
                     serviceBusRuntime.PublishOneWay(new PublishRequest(typeof(IContract), "PublishThis", message));
                 });                   

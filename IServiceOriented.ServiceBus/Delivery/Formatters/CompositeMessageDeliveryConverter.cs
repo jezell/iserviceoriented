@@ -26,7 +26,7 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
             }
         }
 
-        protected override object GetMessageObject(System.ServiceModel.Channels.Message message)
+        public override MessageDelivery ToMessageDelivery(System.ServiceModel.Channels.Message message)
         {
             MessageDeliveryConverter converter;
             if (_converterMap.TryGetValue(message.Headers.Action, out converter))
@@ -39,9 +39,18 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
             }
         }
 
-        protected override System.ServiceModel.Channels.Message ToMessageCore(MessageDelivery delivery)
+        protected override object GetMessageObject(System.ServiceModel.Channels.Message message)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override System.ServiceModel.Channels.Message ToMessage(MessageDelivery delivery)
         {
             MessageDeliveryConverter converter;
+            if (delivery.Action == null)
+            {
+                throw new InvalidOperationException("Action cannot be null");
+            }
             if (_converterMap.TryGetValue(delivery.Action, out converter))
             {
                 return converter.ToMessage(delivery);
@@ -50,6 +59,11 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
             {
                 throw new InvalidOperationException("Unknown action " + delivery.Action);
             }
+        }
+
+        protected override System.ServiceModel.Channels.Message ToMessageCore(MessageDelivery delivery)
+        {
+            throw new NotImplementedException();
         }
 
         Dictionary<string, MessageDeliveryConverter> _converterMap = new Dictionary<string, MessageDeliveryConverter>();

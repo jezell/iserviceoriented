@@ -99,6 +99,7 @@
     <Compile Include="Delivery\Formatters\ConverterMessageDeliveryWriter.cs" />
     <Compile Include="Delivery\Formatters\ConverterMessageDeliveryWriterFactory.cs" />
     <Compile Include="Delivery\Formatters\DataContractMessageDeliveryConverter.cs" />
+    <Compile Include="Delivery\Formatters\FaultContractMessageDeliveryConverter.cs" />
     <Compile Include="Delivery\Formatters\MessageContractMessageDeliveryConverter.cs" />
     <Compile Include="Delivery\Formatters\RawMessageMessageDeliveryConverter.cs" />
     <Compile Include="Dispatchers\ActionDispatcher.cs" />

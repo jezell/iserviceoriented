@@ -5,16 +5,20 @@ using System.Text;
 using IServiceOriented.ServiceBus.IO;
 using System.ServiceModel.Channels;
 using System.IO;
+using System.ServiceModel.Description;
 
 namespace IServiceOriented.ServiceBus.Delivery.Formatters
 {
-    internal class ConverterMessageDeliveryReader<T> : MessageDeliveryReader
+    internal class ConverterMessageDeliveryReader : MessageDeliveryReader
     {
-        public ConverterMessageDeliveryReader(Stream stream, bool isOwner, MessageEncoder encoder, int maxSizeOfHeaders) : base(stream, isOwner)
+        public ConverterMessageDeliveryReader(ContractDescription[] contracts, Stream stream, bool isOwner, MessageEncoder encoder, int maxSizeOfHeaders) : base(stream, isOwner)
         {
             MaxSizeOfHeaders = maxSizeOfHeaders;
             Encoder = encoder;
+            _contracts = contracts;
         }
+
+        ContractDescription[] _contracts;
 
         public int MaxSizeOfHeaders
         {
@@ -35,7 +39,7 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
             {
                 if (_converter == null)
                 {
-                    _converter = MessageDeliveryConverter.CreateConverter(typeof(T));
+                    _converter = MessageDeliveryConverter.CreateConverter(_contracts);
                 }
                 return _converter;
             }
