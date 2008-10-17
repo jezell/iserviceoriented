@@ -36,8 +36,6 @@ namespace IServiceOriented.ServiceBus.Delivery.Formatters
 
         public virtual Message ToMessage(MessageDelivery delivery)
         {
-            Type objType = delivery.Message.GetType();
-
             Message msg = ToMessageCore(delivery);                        
             
             msg.Headers.Add(System.ServiceModel.Channels.MessageHeader.CreateHeader(ContextHeader, MessagingNamespace, delivery.Context)); 

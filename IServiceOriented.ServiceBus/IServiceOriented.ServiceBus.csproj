@@ -121,6 +121,7 @@
     <Compile Include="Listeners\WcfServiceHostListener.cs" />
     <Compile Include="MessageDeliveryContext.cs" />
     <Compile Include="AutoSubscribeBehavior.cs" />
+    <Compile Include="Services\TimerRuntimeService.cs" />
     <Compile Include="Threading\CountdownLatch.cs" />
     <Compile Include="Delivery\DeliveryCore.cs" />
     <Compile Include="Dispatcher.cs" />
@@ -167,6 +168,7 @@
     <Compile Include="Listeners\WcfListener.cs" />
     <Compile Include="Listeners\WcfServiceHostFactory.cs" />
     <Compile Include="Services\WcfManagementService.cs" />
+    <Compile Include="ValidationException.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />

@@ -19,7 +19,7 @@ namespace IServiceOriented.ServiceBus
 {
 	public class ServiceBusRuntime : IDisposable
 	{
-        public ServiceBusRuntime(IServiceLocator serviceLocator)
+        public ServiceBusRuntime(IServiceLocator serviceLocator) 
         {            
             try
             {
@@ -76,7 +76,13 @@ namespace IServiceOriented.ServiceBus
                 if (_started)
                 {
                     throw new InvalidOperationException("The service bus is already started.");
-                }                
+                }
+
+                IEnumerable<RuntimeService> runtimeServices = ServiceLocator.GetAllInstances<RuntimeService>();
+                foreach (RuntimeService rs in runtimeServices)
+                {
+                    rs.Validate();
+                }
                                                
                 _subscriptions.Read(subscriptions =>
                 {
@@ -86,7 +92,6 @@ namespace IServiceOriented.ServiceBus
                     }
                 });                   
 
-                IEnumerable<RuntimeService> runtimeServices = ServiceLocator.GetAllInstances<RuntimeService>();
                 foreach (RuntimeService rs in runtimeServices)
                 {
                     // start delivery after other services

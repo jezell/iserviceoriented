@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.ServiceModel;
 
 namespace IServiceOriented.ServiceBus
 {
@@ -16,7 +17,38 @@ namespace IServiceOriented.ServiceBus
             private set;
         }
 
-        volatile bool _started;
+
+        internal void Validate()
+        {
+            WithLockedState(RuntimeServiceState.Stopped, () =>
+            {                
+                _state = RuntimeServiceState.Validating;
+                try
+                {
+                    OnValidate();
+                }
+                catch(Exception ex)
+                {
+                    _state = RuntimeServiceState.Stopped;
+                    throw new ValidationException("The service could not be validated", ex);
+                }
+                _state = RuntimeServiceState.Validated;
+            });
+        }
+
+        protected virtual void OnValidate()
+        {
+        }
+
+        volatile RuntimeServiceState _state = RuntimeServiceState.Stopped;
+        public RuntimeServiceState State
+        {
+            get
+            {
+                return _state;
+            }
+        }
+
         /// <summary>
         /// Gets a value indicating whether this service has been started
         /// </summary>
@@ -24,44 +56,76 @@ namespace IServiceOriented.ServiceBus
         {
             get
             {
-                return _started;
+                return (int)_state >= (int)RuntimeServiceState.Started;
             }
         }
+
         internal void StartInternal(ServiceBusRuntime runtime)
         {
-            Runtime = runtime;
+            WithLockedState(RuntimeServiceState.Validated, () =>
+            {
+                _state = RuntimeServiceState.Starting;
 
-            try
-            {
-                if (!_started)
+                Runtime = runtime;
+
+                try
                 {
-                    OnStart();
-                    _started = true;
+                    if (!Started)
+                    {
+                        OnStart();
+                        _state = RuntimeServiceState.Started;
+                    }
                 }
-            }
-            finally
-            {
-                if (!_started)
+                finally
                 {
-                    Runtime = null;
+                    if (!Started)
+                    {
+                        Runtime = null;
+                        _state = RuntimeServiceState.Error;
+                    }
                 }
-            }
+            });
         }
         internal void StopInternal()
         {
-            try
+            WithLockedState(RuntimeServiceState.Started, () =>
             {
-                if (_started)
+                try
                 {
-                    _started = false;
+                    _state = RuntimeServiceState.Stopping;
                     OnStop();
+                    _state = RuntimeServiceState.Stopped;
                 }
-            }
-            finally
+                finally
+                {
+                    if (_state != RuntimeServiceState.Stopped) _state = RuntimeServiceState.Error;
+                    Runtime = null;
+                }
+            });
+        }
+        
+        protected void WithLockedState(Action action )
+        {
+            lock (_stateTransitionLock)
             {
-                Runtime = null;
+                action();
             }
         }
+      
+        protected void WithLockedState(RuntimeServiceState state, Action action)
+        {
+            lock (_stateTransitionLock)
+            {
+                if (_state != state)
+                {
+                    throw new InvalidOperationException("The service must be " + state);
+                }
+                action();
+            }
+        }
+      
+
+        object _stateTransitionLock = new object();
 
         /// <summary>
         /// Called when the service is starting
@@ -146,5 +210,10 @@ namespace IServiceOriented.ServiceBus
 
             GC.SuppressFinalize(this);
         }
+    }
+
+    public enum RuntimeServiceState
+    {
+        None, Stopped, Validating, Validated, Starting, Started, Stopping, Error = -1
     }
 }
