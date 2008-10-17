@@ -88,10 +88,35 @@ namespace IServiceOriented.ServiceBus.Services
     }
 
     public class TimerEvent : IDisposable
-    {
-        public TimerEvent(Action action)
+    {        
+        public TimerEvent(Action action, TimeSpan interval)
         {
             Action = action;
+            Interval = interval;
+            StartDate = DateTime.MinValue;
+        }
+
+        public TimerEvent(Action action, TimeSpan interval, DateTime startDate)
+        {
+            Action = action;
+            Interval = interval;
+            StartDate = startDate;
+        }
+
+        public TimerEvent(Guid eventId, Action action, TimeSpan interval)
+        {
+            EventId = eventId;
+            Action = action;
+            Interval = interval;
+            StartDate = DateTime.MinValue;
+        }
+
+        public TimerEvent(Guid eventId, Action action, TimeSpan interval, DateTime startDate)
+        {
+            EventId = eventId;
+            Action = action;
+            StartDate = startDate;
+            Interval = interval;
         }
 
         public Guid EventId
@@ -125,12 +150,12 @@ namespace IServiceOriented.ServiceBus.Services
             DateTime now = DateTime.Now;
             if (StartDate > now)
             {
-                _timer = new Timer((now - StartDate).Milliseconds);
+                _timer = new Timer((StartDate - now).TotalMilliseconds);
                 _timer.AutoReset = false;
             }
             else
             {
-                _timer = new Timer(Interval.Milliseconds);
+                _timer = new Timer(Interval.TotalMilliseconds);
                 _timer.AutoReset = true;
             }
             _timer.Elapsed += new ElapsedEventHandler(onTimerElapsed);
@@ -141,7 +166,7 @@ namespace IServiceOriented.ServiceBus.Services
         {
             if (!_timer.AutoReset)
             {
-                _timer.Interval = Interval.Milliseconds;
+                _timer.Interval = Interval.TotalMilliseconds;
                 _timer.AutoReset = true;
                 _timer.Start();
             }
