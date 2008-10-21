@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using IServiceOriented.ServiceBus.Dispatchers;
 using System.Threading;
+using Microsoft.Practices.ServiceLocation;
 
 namespace IServiceOriented.ServiceBus.Services
 {
@@ -26,7 +27,7 @@ namespace IServiceOriented.ServiceBus.Services
                 TimerRuntimeService timerService = Runtime.ServiceLocator.GetInstance<TimerRuntimeService>();
                 return timerService;
             }
-            catch (NullReferenceException)
+            catch (ActivationException)
             {
                 throw new InvalidOperationException("A TimerRuntimeService instance must be registered with the bus to use the HeartbeatRuntimeService.");
             }    

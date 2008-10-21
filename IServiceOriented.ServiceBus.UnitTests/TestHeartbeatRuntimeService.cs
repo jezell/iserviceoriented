@@ -75,7 +75,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
                 Assert.Fail();
             }
-            catch(InvalidOperationException) // should not be able to start service bus without both timer runtime service
+            catch(ValidationException) // should not be able to start service bus without both timer runtime service
             {
                 
             }
