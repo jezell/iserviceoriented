@@ -76,6 +76,7 @@
     <Compile Include="Config.cs" />
     <Compile Include="IContract.cs" />
     <Compile Include="TestFileSystemDispatchersAndListeners.cs" />
+    <Compile Include="TestHeartbeatRuntimeService.cs" />
     <Compile Include="TestMessageFilters.cs" />
     <Compile Include="TestMsmqMessageDeliveryQueue.cs" />
     <Compile Include="NonTransactionalMemoryQueue.cs" />

@@ -10,7 +10,7 @@ namespace IServiceOriented.ServiceBus.Services
     /// <summary>
     /// Provides performance counter support for a service bus instance.
     /// </summary>
-    public class PerformanceMonitorRuntimeService : RuntimeService
+    public sealed class PerformanceMonitorRuntimeService : RuntimeService
     {
         public PerformanceMonitorRuntimeService() : this (null, null)
         {

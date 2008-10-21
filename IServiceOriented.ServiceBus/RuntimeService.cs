@@ -60,14 +60,17 @@ namespace IServiceOriented.ServiceBus
             }
         }
 
-        internal void StartInternal(ServiceBusRuntime runtime)
+        internal void Attach(ServiceBusRuntime runtime)
+        {
+            Runtime = runtime;
+        }
+
+        internal void StartInternal()
         {
             WithLockedState(RuntimeServiceState.Validated, () =>
             {
                 _state = RuntimeServiceState.Starting;
-
-                Runtime = runtime;
-
+                
                 try
                 {
                     if (!Started)

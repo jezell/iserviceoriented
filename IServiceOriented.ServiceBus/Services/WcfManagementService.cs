@@ -27,7 +27,7 @@ namespace IServiceOriented.ServiceBus.Services
         public const string ListSubscribersResponse = "urn:ListSubscribersResponse";        
     }
 
-    public class WcfManagementService : RuntimeService
+    public sealed class WcfManagementService : RuntimeService
     {        
         protected override void OnStart()
         {
@@ -80,7 +80,7 @@ namespace IServiceOriented.ServiceBus.Services
     }
 
     [ServiceBehavior(InstanceContextMode=InstanceContextMode.Single)]
-    public class ServiceBusManagementService : IServiceBusManagementService
+    public sealed class ServiceBusManagementService : IServiceBusManagementService
     {
         public ServiceBusManagementService(ServiceBusRuntime runtime)
         {
@@ -145,7 +145,7 @@ namespace IServiceOriented.ServiceBus.Services
     }
 
     [DataContract]
-    public class ListenerNotFoundFault
+    public sealed class ListenerNotFoundFault
     {
         public ListenerNotFoundFault()
         {
@@ -166,7 +166,7 @@ namespace IServiceOriented.ServiceBus.Services
 
 
     [DataContract]
-    public class SubscriptionNotFoundFault
+    public sealed class SubscriptionNotFoundFault
     {
         public SubscriptionNotFoundFault()
         {
@@ -186,7 +186,7 @@ namespace IServiceOriented.ServiceBus.Services
     }
 
     [DataContract]
-    public class MessageDeliveryNotFoundFault
+    public sealed class MessageDeliveryNotFoundFault
     {
         public MessageDeliveryNotFoundFault()
         {

@@ -7,7 +7,7 @@ using System.Timers;
 
 namespace IServiceOriented.ServiceBus.Services
 {
-    public class TimerRuntimeService : RuntimeService
+    public sealed class TimerRuntimeService : RuntimeService
     {
         protected override void OnStart()
         {
@@ -34,15 +34,7 @@ namespace IServiceOriented.ServiceBus.Services
 
             base.OnStop();
         }
-
-        protected override void OnValidate()
-        {
-            foreach (TimerEvent t in _timerEvents)
-            {
-                t.Validate();
-            }
-        }
-
+        
         public void AddEvent(TimerEvent evt)
         {
             lock (_timerEvents)
@@ -87,48 +79,52 @@ namespace IServiceOriented.ServiceBus.Services
         }
     }
 
-    public class TimerEvent : IDisposable
+    public sealed class TimerEvent : IDisposable
     {        
-        public TimerEvent(Action action, TimeSpan interval)
+        public TimerEvent(Action action, TimeSpan interval) : this(action, interval, null)
         {
-            Action = action;
-            Interval = interval;
-            StartDate = DateTime.MinValue;
+            
         }
 
-        public TimerEvent(Action action, TimeSpan interval, DateTime startDate)
+        public TimerEvent(Action action, TimeSpan interval, object state)
+            : this(Guid.NewGuid(), action, interval, DateTime.MinValue, state)
         {
-            Action = action;
-            Interval = interval;
-            StartDate = startDate;
         }
 
-        public TimerEvent(Guid eventId, Action action, TimeSpan interval)
+        public TimerEvent(Action action, TimeSpan interval, DateTime startDate) : this(action, interval, startDate, null)
         {
+            
+        }
+
+
+        public TimerEvent(Action action, TimeSpan interval, DateTime startDate, object state) : this(Guid.NewGuid(), action, interval, startDate, state)
+        {
+        }
+
+        public TimerEvent(Guid eventId, Action action, TimeSpan interval, DateTime startDate, object state)
+        {
+            if (action == null) throw new ArgumentNullException("Action must not be null.");
+            if (interval == TimeSpan.Zero)
+            {
+                throw new ArgumentException("Interval must not be zero");
+            }
             EventId = eventId;
             Action = action;
-            Interval = interval;
-            StartDate = DateTime.MinValue;
-        }
-
-        public TimerEvent(Guid eventId, Action action, TimeSpan interval, DateTime startDate)
-        {
-            EventId = eventId;
-            Action = action;
             StartDate = startDate;
             Interval = interval;
+            State = state;            
         }
 
         public Guid EventId
         {
             get;
-            set;
+            private set;
         }
 
         public DateTime StartDate
         {
             get;
-            set;
+            private set;
         }
 
         public Action Action
@@ -140,7 +136,13 @@ namespace IServiceOriented.ServiceBus.Services
         public TimeSpan Interval
         {
             get;
-            set;
+            private set;
+        }
+
+        public object State
+        {
+            get;
+            private set;
         }
 
         internal void Start()
@@ -173,7 +175,25 @@ namespace IServiceOriented.ServiceBus.Services
             Action action = Action;
             if (action != null)
             {
-                action();
+                _current = this;
+                try
+                {
+                    action();
+                }
+                finally
+                {
+                    _current = null;
+                }
+            }
+        }
+
+        [ThreadStatic]
+        static TimerEvent _current;
+        public static TimerEvent Current
+        {
+            get
+            {
+                return _current;
             }
         }
 
@@ -212,15 +232,6 @@ namespace IServiceOriented.ServiceBus.Services
         ~TimerEvent()
         {
             Dispose(false);
-        }
-
-        public virtual void Validate()
-        {
-            if (Action == null) throw new InvalidOperationException("Action has not been set");
-            if (Interval == TimeSpan.Zero)
-            {
-                throw new InvalidOperationException("Interval has not been set");
-            }
         }
     }    
 

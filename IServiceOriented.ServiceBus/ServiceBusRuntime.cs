@@ -36,6 +36,8 @@ namespace IServiceOriented.ServiceBus
             }
 
             _serviceLocator = serviceLocator;
+
+            attachServices();
         }
 
         public ServiceBusRuntime(params RuntimeService[] runtimeServices) : this(SimpleServiceLocator.With(runtimeServices))
@@ -45,6 +47,14 @@ namespace IServiceOriented.ServiceBus
 		{
             
 		}
+
+        void attachServices()
+        {
+            foreach (RuntimeService rs in ServiceLocator.GetAllInstances<RuntimeService>())
+            {
+                rs.Attach(this);
+            }
+        }
 		
 		object _startLock = new object();
 				
@@ -97,13 +107,13 @@ namespace IServiceOriented.ServiceBus
                     // start delivery after other services
                     if (!(rs is DeliveryCore))
                     {
-                        rs.StartInternal(this);
+                        rs.StartInternal();
                     }
                 }
 
                 foreach (DeliveryCore core in ServiceLocator.GetAllInstances<DeliveryCore>())
                 {
-                    core.StartInternal(this);
+                    core.StartInternal();
                 }
 
                 lock (_listenerEndpointsLock)
