@@ -34,14 +34,14 @@ namespace IServiceOriented.ServiceBus.UnitTests
             {
                 CEcho echo = new CEcho();
 
-                SubscriptionEndpoint replyEndpoint = new SubscriptionEndpoint(Guid.NewGuid(), "test", null, null, typeof(void), new MethodDispatcher(echo, false), new IgnoreReplyFilter());
+                SubscriptionEndpoint replyEndpoint = new SubscriptionEndpoint(Guid.NewGuid(), "test", null, null, typeof(void), new MethodDispatcher(echo, false), new PredicateMessageFilter( m => m.Action == "Echo"));
                 runtime.Subscribe(replyEndpoint);
                 runtime.Start();
                 try
                 {
                     string message = "echo this";
 
-                    MessageDelivery[] output = runtime.PublishTwoWay(new PublishRequest(typeof(void), "Echo", message), TimeSpan.FromSeconds(10));
+                    MessageDelivery[] output = runtime.PublishTwoWay(new PublishRequest(typeof(void), "Echo", message), TimeSpan.FromSeconds(100));
 
                     Assert.IsNotNull(output);
                     Assert.AreEqual(1, output.Length);
@@ -62,16 +62,21 @@ namespace IServiceOriented.ServiceBus.UnitTests
             {
                 CEcho echo = new CEcho();
 
-                SubscriptionEndpoint replyEndpoint = new SubscriptionEndpoint(Guid.NewGuid(), "test", null, null, typeof(void), new MethodDispatcher(echo, false), new IgnoreReplyFilter());
+                SubscriptionEndpoint replyEndpoint = new SubscriptionEndpoint(Guid.NewGuid(), "test", null, null, typeof(void), new MethodDispatcher(echo, false), new PredicateMessageFilter(m =>
+                    {                    
+                        bool result = m.Action == "ThrowInvalidOperationException";
+                        return result;                
+                    }));
                 runtime.Subscribe(replyEndpoint);
                 runtime.Start();
                 try
                 {
                     string message = null;
 
-                    MessageDelivery[] output = runtime.PublishTwoWay(new PublishRequest(typeof(void), "ThrowInvalidOperationException", message), TimeSpan.FromSeconds(10));
+                    MessageDelivery[] output = runtime.PublishTwoWay(new PublishRequest(typeof(void), "ThrowInvalidOperationException", message), TimeSpan.FromSeconds(100));
 
                     Assert.IsNotNull(output);
+                    Assert.AreEqual(1, output.Length);
                     Assert.IsInstanceOfType(typeof(InvalidOperationException), output[0].Message);
                 }
                 finally
@@ -136,7 +141,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
                 {
                     echoHost.Open();
 
-                    SubscriptionEndpoint replyEndpoint = new SubscriptionEndpoint(Guid.NewGuid(), "EchoClient", "EchoHostClient", "net.pipe://localhost/echo", typeof(IEcho), new WcfProxyDispatcher(), new IgnoreReplyFilter());
+                    SubscriptionEndpoint replyEndpoint = new SubscriptionEndpoint(Guid.NewGuid(), "EchoClient", "EchoHostClient", "net.pipe://localhost/echo", typeof(IEcho), new WcfProxyDispatcher(), new PredicateMessageFilter( m => m.Action == "ThrowFaultException"));
                     runtime.Subscribe(replyEndpoint);
                     runtime.Start();
 
@@ -171,7 +176,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
                 {
                     echoHost.Open();
 
-                    SubscriptionEndpoint replyEndpoint = new SubscriptionEndpoint(Guid.NewGuid(), "EchoClient", "EchoHostClient", "net.pipe://localhost/echo", typeof(IEcho), new WcfProxyDispatcher(), new IgnoreReplyFilter());
+                    SubscriptionEndpoint replyEndpoint = new SubscriptionEndpoint(Guid.NewGuid(), "EchoClient", "EchoHostClient", "net.pipe://localhost/echo", typeof(IEcho), new WcfProxyDispatcher(), new PredicateMessageFilter( m => m.Action == "Echo"));
                     runtime.Subscribe(replyEndpoint);
                     runtime.Start();
 
@@ -191,18 +196,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
             }
         }
-
-        public class IgnoreReplyFilter : MessageFilter
-        {
-            public override bool Include(PublishRequest request)
-            {
-                if (request.Context.ContainsKey(MessageDelivery.CorrelationId))
-                {
-                    return false;
-                }
-                return true;
-            }
-        }
+       
 
         
     }

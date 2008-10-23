@@ -23,8 +23,8 @@ namespace IServiceOriented.ServiceBus.Services
         public const string ListListeners = "urn:ListListeners";
         public const string ListListenersResponse = "urn:ListListenersResponse";
 
-        public const string ListSubscribers = "urn:ListSubscribers";
-        public const string ListSubscribersResponse = "urn:ListSubscribersResponse";        
+        public const string ListSubscriptions = "urn:ListSubscriptions";
+        public const string ListSubscriptionsResponse = "urn:ListSubscriptionsResponse";        
     }
 
     public sealed class WcfManagementService : RuntimeService
@@ -75,7 +75,7 @@ namespace IServiceOriented.ServiceBus.Services
         [OperationContract(Action = WcfManagementServiceActions.ListListeners, ReplyAction = WcfManagementServiceActions.ListListenersResponse)]
         Collection<ListenerEndpoint> ListListeners();
 
-        [OperationContract(Action = WcfManagementServiceActions.ListSubscribers, ReplyAction = WcfManagementServiceActions.ListSubscribersResponse)]        
+        [OperationContract(Action = WcfManagementServiceActions.ListSubscriptions, ReplyAction = WcfManagementServiceActions.ListSubscriptionsResponse)]        
         Collection<SubscriptionEndpoint> ListSubscribers();
     }
 
@@ -113,7 +113,7 @@ namespace IServiceOriented.ServiceBus.Services
         [OperationBehavior]
         public void Listen([MessageParameter(Name = "Endpoint")] ListenerEndpoint endpoint)
         {
-            Runtime.AddListener(endpoint);
+            Runtime.Listen(endpoint);
         }
 
         [OperationBehavior]
@@ -121,7 +121,7 @@ namespace IServiceOriented.ServiceBus.Services
         {
             try
             {
-                Runtime.RemoveListener(listenerId);
+                Runtime.StopListening(listenerId);
             }
             catch (ListenerNotFoundException)
             {
@@ -132,7 +132,7 @@ namespace IServiceOriented.ServiceBus.Services
         [OperationBehavior]
         public Collection<SubscriptionEndpoint> ListSubscribers()
         {
-            return Runtime.ListSubscribers(false);
+            return Runtime.ListSubscriptions(false);
         }
 
         [OperationBehavior]

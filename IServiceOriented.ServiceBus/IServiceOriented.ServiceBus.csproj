@@ -93,6 +93,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ActionMessageFilter.cs" />
+    <Compile Include="Correlator.cs" />
     <Compile Include="DeliveryException.cs" />
     <Compile Include="Delivery\Formatters\CompositeMessageDeliveryConverter.cs" />
     <Compile Include="Delivery\Formatters\ConverterMessageDeliveryReader.cs" />
@@ -109,6 +110,7 @@
     <Compile Include="Delivery\Formatters\MessageDeliveryFormatter.cs" />
     <Compile Include="Dispatchers\FileSystemDispatcher.cs" />
     <Compile Include="Dispatchers\SmtpDispatcher.cs" />
+    <Compile Include="Dispatchers\SubscriptionDispatcher.cs" />
     <Compile Include="Dispatchers\WcfChannelDispatcher.cs" />
     <Compile Include="Dispatchers\WcfDispatcher.cs" />
     <Compile Include="GlobalSuppressions.cs" />

@@ -11,7 +11,7 @@ namespace IServiceOriented.ServiceBus.Dispatchers
     /// <summary>
     /// Provides support for dispatching messages to an object instance.
     /// </summary>
-    public sealed class MethodDispatcher : Dispatcher 
+    public class MethodDispatcher : Dispatcher 
     {
         private MethodDispatcher()
         {
@@ -63,6 +63,11 @@ namespace IServiceOriented.ServiceBus.Dispatchers
             private set;
         }
 
+        protected string GetResponseCorrelationId(MessageDelivery delivery)
+        {
+            return (string)delivery.Context[MessageDelivery.PublishRequestId];
+        }
+
         public override void Dispatch(MessageDelivery messageDelivery)
         {            
             MethodInfo methodInfo;
@@ -88,30 +93,28 @@ namespace IServiceOriented.ServiceBus.Dispatchers
                 {
                     result = methodInfo.Invoke(Target, new object[] { messageDelivery.Message });
 
-                    KeyValuePair<MessageDeliveryContextKey, object>[] replyData = new KeyValuePair<MessageDeliveryContextKey, object>[1];
-                    replyData[0] = new KeyValuePair<MessageDeliveryContextKey, object>(MessageDelivery.CorrelationId, messageDelivery.MessageDeliveryId);
                     if (!IsOneWay)
                     {
+                        KeyValuePair<MessageDeliveryContextKey, object>[] replyData = new KeyValuePair<MessageDeliveryContextKey, object>[1];
+                        replyData[0] = new KeyValuePair<MessageDeliveryContextKey, object>(MessageDelivery.CorrelationId, GetResponseCorrelationId(messageDelivery));
                         replyAction = _replyLookup[messageDelivery.Action];
                         Runtime.PublishOneWay(new PublishRequest(Endpoint.ContractType, replyAction, result, new MessageDeliveryContext(replyData)));
-                    }                    
+                    }
                 }
-                catch(TargetInvocationException ex)
+                catch (TargetInvocationException ex)
                 {
                     result = ex.InnerException;
                     if (!IsOneWay)
                     {
                         KeyValuePair<MessageDeliveryContextKey, object>[] replyData = new KeyValuePair<MessageDeliveryContextKey, object>[1];
-                        replyData[0] = new KeyValuePair<MessageDeliveryContextKey, object>(MessageDelivery.CorrelationId, messageDelivery.MessageDeliveryId);
+                        replyData[0] = new KeyValuePair<MessageDeliveryContextKey, object>(MessageDelivery.CorrelationId, GetResponseCorrelationId(messageDelivery));
                         Runtime.PublishOneWay(new PublishRequest(Endpoint.ContractType, replyAction, result, new MessageDeliveryContext(replyData)));
                     }
                     else
                     {
                         throw;
                     }
-                }
-                
-                    
+                }                    
 
                 
             }

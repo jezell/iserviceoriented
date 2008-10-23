@@ -32,7 +32,10 @@ namespace IServiceOriented.ServiceBus.Delivery
             {
                 foreach (string replyToMessageId in CorrelationIds)
                 {
-                    return ((string)request.Context[MessageDelivery.CorrelationId] == replyToMessageId);
+                    if ((string)request.Context[MessageDelivery.CorrelationId] == replyToMessageId)
+                    {
+                        return true;
+                    }
                 }
             }
             return false;

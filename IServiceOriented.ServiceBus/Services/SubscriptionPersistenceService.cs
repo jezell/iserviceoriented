@@ -45,7 +45,7 @@ namespace IServiceOriented.ServiceBus.Services
 
                 if (le != null)
                 {
-                    Runtime.RemoveListener(le);
+                    Runtime.StopListening(le);
                 }
                 else if (se != null)
                 {

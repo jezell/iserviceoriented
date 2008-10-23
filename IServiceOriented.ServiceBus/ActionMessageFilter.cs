@@ -16,7 +16,7 @@ namespace IServiceOriented.ServiceBus
         {
             _actions = new HashSet<string>(actions);
         }
-
+        
         [DataMember(Name="Actions")]
         HashSet<string> _actions;
 
@@ -29,8 +29,8 @@ namespace IServiceOriented.ServiceBus
         }
 
         public override bool Include(PublishRequest request)
-        {
-            return _actions.Contains(request.Action);
+        {            
+            return _actions.Contains("*") ||  _actions.Contains(request.Action);
         }
 
         public static ActionMessageFilter Create(ContractDescription description)

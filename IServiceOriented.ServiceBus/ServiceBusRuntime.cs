@@ -38,6 +38,15 @@ namespace IServiceOriented.ServiceBus
             _serviceLocator = serviceLocator;
 
             attachServices();
+
+            _subscriptionEndpoint = new SubscriptionEndpoint(Guid.Empty, "Subscription endpoint", null, null, (Type)null, new SubscriptionDispatcher(() => this.ListSubscriptions(true)), new PredicateMessageFilter(pr => false), true, null);
+            _correlatorEndpoint = new SubscriptionEndpoint(Guid.NewGuid(), "Correlator", null, null, (Type)null, new ActionDispatcher((se, md) =>
+                {
+                    _correlator.Reply((string)md.Context[MessageDelivery.CorrelationId], md);
+                }), new PredicateMessageFilter(pr => pr.Context.ContainsKey(MessageDelivery.CorrelationId)), true, null);
+            
+            Subscribe(_subscriptionEndpoint);
+            Subscribe(_correlatorEndpoint);            
         }
 
         public ServiceBusRuntime(params RuntimeService[] runtimeServices) : this(SimpleServiceLocator.With(runtimeServices))
@@ -47,7 +56,9 @@ namespace IServiceOriented.ServiceBus
 		{
             
 		}
-
+        Correlator _correlator = new Correlator();
+        SubscriptionEndpoint _correlatorEndpoint;
+        
         void attachServices()
         {
             foreach (RuntimeService rs in ServiceLocator.GetAllInstances<RuntimeService>())
@@ -219,7 +230,7 @@ namespace IServiceOriented.ServiceBus
 
         ReaderWriterLockedObject<IEnumerable<SubscriptionEndpoint>, SubscriptionEndpointCollection> _subscriptions = new ReaderWriterLockedObject<IEnumerable<SubscriptionEndpoint>, SubscriptionEndpointCollection>(new SubscriptionEndpointCollection(), l => l);
         
-		public void AddListener(ListenerEndpoint endpoint)
+		public void Listen(ListenerEndpoint endpoint)
 		{
             if (_disposed) throw new ObjectDisposedException("ServiceBusRuntime");
 
@@ -272,7 +283,7 @@ namespace IServiceOriented.ServiceBus
             }            
 		}
 
-        public void RemoveListener(Guid endpointId)
+        public void StopListening(Guid endpointId)
         {
             if (_disposed) throw new ObjectDisposedException("ServiceBusRuntime");
 
@@ -285,7 +296,7 @@ namespace IServiceOriented.ServiceBus
                     {
                         endpoint.Listener.StopInternal();
                     }
-                    RemoveListener(endpoint);
+                    StopListening(endpoint);
 
                     foreach (RuntimeService service in ServiceLocator.GetAllInstances<RuntimeService>())
                     {
@@ -305,7 +316,7 @@ namespace IServiceOriented.ServiceBus
             }
         }
 		
-		public void RemoveListener(ListenerEndpoint endpoint)
+		public void StopListening(ListenerEndpoint endpoint)
 		{
             if (_disposed) throw new ObjectDisposedException("ServiceBusRuntime");
 
@@ -381,144 +392,51 @@ namespace IServiceOriented.ServiceBus
             PublishOneWay(new PublishRequest(contractType, action, message, new MessageDeliveryContext()));
         }
 
-        List<MessageDelivery> determineDeliveries(PublishRequest publishRequest)
+        SubscriptionEndpoint _subscriptionEndpoint;
+
+        void deliverToSubscriptionEndpoint(TimeSpan timeout, PublishRequest publishRequest)
         {
-            List<MessageDelivery> messageDeliveries = new List<MessageDelivery>();
-            
-            SubscriptionEndpoint[] subscriptions = null;
-            _subscriptions.Read(endpoints =>
-            {
-                subscriptions = endpoints.ToArray();
-            });
-            
-            List<SubscriptionEndpoint> unhandledFilters = new List<SubscriptionEndpoint>();
+            SubscriptionEndpoint se = _subscriptionEndpoint;
 
-            bool handled = false;
-            foreach (SubscriptionEndpoint subscription in subscriptions)
-            {
-                bool include;
+            publishRequest = PublishRequest.Copy(publishRequest, new KeyValuePair<MessageDeliveryContextKey, object>(MessageDelivery.PublishRequestId, publishRequest.PublishRequestId));
 
-                if (subscription.Filter is UnhandledMessageFilter)
-                {
-                    include = false;
-                    if (subscription.Filter.Include(publishRequest))
-                    {
-                        unhandledFilters.Add(subscription);
-                    }
-                }
-                else
-                {
-                    include = subscription.Filter == null || subscription.Filter.Include(publishRequest);
-                }
-
-                if (include)
-                {
-                    MessageDelivery delivery = new MessageDelivery(subscription.Id, publishRequest.ContractType, publishRequest.Action, publishRequest.Message, MaxRetries, publishRequest.Context);
-                    messageDeliveries.Add(delivery);
-                    handled = true;
-                }
-            }
-
-            // if unhandled, send to subscribers of unhandled messages
-            if (!handled)
-            {
-                foreach (SubscriptionEndpoint subscription in unhandledFilters)
-                {
-                    MessageDelivery delivery = new MessageDelivery(subscription.Id, publishRequest.ContractType, publishRequest.Action, publishRequest.Message, MaxRetries, publishRequest.Context);
-                    messageDeliveries.Add(delivery);
-                }
-            }
-
-            return messageDeliveries;
-        }
-
-        public void PublishOneWay(PublishRequest publishRequest)
-        {
             using (TransactionScope ts = new TransactionScope())
-            {                
-                foreach (MessageDelivery md in determineDeliveries(publishRequest))
-                {
-                    DeliveryCore deliveryCore = SelectDeliveryCore(md);
-                    deliveryCore.Deliver(md);                    
-                }
+            {
+                MessageDelivery md = new MessageDelivery(Guid.NewGuid().ToString(), se.Id, publishRequest.ContractType, publishRequest.Action, publishRequest.Message, MaxRetries, 0, null, publishRequest.Context, DateTime.Now + timeout);
+                DeliveryCore deliveryCore = ServiceLocator.GetInstance<DeliveryCore>();
+                deliveryCore.Deliver(md);
                 ts.Complete();
             }
         }
 
-        public virtual DeliveryCore SelectDeliveryCore(MessageDelivery delivery)
-        {
-            DeliveryCore deliveryCore = ServiceLocator.GetInstance<DeliveryCore>();
-            return deliveryCore;
-        }
+        // todo: get rid of this
+        TimeSpan _oneWayTimeout = TimeSpan.FromSeconds(120);
         
+        public void PublishOneWay(PublishRequest publishRequest)
+        {
+            deliverToSubscriptionEndpoint(_oneWayTimeout, publishRequest);
+        }
+
+        protected string GetResponseCorrelationId(PublishRequest request)
+        {
+            return request.PublishRequestId.ToString();
+        }
+     
 		public MessageDelivery[] PublishTwoWay(PublishRequest publishRequest, TimeSpan timeout)
-		{                     
-            MessageDelivery[] results = null;
+		{                                             
+            CorrelatorAsyncResult result = null;
 
-            CorrelationMessageFilter filter;
-            ActionDispatcher dispatcher;
-            SubscriptionEndpoint temporarySubscription = null;
-
-            CountdownLatch latch = null;
-            try
-            {
-                using (TransactionScope ts = new TransactionScope())
-                {
-                    var messageDeliveries = determineDeliveries(publishRequest);
-                    
-                    latch = new CountdownLatch(messageDeliveries.Count);
-                    filter = new CorrelationMessageFilter(messageDeliveries.Select(md => md.MessageDeliveryId).ToArray());
-                    results = new MessageDelivery[messageDeliveries.Count];
-                    dispatcher = new ActionDispatcher((se, md) =>
-                    {
-                        for (int j = 0; j < messageDeliveries.Count; j++)
-                        {
-                            if (messageDeliveries[j].MessageDeliveryId == (string)md.Context[MessageDelivery.CorrelationId]) // is reply
-                            {
-                                results[j] = md;
-                                latch.Tick();
-                            }
-                        }
-                    });
-
-                    temporarySubscription = new SubscriptionEndpoint(Guid.NewGuid(), "Temporary subscription", null, null, typeof(void), dispatcher, filter, true);
-                    Subscribe(temporarySubscription);
+            string correlationId = GetResponseCorrelationId(publishRequest);            
             
-                    Thread.MemoryBarrier(); // make sure variable assignment doesn't move after enqueue
-
-                    foreach (MessageDelivery md in messageDeliveries)
-                    {
-                        DeliveryCore deliveryCore = SelectDeliveryCore(md);
-                        deliveryCore.Deliver(md);                        
-                    }
-
-                    ts.Complete();
-                }
-
-                latch.Handle.WaitOne(timeout, true); // wait for responses
-                
-            }
-            finally
+            using (TransactionScope ts = new TransactionScope())
             {
-                if (temporarySubscription != null)
-                {
-                    Unsubscribe(temporarySubscription);
-                }
-                if (latch != null)
-                {
-                    latch.Dispose();
-                }
-            }
+                result = (CorrelatorAsyncResult)_correlator.BeginWaitForReply(correlationId, null, null);
+                deliverToSubscriptionEndpoint(timeout, publishRequest);
+                ts.Complete(); 
+            }             
 
-            List<MessageDelivery> trimmedResults = new List<MessageDelivery>();
-            foreach (MessageDelivery delivery in results)
-            {
-                if (delivery != null)
-                {
-                    trimmedResults.Add(delivery);
-                }
-            }
-            return trimmedResults.ToArray();
+            _correlator.EndWaitForReply(result);
+            return result.Results.ToArray();
 		}
 
         public Collection<ListenerEndpoint> ListListeners()
@@ -544,9 +462,9 @@ namespace IServiceOriented.ServiceBus
 
         public Collection<SubscriptionEndpoint> ListSubscribers()
         {
-            return ListSubscribers(true);
+            return ListSubscriptions(true);
         }
-        public Collection<SubscriptionEndpoint> ListSubscribers(bool includeTransient)
+        public Collection<SubscriptionEndpoint> ListSubscriptions(bool includeTransient)
         {
             if (_disposed) throw new ObjectDisposedException("ServiceBusRuntime");
 

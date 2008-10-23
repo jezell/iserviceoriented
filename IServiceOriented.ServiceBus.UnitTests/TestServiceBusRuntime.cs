@@ -57,18 +57,23 @@ namespace IServiceOriented.ServiceBus.UnitTests
         public void OnlyRetryOnce()
         {
             serviceBusRuntime.ServiceLocator.GetInstance<QueuedDeliveryCore>().ExponentialBackOff = false;
-            serviceBusRuntime.ServiceLocator.GetInstance<QueuedDeliveryCore>().RetryDelay = 1000;
+            serviceBusRuntime.ServiceLocator.GetInstance<QueuedDeliveryCore>().RetryDelay = 100;
             serviceBusRuntime.MaxRetries = 1;
         }
 
         public void AddTestListener()
         {
-            serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/testlistener", typeof(IContract), new WcfServiceHostListener()));
+            serviceBusRuntime.Listen(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/testlistener", typeof(IContract), new WcfServiceHostListener()));
         }
 
         public void AddTestSubscription(ContractImplementation ci, MessageFilter messageFilter)
         {
-            serviceBusRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "", "", typeof(IContract), new MethodDispatcher(ci), messageFilter));
+            AddTestSubscription(ci, messageFilter, null);
+        }
+
+        public void AddTestSubscription(ContractImplementation ci, MessageFilter messageFilter, DateTime? expiration)
+        {
+            serviceBusRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "subscription", "", "", typeof(IContract), new MethodDispatcher(ci), messageFilter, false, expiration));
         }
 
         public void StartAndStop(Action inner)
@@ -80,45 +85,47 @@ namespace IServiceOriented.ServiceBus.UnitTests
             serviceBusRuntime.Stop();            
         }
 
-        public void WaitForDeliveriesOrFailures(int deliveryCount, TimeSpan timeout, Action inner)
+        public void WaitForDeliveriesAndFailures(int deliveryCount, int failureCount, TimeSpan timeout, Action inner)
         {
-            waitForDeliveries(deliveryCount, true, timeout, inner);
+            waitForDeliveries(deliveryCount, failureCount, true, timeout, inner);
         }
 
         public void WaitForDeliveries(int deliveryCount, TimeSpan timeout, Action inner)
         {
-            waitForDeliveries(deliveryCount, false, timeout, inner);
+            waitForDeliveries(deliveryCount, 0, false, timeout, inner);
         }
 
-        void waitForDeliveries(int deliveryCount, bool includeFailures, TimeSpan timeout, Action inner)
+        void waitForDeliveries(int deliveryCount, int failureCount, bool includeFailures, TimeSpan timeout, Action inner)
         {
             using (CountdownLatch latch = new CountdownLatch(deliveryCount))
             {
-
-                EventHandler<MessageDeliveryEventArgs> delivered = (o, mdea) => {  latch.Tick(); };
-                EventHandler<MessageDeliveryFailedEventArgs> deliveryFailed = (o, mdfa) => { latch.Tick(); };
-                
-                serviceBusRuntime.MessageDelivered += delivered;
-                if(includeFailures) serviceBusRuntime.MessageDeliveryFailed += deliveryFailed;
-
-                try
+                using (CountdownLatch failLatch = new CountdownLatch(failureCount))
                 {
-                    StartAndStop(() =>
+
+                    EventHandler<MessageDeliveryEventArgs> delivered = (o, mdea) => { Console.WriteLine("s");  latch.Tick(); };
+                    EventHandler<MessageDeliveryFailedEventArgs> deliveryFailed = (o, mdfa) => { Console.WriteLine("f"); failLatch.Tick(); };
+
+                    serviceBusRuntime.MessageDelivered += delivered;
+                    if (includeFailures) serviceBusRuntime.MessageDeliveryFailed += deliveryFailed;
+
+                    try
                     {
-                        inner();
-
-                        if (!latch.Handle.WaitOne(timeout))
+                        StartAndStop(() =>
                         {
-                            throw new TimeoutException("timeout expired");
-                        }
-                    });
-                }
-                finally
-                {
-                    serviceBusRuntime.MessageDelivered -= delivered;
-                    if (includeFailures) serviceBusRuntime.MessageDeliveryFailed -= deliveryFailed;
-                }
+                            inner();
 
+                            if (!WaitHandle.WaitAll(new WaitHandle[] { latch.Handle, failLatch.Handle } , timeout))
+                            {
+                                throw new TimeoutException("timeout expired");
+                            }
+                        });
+                    }
+                    finally
+                    {
+                        serviceBusRuntime.MessageDelivered -= delivered;
+                        if (includeFailures) serviceBusRuntime.MessageDeliveryFailed -= deliveryFailed;
+                    }
+                }
 
                 
             }
@@ -156,7 +163,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
                 try
                 {
-                    tester.WaitForDeliveriesOrFailures(1, TimeSpan.FromSeconds(5), () =>
+                    tester.WaitForDeliveries(2, TimeSpan.FromSeconds(5), () =>
                     {
                         serviceBusRuntime.PublishOneWay(new PublishRequest(typeof(IContract), "PublishThis", message));
                     });
@@ -187,7 +194,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
                 string message = "Publish this message";
                 
-                tester.WaitForDeliveries(1, TimeSpan.FromMinutes(1), ()=>
+                tester.WaitForDeliveries(2, TimeSpan.FromMinutes(1), ()=>
                 {
                     serviceBusRuntime.PublishOneWay(new PublishRequest(typeof(IContract), "PublishThis", message));
                 });
@@ -213,7 +220,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
                 tester.AddTestListener();
                 tester.AddTestSubscription(ci, new PassThroughMessageFilter());
 
-                tester.WaitForDeliveriesOrFailures(1, TimeSpan.FromSeconds(5), () =>
+                tester.WaitForDeliveries(2, TimeSpan.FromSeconds(50), () =>
                 {
                     serviceBusRuntime.PublishOneWay(new PublishRequest(typeof(IContract), "PublishThis", message));
                 });
@@ -249,7 +256,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
                 DateTime start = DateTime.Now;
 
-                tester.WaitForDeliveriesOrFailures(messageCount, TimeSpan.FromMinutes(1), () =>
+                tester.WaitForDeliveries(messageCount*2, TimeSpan.FromMinutes(1), () =>
                 {
                                      
                 });
@@ -301,7 +308,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
                 DateTime start = DateTime.Now;
 
             
-                tester.WaitForDeliveries(messageCount, TimeSpan.FromMinutes(1), () =>
+                tester.WaitForDeliveries(messageCount*2, TimeSpan.FromMinutes(1), () =>
                 {
                     for (int i = 0; i < messageCount; i++)
                     {
@@ -353,7 +360,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
                 tester.StartAndStop(() =>
                 {
-                    CountdownLatch latch = new CountdownLatch(2);
+                    CountdownLatch latch = new CountdownLatch(2+1);
 
                     serviceBusRuntime.MessageDelivered += (o, mdea) =>
                     {
@@ -370,14 +377,70 @@ namespace IServiceOriented.ServiceBus.UnitTests
                     latch.Handle.WaitOne(TimeSpan.FromMinutes(1), false); // give it a minute
 
                 });
+
+                Assert.AreEqual(true, failFirst);
+                Assert.AreEqual(true, deliverSecond);
                 
                 Assert.AreEqual(1, ci.PublishedCount);
                 Assert.AreEqual(message, ci.PublishedMessages[0]);
 
-                Assert.AreEqual(true, failFirst);
-                Assert.AreEqual(true, deliverSecond);
-
+                
                 tester.VerifyQueuesEmpty(); 
+            }
+        }
+
+        [Test]
+        public void Expired_Subscriptions_Do_Not_Get_Messages()
+        {            
+            using (var serviceBusRuntime = new ServiceBusRuntime())
+            {
+                ServiceBusTest tester = new ServiceBusTest(serviceBusRuntime);
+
+                string message = "Publish this message";
+                ContractImplementation ci = new ContractImplementation();
+                
+                tester.AddTestSubscription(ci, new PassThroughMessageFilter(), DateTime.MinValue);
+
+
+                try
+                {
+                    tester.WaitForDeliveries(2, TimeSpan.FromSeconds(1), () =>
+                    {
+                        serviceBusRuntime.PublishOneWay(new PublishRequest(typeof(IContract), "PublishThis", message));
+                    });
+                    Assert.Fail("Message should not have been delivered to an expired subscription.");
+                }
+                catch (TimeoutException)
+                {
+
+                }
+            }
+        }
+
+        [Test]
+        public void Not_Yet_Expired_Subscriptions_Get_Messages()
+        {
+            using (var serviceBusRuntime = new ServiceBusRuntime())
+            {
+                ServiceBusTest tester = new ServiceBusTest(serviceBusRuntime);
+
+                string message = "Publish this message";
+                ContractImplementation ci = new ContractImplementation();
+
+                tester.AddTestSubscription(ci, new PassThroughMessageFilter(), DateTime.MaxValue);
+
+
+                try
+                {
+                    tester.WaitForDeliveries(2, TimeSpan.FromSeconds(1), () =>
+                    {
+                        serviceBusRuntime.PublishOneWay(new PublishRequest(typeof(IContract), "PublishThis", message));
+                    });                    
+                }
+                catch (TimeoutException)
+                {
+                    Assert.Fail("Message should have been delivered to not yet expired subscription.");
+                }
             }
         }
 
@@ -397,7 +460,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
                 tester.AddTestListener();
                 tester.AddTestSubscription(ci, new PassThroughMessageFilter());
 
-                tester.WaitForDeliveriesOrFailures(3, TimeSpan.FromSeconds(10), () =>
+                tester.WaitForDeliveriesAndFailures(1, 3, TimeSpan.FromSeconds(10), () =>
                 {
                     serviceBusRuntime.PublishOneWay(new PublishRequest(typeof(IContract), "PublishThis", message));
                 });                   

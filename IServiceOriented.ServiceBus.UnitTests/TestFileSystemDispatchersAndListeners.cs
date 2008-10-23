@@ -46,7 +46,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
             ServiceBusRuntime listenerRuntime = new ServiceBusRuntime(new DirectDeliveryCore());
             var listener = new ListenerEndpoint(Guid.NewGuid(), "File System Listener", null, null, typeof(IContract), new FileSystemListener(new ConverterMessageDeliveryReaderFactory(encoder, typeof(IContract)), Config.IncomingFilePath, Config.ProcessedFilePath));
-            listenerRuntime.AddListener(listener);
+            listenerRuntime.Listen(listener);
             listenerRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "Pass through", null, null, typeof(IContract), new ActionDispatcher((se, md) => { }), new PassThroughMessageFilter()));
             
             var dispatchTester = new ServiceBusTest(dispatchRuntime);
@@ -79,7 +79,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
             ServiceBusRuntime listenerRuntime = new ServiceBusRuntime(new DirectDeliveryCore());
             var listener = new ListenerEndpoint(Guid.NewGuid(), "File System Listener", null, null, typeof(IContract), new FileSystemListener(new ConverterMessageDeliveryReaderFactory(encoder, typeof(IContract)),Config.IncomingFilePath, Config.ProcessedFilePath));
-            listenerRuntime.AddListener(listener);
+            listenerRuntime.Listen(listener);
             listenerRuntime.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "Pass through", null, null, typeof(IContract), new ActionDispatcher((se, md) => { }), new PassThroughMessageFilter()));
 
             var dispatchTester = new ServiceBusTest(dispatchRuntime);

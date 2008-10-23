@@ -91,18 +91,28 @@ namespace IServiceOriented.ServiceBus
         }
         internal void StopInternal()
         {
-            WithLockedState(RuntimeServiceState.Started, () =>
+            WithLockedState(() =>
             {
-                try
+                if (_state == RuntimeServiceState.Stopping || _state == RuntimeServiceState.Stopped)
                 {
-                    _state = RuntimeServiceState.Stopping;
-                    OnStop();
-                    _state = RuntimeServiceState.Stopped;
                 }
-                finally
+                else
                 {
-                    if (_state != RuntimeServiceState.Stopped) _state = RuntimeServiceState.Error;
-                    Runtime = null;
+                    if (_state != RuntimeServiceState.Started)
+                    {
+                        throw new InvalidOperationException("The service must be started. It is currently "+ _state );
+                    }
+                    try
+                    {
+                        _state = RuntimeServiceState.Stopping;
+                        OnStop();
+                        _state = RuntimeServiceState.Stopped;
+                    }
+                    finally
+                    {
+                        if (_state != RuntimeServiceState.Stopped) _state = RuntimeServiceState.Error;
+                        Runtime = null;
+                    }
                 }
             });
         }

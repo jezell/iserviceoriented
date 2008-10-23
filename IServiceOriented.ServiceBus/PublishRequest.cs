@@ -14,18 +14,25 @@ namespace IServiceOriented.ServiceBus
     {
         protected PublishRequest()
         {
+            PublishRequestId = Guid.NewGuid().ToString();
         }
-
+        
         public PublishRequest(Type contract, string action, object message) :
             this(contract, action, message, new MessageDeliveryContext())
         {
         }
-        public PublishRequest(Type contract, string action, object message, MessageDeliveryContext context)
+        public PublishRequest(Type contract, string action, object message, MessageDeliveryContext context) : this()
         {
             ContractType = contract;
             Action = action;
             Message = message;
             Context = context;
+        }
+
+        public string PublishRequestId
+        {
+            get;
+            private set;
         }
 
         /// <summary>
@@ -63,5 +70,17 @@ namespace IServiceOriented.ServiceBus
             get;
             private set;
         }
+
+
+        public static PublishRequest Copy(PublishRequest original, params KeyValuePair<MessageDeliveryContextKey, object>[] additionalContext)
+        {
+            Dictionary<MessageDeliveryContextKey, object> editableContext = original.Context.ToDictionary();
+            foreach (var c in additionalContext)
+            {
+                editableContext.Add(c.Key, c.Value);
+            }
+            return new PublishRequest(original.ContractType, original.Action, original.Message, new MessageDeliveryContext(editableContext));
+        }
+
     }
 }

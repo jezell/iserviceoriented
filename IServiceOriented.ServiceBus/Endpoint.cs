@@ -14,12 +14,21 @@ namespace IServiceOriented.ServiceBus
     [Serializable]
     [DataContract]
     public abstract class Endpoint
-    {        
-        protected Endpoint(Guid id, string name, string configurationName, string address, Type contractType, bool transient) : this(id, name, configurationName, address, contractType)
+    {
+        protected Endpoint(Guid id, string name, string configurationName, string address, Type contractType, bool transient, DateTime? expiration) : this(id, name, configurationName, address, contractType)            
         {
             Transient = transient;
+            Expiration = expiration;
         }
 
+        protected Endpoint(Guid id, string name, string configurationName, string address, string contractTypeName, bool transient, DateTime? expiration)
+            : this(id, name, configurationName, address, contractTypeName)
+        {
+            Transient = transient;
+            Expiration = expiration;
+        }
+
+       
         protected Endpoint(Guid id, string name, string configurationName, string address, Type contractType)
         {
             Id = id;
@@ -80,7 +89,14 @@ namespace IServiceOriented.ServiceBus
         {
             get
             {
-                return _contractType.AssemblyQualifiedName;
+                if (_contractType == null)
+                {
+                    return null;    
+                }
+                else
+                {
+                    return _contractType.AssemblyQualifiedName;
+                }
             }
             private set
             {
@@ -154,9 +170,39 @@ namespace IServiceOriented.ServiceBus
             {
                 return _transient;
             }
-            set
+            private set
             {
                 _transient = value;
+            }
+        }
+
+        DateTime? _expiration;
+
+        [DataMember]
+        public DateTime? Expiration
+        {
+            get
+            {
+                return _expiration;
+            }
+            private set
+            {
+                _expiration = value;
+            }
+        }
+
+        public bool IsExpired
+        {
+            get
+            {
+                if (_expiration.HasValue)
+                {
+                    return _expiration.Value < DateTime.Now;
+                }
+                else
+                {
+                    return false;
+                }
             }
         }
     }    

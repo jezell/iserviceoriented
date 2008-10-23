@@ -91,6 +91,10 @@ namespace IServiceOriented.ServiceBus.Dispatchers
             return (IContextChannel)channelType.GetMethod("CreateChannel", new Type[] { }).Invoke(factory, new object[] { });
         }
 
+        protected string GetResponseCorrelationId(MessageDelivery delivery)
+        {
+            return (string)delivery.Context[MessageDelivery.PublishRequestId];
+        }
         
         public override void Dispatch(MessageDelivery messageDelivery)
         {
@@ -118,7 +122,8 @@ namespace IServiceOriented.ServiceBus.Dispatchers
                             if (lookup.ReplyActionLookup.ContainsKey(messageDelivery.Action)) // if two way message, publish reply
                             {
                                 KeyValuePair<MessageDeliveryContextKey, object>[] replyData = new KeyValuePair<MessageDeliveryContextKey, object>[1];
-                                replyData[0] = new KeyValuePair<MessageDeliveryContextKey, object>(MessageDelivery.CorrelationId, messageDelivery.MessageDeliveryId);
+                                replyData[0] = new KeyValuePair<MessageDeliveryContextKey, object>(MessageDelivery.CorrelationId, GetResponseCorrelationId(messageDelivery));
+
                                 Runtime.PublishOneWay(new PublishRequest(Endpoint.ContractType, lookup.ReplyActionLookup[messageDelivery.Action], result, new MessageDeliveryContext(replyData)));
                             }
                         }
@@ -127,7 +132,7 @@ namespace IServiceOriented.ServiceBus.Dispatchers
                             if (lookup.ReplyActionLookup.ContainsKey(messageDelivery.Action)) // if two way message, publish reply
                             {
                                 KeyValuePair<MessageDeliveryContextKey, object>[] replyData = new KeyValuePair<MessageDeliveryContextKey, object>[1];
-                                replyData[0] = new KeyValuePair<MessageDeliveryContextKey, object>(MessageDelivery.CorrelationId, messageDelivery.MessageDeliveryId);
+                                replyData[0] = new KeyValuePair<MessageDeliveryContextKey, object>(MessageDelivery.CorrelationId, GetResponseCorrelationId(messageDelivery));
 
                                 FaultException fex = ex.InnerException as FaultException;
                                 if (fex != null)

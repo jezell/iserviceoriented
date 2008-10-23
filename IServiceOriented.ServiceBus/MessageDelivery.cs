@@ -270,6 +270,9 @@ namespace IServiceOriented.ServiceBus
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public static readonly MessageDeliveryContextKey CorrelationId = new MessageDeliveryContextKey("CorrelationId", MessagingNamespace);
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
-        public static readonly MessageDeliveryContextKey Exceptions = new MessageDeliveryContextKey("Exceptions", MessagingNamespace);
+        public static readonly MessageDeliveryContextKey PublishRequestId = new MessageDeliveryContextKey("PublishRequestId", MessagingNamespace);
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
+        public static readonly MessageDeliveryContextKey Exceptions = new MessageDeliveryContextKey("Exceptions", MessagingNamespace);        
+        
     }
 }

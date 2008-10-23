@@ -18,7 +18,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
             long count = 0;
 
             TimerRuntimeService timerService = new TimerRuntimeService();
-            timerService.AddEvent(new TimerEvent(() => { Interlocked.Increment(ref count); }, TimeSpan.FromMilliseconds(100)));
+            timerService.AddEvent(new TimerEvent(() => { Interlocked.Increment(ref count); }, TimeSpan.FromMilliseconds(1000)));
             
             DeliveryCore deliveryCore = new DirectDeliveryCore();
 
@@ -26,14 +26,13 @@ namespace IServiceOriented.ServiceBus.UnitTests
             {
                 runtime.Start();
 
-                Thread.Sleep(1000);
+                Thread.Sleep(9100);
 
                 long curCount = Interlocked.Read(ref count);
                 
                 runtime.Stop();
 
-                Assert.GreaterOrEqual(11, curCount);
-                Assert.LessOrEqual(9, curCount);
+                Assert.AreEqual(9, curCount);                
             }
         }
 

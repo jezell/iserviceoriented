@@ -15,30 +15,42 @@ namespace IServiceOriented.ServiceBus
     public sealed class SubscriptionEndpoint : Endpoint
     {
         public SubscriptionEndpoint(string name, string configurationName, string address, Type contractType, Dispatcher dispatcher, MessageFilter filter)
-            : base(Guid.NewGuid(), name, configurationName, address, contractType)
-        {
-            Filter = filter;
-            Dispatcher = dispatcher;
+            : this(Guid.NewGuid(), name, configurationName, address, contractType, dispatcher, filter, false, null)
+        {            
         }
 
     
         public SubscriptionEndpoint(Guid id, string name, string configurationName, string address, Type contractType, Dispatcher dispatcher, MessageFilter filter)
-            : base(id, name, configurationName, address, contractType)
-        {
-            Filter = filter;
-            Dispatcher = dispatcher;
+            : this(id, name, configurationName, address, contractType, dispatcher, filter, false, null)
+        {            
         }
 
 
         public SubscriptionEndpoint(Guid id, string name, string configurationName, string address, Type contractType, Dispatcher dispatcher, MessageFilter filter, bool transient)
-            : base(id, name, configurationName, address, contractType,  transient)
+            : this(id, name, configurationName, address, contractType, dispatcher, filter, transient, null)
+        {            
+        }
+
+        public SubscriptionEndpoint(Guid id, string name, string configurationName, string address, Type contractType, Dispatcher dispatcher, MessageFilter filter, bool transient, DateTime? expiration)
+            : base(id, name, configurationName, address, contractType, transient, expiration)
         {
             Filter = filter;
             Dispatcher = dispatcher;
         }
 
         public SubscriptionEndpoint(Guid id, string name, string configurationName, string address, string contractTypeName, Dispatcher dispatcher, MessageFilter filter)
-            : base(id, name, configurationName, address, contractTypeName)
+            : this(id, name, configurationName, address, contractTypeName, dispatcher, filter, false, null)
+        {            
+        }
+
+        public SubscriptionEndpoint(Guid id, string name, string configurationName, string address, string contractTypeName, Dispatcher dispatcher, MessageFilter filter, bool transient)
+            : this(id, name, configurationName, address, contractTypeName, dispatcher, filter, transient, null)
+        {
+            
+        }
+
+        public SubscriptionEndpoint(Guid id, string name, string configurationName, string address, string contractTypeName, Dispatcher dispatcher, MessageFilter filter, bool transient, DateTime? expiration)
+            : base(id, name, configurationName, address, contractTypeName, transient, expiration)
         {
             Filter = filter;
             Dispatcher = dispatcher;

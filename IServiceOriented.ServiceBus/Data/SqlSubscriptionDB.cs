@@ -186,9 +186,11 @@ namespace IServiceOriented.ServiceBus.Data
                 dr["name"] as string,
                 dr["configuration_name"] as string,
                 dr["address"] as string,
-                Type.GetType(dr["contract_type"] as string),
+                Type.GetType(dr["contract_type"] as string),                
                 getDispatcherFromPersistenceData((byte[])dr["dispatcher_data"]),
-                getFilterFromPersistenceData((byte[])dr["filter_data"]))
+                getFilterFromPersistenceData((byte[])dr["filter_data"]),
+                false,
+                dr["expiration"] == DBNull.Value ? default(DateTime?) : Convert.ToDateTime(dr["expiration"]))
             ;
 
             if (endpoint.ContractType == null)
@@ -206,8 +208,10 @@ namespace IServiceOriented.ServiceBus.Data
                 dr["name"] as string,
                 dr["configuration_name"] as string,
                 dr["address"] as string,
-                Type.GetType(dr["contract_type"] as string),
-                getListenerFromPersistenceData((byte[])dr["listener_data"]));
+                Type.GetType(dr["contract_type"] as string),                
+                getListenerFromPersistenceData((byte[])dr["listener_data"]),
+                false,
+                dr["expiration"] == DBNull.Value ? default(DateTime?) : Convert.ToDateTime(dr["expiration"]));
 
             if (endpoint.ContractType == null)
             {
@@ -271,6 +275,7 @@ namespace IServiceOriented.ServiceBus.Data
                     command.Parameters.AddWithValue("@configuration_name", endpoint.ConfigurationName);
                     command.Parameters.AddWithValue("@contract_type", endpoint.ContractTypeName);
                     command.Parameters.AddWithValue("@name", endpoint.Name);
+                    command.Parameters.AddWithValue("@expiration", (object)endpoint.Expiration ?? DBNull.Value);
                     command.Parameters.AddWithValue("@listener_data", getListenerPersistenceData(endpoint.Listener));
                     command.ExecuteNonQuery();
                 }
@@ -290,6 +295,7 @@ namespace IServiceOriented.ServiceBus.Data
                     command.Parameters.AddWithValue("@configuration_name", subscription.ConfigurationName);
                     command.Parameters.AddWithValue("@contract_type", subscription.ContractTypeName);
                     command.Parameters.AddWithValue("@name", subscription.Name);
+                    command.Parameters.AddWithValue("@expiration", (object)subscription.Expiration ?? DBNull.Value);
                     command.Parameters.AddWithValue("@dispatcher_data", getDispatcherPersistenceData(subscription.Dispatcher));
                     command.ExecuteNonQuery();
                 }

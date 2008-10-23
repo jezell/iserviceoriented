@@ -13,13 +13,35 @@ namespace IServiceOriented.ServiceBus
     public sealed class ListenerEndpoint : Endpoint
     {
         public ListenerEndpoint(string name, string configurationName, string address, Type contractType, Listener listener)
-            : base(Guid.NewGuid(), name, configurationName, address, contractType)
+            : this(Guid.NewGuid(), name, configurationName, address, contractType, listener, false, null)
+        {            
+        }
+
+        public ListenerEndpoint(Guid id, string name, string configurationName, string address, Type contractType, Listener listener) : this(id, name, configurationName, address, contractType, listener, false, null)
+        {            
+            
+        }
+
+        public ListenerEndpoint(Guid id, string name, string configurationName, string address, Type contractType, Listener listener, bool transient, DateTime? expiration)
+            : base(id, name, configurationName, address, contractType, transient, expiration)
         {
             Listener = listener;
         }
 
-        public ListenerEndpoint(Guid id, string name, string configurationName, string address, Type contractType, Listener listener) : base(id, name, configurationName, address, contractType)
-        {            
+        public ListenerEndpoint(string name, string configurationName, string address, string contractTypeName, Listener listener)
+            : this(Guid.NewGuid(), name, configurationName, address, contractTypeName, listener, false, null)
+        {
+        }
+
+        public ListenerEndpoint(Guid id, string name, string configurationName, string address, string contractTypeName, Listener listener)
+            : this(id, name, configurationName, address, contractTypeName, listener, false, null)
+        {
+
+        }
+
+        public ListenerEndpoint(Guid id, string name, string configurationName, string address, string contractTypeName, Listener listener, bool transient, DateTime? expiration)
+            : base(id, name, configurationName, address, contractTypeName, transient, expiration)
+        {
             Listener = listener;
         }
 

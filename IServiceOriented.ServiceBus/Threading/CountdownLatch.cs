@@ -15,6 +15,14 @@ namespace IServiceOriented.ServiceBus.Threading
         public CountdownLatch(int count)
         {
             _count = count;
+            if (count != 0)
+            {
+                _handle.Reset();
+            }
+            else
+            {
+                _handle.Set();
+            }
         }
 
         int _count;
@@ -64,7 +72,14 @@ namespace IServiceOriented.ServiceBus.Threading
             if (_disposed) throw new ObjectDisposedException("CoundownLatch");
             
             _count = count;
-            _handle.Reset();
+            if (count != 0)
+            {
+                _handle.Reset();
+            }
+            else
+            {
+                _handle.Set();
+            }
         }
 
         protected virtual void Dispose(bool disposing)
