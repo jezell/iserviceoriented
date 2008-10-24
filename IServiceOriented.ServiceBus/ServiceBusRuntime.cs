@@ -208,8 +208,8 @@ namespace IServiceOriented.ServiceBus
         public event EventHandler Started;
         public event EventHandler Stopped;        
 
-        public event EventHandler<EndpointEventArgs> Subscribed;
-        public event EventHandler<EndpointEventArgs> Unsubscribed;
+        public event EventHandler<EndpointEventArgs> SubscriptionAdded;
+        public event EventHandler<EndpointEventArgs> SubscriptionRemoved;
         
         public event EventHandler<EndpointEventArgs> ListenerAdded;
         public event EventHandler<EndpointEventArgs> ListenerRemoved;
@@ -230,7 +230,7 @@ namespace IServiceOriented.ServiceBus
 
         ReaderWriterLockedObject<IEnumerable<SubscriptionEndpoint>, SubscriptionEndpointCollection> _subscriptions = new ReaderWriterLockedObject<IEnumerable<SubscriptionEndpoint>, SubscriptionEndpointCollection>(new SubscriptionEndpointCollection(), l => l);
         
-		public void Listen(ListenerEndpoint endpoint)
+		public void AddListener(ListenerEndpoint endpoint)
 		{
             if (_disposed) throw new ObjectDisposedException("ServiceBusRuntime");
 
@@ -283,7 +283,7 @@ namespace IServiceOriented.ServiceBus
             }            
 		}
 
-        public void StopListening(Guid endpointId)
+        public void RemoveListener(Guid endpointId)
         {
             if (_disposed) throw new ObjectDisposedException("ServiceBusRuntime");
 
@@ -296,7 +296,7 @@ namespace IServiceOriented.ServiceBus
                     {
                         endpoint.Listener.StopInternal();
                     }
-                    StopListening(endpoint);
+                    RemoveListener(endpoint);
 
                     foreach (RuntimeService service in ServiceLocator.GetAllInstances<RuntimeService>())
                     {
@@ -316,7 +316,7 @@ namespace IServiceOriented.ServiceBus
             }
         }
 		
-		public void StopListening(ListenerEndpoint endpoint)
+		public void RemoveListener(ListenerEndpoint endpoint)
 		{
             if (_disposed) throw new ObjectDisposedException("ServiceBusRuntime");
 
@@ -515,7 +515,7 @@ namespace IServiceOriented.ServiceBus
                         service.OnSubscriptionAdded(subscription);
                     }
                 
-                    EventHandler<EndpointEventArgs> subscribedEvent = Subscribed;
+                    EventHandler<EndpointEventArgs> subscribedEvent = SubscriptionAdded;
                     if (subscribedEvent != null) subscribedEvent(this, new EndpointEventArgs(subscription));                   
 
                     ts.Complete();
@@ -535,7 +535,7 @@ namespace IServiceOriented.ServiceBus
             }
 		}
 
-        public void Unsubscribe(Guid subscriptionId)
+        public void RemoveSubscription(Guid subscriptionId)
         {
             if (_disposed) throw new ObjectDisposedException("ServiceBusRuntime");
 
@@ -551,10 +551,10 @@ namespace IServiceOriented.ServiceBus
                 throw new SubscriptionNotFoundException();
             }
 
-            Unsubscribe(endpoint);
+            RemoveSubscription(endpoint);
         }
 		
-		public void Unsubscribe(SubscriptionEndpoint subscription)
+		public void RemoveSubscription(SubscriptionEndpoint subscription)
 		{
             if (_disposed) throw new ObjectDisposedException("ServiceBusRuntime");
 
@@ -580,7 +580,7 @@ namespace IServiceOriented.ServiceBus
                         service.OnSubscriptionRemoved(subscription);
                     }
                 
-                    EventHandler<EndpointEventArgs> unsubscribedEvent = Unsubscribed;
+                    EventHandler<EndpointEventArgs> unsubscribedEvent = SubscriptionRemoved;
                     if (unsubscribedEvent != null) unsubscribedEvent(this, new EndpointEventArgs(subscription));
                     
                     ts.Complete();

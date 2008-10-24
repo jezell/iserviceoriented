@@ -63,7 +63,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
 
         public void AddTestListener()
         {
-            serviceBusRuntime.Listen(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/testlistener", typeof(IContract), new WcfServiceHostListener()));
+            serviceBusRuntime.AddListener(new ListenerEndpoint(Guid.NewGuid(), "test", "NamedPipeListener", "net.pipe://localhost/servicebus/testlistener", typeof(IContract), new WcfServiceHostListener()));
         }
 
         public void AddTestSubscription(ContractImplementation ci, MessageFilter messageFilter)

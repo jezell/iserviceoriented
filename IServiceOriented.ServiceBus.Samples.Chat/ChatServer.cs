@@ -22,7 +22,7 @@ namespace IServiceOriented.ServiceBus.Samples.Chat
              
             MessageDeliveryFormatter formatter = new MessageDeliveryFormatter(new ConverterMessageDeliveryReaderFactory(encoder, typeof(IChatService)), new ConverterMessageDeliveryWriterFactory(encoder, typeof(IChatService)));            
             _serviceBus = new ServiceBusRuntime(new DirectDeliveryCore() , new WcfManagementService());
-            _serviceBus.Listen(new ListenerEndpoint(Guid.NewGuid(), "Chat Service", "ChatServer", "http://localhost/chatServer", typeof(IChatService), new WcfServiceHostListener()));
+            _serviceBus.AddListener(new ListenerEndpoint(Guid.NewGuid(), "Chat Service", "ChatServer", "http://localhost/chatServer", typeof(IChatService), new WcfServiceHostListener()));
             _serviceBus.Subscribe(new SubscriptionEndpoint(Guid.NewGuid(), "No subscribers", "ChatClient", "", typeof(IChatService), new MethodDispatcher(new UnhandledReplyHandler(_serviceBus)), new UnhandledMessageFilter(typeof(SendMessageRequest)), true));
             _serviceBus.UnhandledException+= (o, ex) =>
                 {

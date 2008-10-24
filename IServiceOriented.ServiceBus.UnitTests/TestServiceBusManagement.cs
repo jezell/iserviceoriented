@@ -43,12 +43,12 @@ namespace IServiceOriented.ServiceBus.UnitTests
                     Service.Use<IServiceBusManagementService>(managementService =>
                         {
                             ListenerEndpoint endpoint = new ListenerEndpoint(Guid.NewGuid(), "name of endpoint", "NamedPipeListener", "net.pipe://test/someservice/", typeof(IContract), new WcfServiceHostListener());
-                            managementService.Listen(endpoint);
+                            managementService.AddListener(endpoint);
 
                             ListenerEndpoint added = managementService.ListListeners().First();
                             tester.AssertEqual(endpoint, added);
 
-                            managementService.StopListening(endpoint.Id);
+                            managementService.RemoveListener(endpoint.Id);
                             Assert.IsEmpty(managementService.ListListeners());
                         });
                 });

@@ -89,7 +89,7 @@ namespace IServiceOriented.ServiceBus.UnitTests
                     throw new InvalidOperationException("Waited too long");
                 }
 
-                runtime.Unsubscribe(handled);
+                runtime.RemoveSubscription(handled);
 
                 handledCount = 0;
                 unhandledCount = 0;

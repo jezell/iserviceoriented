@@ -220,7 +220,7 @@ namespace IServiceOriented.ServiceBus.Services
                 }
                 finally
                 {
-                    runtime.Unsubscribe(subscription);
+                    runtime.RemoveSubscription(subscription);
                 }
             }
         }

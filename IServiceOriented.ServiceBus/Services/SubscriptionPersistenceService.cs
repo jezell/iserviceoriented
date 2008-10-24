@@ -45,11 +45,11 @@ namespace IServiceOriented.ServiceBus.Services
 
                 if (le != null)
                 {
-                    Runtime.StopListening(le);
+                    Runtime.RemoveListener(le);
                 }
                 else if (se != null)
                 {
-                    Runtime.Unsubscribe(se);
+                    Runtime.RemoveSubscription(se);
                 }
                 else
                 {
