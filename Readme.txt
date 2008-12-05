@@ -1,3 +1,7 @@
+I'm now working on the Neuron team at Neudesic. Feel free to use this code however you want.
+
+------------------------------------
+
 Projects
 ------------------------------------
 
